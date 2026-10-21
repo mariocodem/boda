@@ -1,0 +1,249 @@
+{
+ "title": "Elige el mundo visual de la invitación",
+ "question": "El sorteo asignó «La suite del sobre». Quédate con ella, toma la alternativa o vuelve a sortear.",
+ "options": [
+  {
+   "id": "assigned",
+   "kind": "assigned",
+   "label": "La suite del sobre",
+   "kicker": "THE ROLL",
+   "lineage": "Suite de papelería de boda formal y la lluvia de sobres colombiana",
+   "thesis": "La invitación es un sobre que va y vuelve: Diego y Erika te mandan uno con tu nombre y tú respondes con el tuyo.",
+   "palette": [
+    "#1d3a2e",
+    "#f6f5f0",
+    "#14231c",
+    "#d99a1e",
+    "#8fae9a"
+   ],
+   "materials": [
+    "sobre de cartulina verde hoja",
+    "forro impreso con rosas y lirios blancos",
+    "tarjetas de algodón blanco con bajorrelieve",
+    "papel vegetal",
+    "sello postal y matasellos"
+   ],
+   "viewport": "Un sobre cerrado a pantalla completa sobre el verde del forro, con tu nombre caligrafiado, tus cupos y un sello postal del ramo; al tocarlo se abre la solapa, sube la tarjeta y florece el ramo.",
+   "risk": "Abrir un sobre es el gesto más común del género: vive o muere por el oficio (física de papel real, forro real, nombre a mano); hecho con timidez es la plantilla.",
+   "raised": [
+    {
+     "from": "challenger-jacquard",
+     "raise": "Un registro, tres superficies: el número de sobre y el nombre del invitado aparecen igual en su sobre, en su tarjeta de respuesta y en su fila del panel."
+    },
+    {
+     "from": "challenger-flash",
+     "raise": "El matasellos se queda: al responder, el sobre del invitado queda sellado con la fecha de respuesta; los estados son marcas sobre el papel, no insignias."
+    },
+    {
+     "from": "challenger-agit",
+     "raise": "El polen solo para responder: el azafrán del estambre del lirio se raciona a la acción de confirmar y a su sello."
+    },
+    {
+     "from": "challenger-nixie",
+     "raise": "Cifras en casillero fijo: en el panel, cupos y confirmados ocupan posiciones fijas de dígito y cada cambio se ve."
+    }
+   ],
+   "html": ".impeccable/mocks/decision/assigned.html",
+   "htmlFrame": "390x844"
+  },
+  {
+   "id": "model-pick",
+   "kind": "pick",
+   "label": "Lámina de la Expedición Botánica",
+   "kicker": "IMPECCABLE’S PICK",
+   "lineage": "Láminas de la Real Expedición Botánica del Nuevo Reino de Granada (Mutis, 1783–1816)",
+   "thesis": "El ramo es el espécimen: la boda presentada como una lámina botánica numerada, una por invitado.",
+   "palette": [
+    "#f2efe6",
+    "#2d4a2b",
+    "#1a1a17",
+    "#b8862e",
+    "#c9d3c0"
+   ],
+   "materials": [
+    "papel de lámina",
+    "témpera verde profunda",
+    "rótulos a tinta",
+    "carpeta de láminas con cinta"
+   ],
+   "viewport": "Una carpeta de láminas atada; al tocarla se abre y el ramo de rosas y lirios se pinta trazo a trazo con su rótulo latino y «Lám. 027 — para tu familia».",
+   "risk": "Es mi favorita porque es muy colombiana, pero el papel claro y la tinta son el terreno al que caen casi todas las invitaciones; puede leerse académica en vez de festiva.",
+   "html": ".impeccable/mocks/decision/model-pick.html",
+   "htmlFrame": "390x844"
+  },
+  {
+   "id": "challenger-jacquard",
+   "kind": "challenger",
+   "catalogId": "textiles-weave-drape-fashion-jacquard-punched-brocade",
+   "label": "Brocado jacquard",
+   "verdict": "declined",
+   "lineage": "Telar jacquard de tarjetas perforadas",
+   "thesis": "La invitación tejida hilo por hilo desde tarjetas perforadas.",
+   "palette": [
+    "#141c3a",
+    "#c9a24a",
+    "#efe6d2",
+    "#0b0d12"
+   ],
+   "materials": [
+    "seda azul noche",
+    "trama dorada",
+    "tarjetas perforadas"
+   ],
+   "viewport": "Filas perforadas sobre el telar mientras la trama dorada forma el ramo.",
+   "case": "Se funde mal: los invitados no se reconocen en un telar y la confirmación se pierde en la metáfora.",
+   "kept": "Trazabilidad total: un mismo registro dibuja el sobre, la respuesta y la fila del panel.",
+   "risk": "Lectura técnica y fría para una boda familiar.",
+   "hero": "https://impeccable.style/worlds/cards/textiles-weave-drape-fashion-jacquard-punched-brocade-hero.webp"
+  },
+  {
+   "id": "challenger-flash",
+   "kind": "challenger",
+   "catalogId": "posters-covers-sleeves-flash-scrawl-club-sleeve",
+   "label": "Funda de club con flash",
+   "verdict": "declined",
+   "lineage": "Fundas de discos house franceses",
+   "thesis": "La boda como funda de disco: foto con flash y los nombres garabateados con marcador.",
+   "palette": [
+    "#111111",
+    "#f2f2f2",
+    "#d4ff2a"
+   ],
+   "materials": [
+    "foto con flash directo",
+    "marcador fluorescente",
+    "sticker blanco"
+   ],
+   "viewport": "Foto de fiesta a sangre con los nombres a marcador y un sticker en la esquina.",
+   "case": "Se funde mal: depende de fotos que aún no existen y deja fuera a los invitados mayores.",
+   "kept": "Las marcas usadas se quedan en la superficie como historia.",
+   "risk": "Choca con el ramo blanco y la formalidad de la invitación.",
+   "hero": "https://impeccable.style/worlds/cards/posters-covers-sleeves-flash-scrawl-club-sleeve-hero.webp"
+  },
+  {
+   "id": "challenger-agit",
+   "kind": "challenger",
+   "catalogId": "design-canon-constructivist-agit-train",
+   "label": "Tren de agitación constructivista",
+   "verdict": "declined",
+   "lineage": "Trenes de propaganda soviéticos",
+   "thesis": "La invitación avanza vagón por vagón en diagonales rojas.",
+   "palette": [
+    "#efe6d2",
+    "#151412",
+    "#c8261d"
+   ],
+   "materials": [
+    "papel periódico",
+    "tinta de esténcil",
+    "fotomontaje"
+   ],
+   "viewport": "Una cuña roja cruza el vagón con los nombres en tipos de madera.",
+   "case": "Se funde mal: el lenguaje de consigna no corresponde a una boda de flores blancas.",
+   "kept": "El color de acento racionado a la única acción que importa.",
+   "risk": "Tono de propaganda.",
+   "hero": "https://impeccable.style/worlds/cards/design-canon-constructivist-agit-train-hero.webp"
+  },
+  {
+   "id": "challenger-nixie",
+   "kind": "challenger",
+   "catalogId": "signals-instruments-nixie-laboratory-counter",
+   "label": "Contador nixie",
+   "verdict": "declined",
+   "lineage": "Contadores de laboratorio con tubos nixie",
+   "thesis": "La cuenta regresiva y los cupos como dígitos de plasma naranja.",
+   "palette": [
+    "#121212",
+    "#ff7a1a",
+    "#6b6f73"
+   ],
+   "materials": [
+    "tubos de vidrio",
+    "chasis de acero",
+    "malla de ánodo"
+   ],
+   "viewport": "Bancos de tubos con los días que faltan y los cupos confirmados.",
+   "case": "Se funde mal: la boda no es un instrumento y nadie se reconoce en él.",
+   "kept": "Las cantidades en posiciones fijas de dígito, con cambios visibles.",
+   "risk": "Frío y técnico.",
+   "hero": "https://impeccable.style/worlds/cards/signals-instruments-nixie-laboratory-counter-hero.webp"
+  },
+  {
+   "id": "challenger-chromatophore",
+   "kind": "challenger",
+   "catalogId": "reefs-bioluminescent-nocturnal-chromatophore-skin-language",
+   "label": "Piel de cefalópodo",
+   "verdict": "declined",
+   "lineage": "Cromatóforos de pulpo y sepia",
+   "thesis": "La página como piel viva que cambia de patrón.",
+   "palette": [
+    "#efe4d6",
+    "#7a3b26",
+    "#2fb3a0",
+    "#2a201b"
+   ],
+   "materials": [
+    "piel de manto",
+    "cromatóforos",
+    "destello iridiscente"
+   ],
+   "viewport": "Ondas de pigmento recorren la superficie hasta formar los nombres.",
+   "case": "Se funde mal: sin vínculo con la pareja ni con las flores.",
+   "kept": "Las señales se dibujan sobre la superficie, no en un cromo aparte.",
+   "risk": "Inquietante para una boda.",
+   "hero": "https://impeccable.style/worlds/cards/reefs-bioluminescent-nocturnal-chromatophore-skin-language-hero.webp"
+  },
+  {
+   "id": "challenger-bbs",
+   "kind": "challenger",
+   "catalogId": "medium-native-ansi-bbs-nightboard",
+   "label": "BBS ANSI nocturno",
+   "verdict": "declined",
+   "lineage": "Tableros de anuncios por módem",
+   "thesis": "La invitación como pantalla de bienvenida en texto de 16 colores.",
+   "palette": [
+    "#000000",
+    "#00ffff",
+    "#ff00ff",
+    "#0000aa"
+   ],
+   "materials": [
+    "glifos de bloque",
+    "rejilla de 80×25"
+   ],
+   "viewport": "Arte ANSI del ramo entrando línea por línea.",
+   "case": "Se funde mal: excluye a casi todo el público y oculta la confirmación.",
+   "kept": "La presencia es escasa: cada respuesta llega al panel como un evento.",
+   "risk": "Novedad retro ilegible para los abuelos.",
+   "hero": "https://impeccable.style/worlds/cards/medium-native-ansi-bbs-nightboard-hero.webp"
+  }
+ ],
+ "reroll": {
+  "registers": [
+   "safer",
+   "bolder"
+  ]
+ },
+ "canon": true,
+ "canonCard": {
+  "kind": "canon",
+  "label": "La invitación estándar",
+  "thesis": "Lo que hace todo el género, ejecutado con oficio.",
+  "palette": [
+   "#fbf8f1",
+   "#c9a96e",
+   "#6b705c",
+   "#2b2b2b"
+  ],
+  "materials": [
+   "sobre marfil con lacre",
+   "nombres en caligrafía dorada",
+   "acuarela floral"
+  ],
+  "viewport": "Sobre marfil con sello de lacre; al abrirlo, nombres en dorado, cuenta regresiva y formulario de confirmación.",
+  "risk": "Indistinguible de cualquier plantilla de invitación por diseño.",
+  "html": ".impeccable/mocks/decision/canon.html",
+  "htmlFrame": "390x844"
+ },
+ "steer": true
+}

@@ -1,0 +1,6 @@
+Lo normal es subir las fotos desde el panel (admin.html, pestaña «La boda»):
+la foto principal, las fotos de la pareja y las de referencia de vestimenta.
+
+Si prefieres ponerlas a mano, déjalas en esta carpeta y escribe sus rutas en
+assets/config.js (fotoPortada y fotos). Lo que se suba desde el panel las
+reemplaza.

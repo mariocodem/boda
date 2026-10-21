@@ -1,0 +1,340 @@
+<!doctype html>
+<html lang="es-CO">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Libro de sobres · Diego &amp; Erika</title>
+  <meta name="robots" content="noindex, nofollow">
+  <meta name="theme-color" content="#1c3a2d">
+  <link rel="icon" href="assets/icono.svg" type="image/svg+xml">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Castoro:ital@0;1&family=Castoro+Titling&family=Hanken+Grotesk:wght@400;500;600;700&family=Rouge+Script&display=swap">
+  <link rel="stylesheet" href="assets/base.css">
+  <link rel="stylesheet" href="assets/admin.css">
+</head>
+<body>
+  <!-- Entrada -->
+  <section class="entrada" id="entrada" hidden>
+    <form class="entrada-tarjeta" id="form-entrada" novalidate>
+      <span class="sello-mono" aria-hidden="true"><span>D</span><span>E</span></span>
+      <h1 class="entrada-titulo">Libro de sobres</h1>
+      <p class="entrada-sub">Invitados y respuestas de la boda de Diego y Erika.</p>
+      <div class="campos" data-campos-entrada></div>
+      <p class="campo-error" id="entrada-error" role="alert"></p>
+      <button class="boton boton-principal boton-ancho" type="submit">Entrar</button>
+      <p class="entrada-nota" data-nota-modo></p>
+    </form>
+  </section>
+
+  <!-- Panel -->
+  <div class="panel" id="panel" hidden>
+    <header class="barra">
+      <div class="barra-marca">
+        <span class="sello-mono sello-mono-chico" aria-hidden="true"><span>D</span><span>E</span></span>
+        <div>
+          <p class="barra-titulo">Libro de sobres</p>
+          <p class="barra-sub">Diego <i>&amp;</i> Erika</p>
+        </div>
+      </div>
+      <nav class="vistas" aria-label="Secciones del panel">
+        <a href="#invitados" data-vista="invitados">Invitados</a>
+        <a href="#boda" data-vista="boda">La boda</a>
+      </nav>
+      <div class="barra-acciones">
+        <span class="chip-modo" data-chip-modo></span>
+        <a class="boton boton-barra" href="index.html" target="_blank" rel="noopener" data-icono="ojo">Ver invitación</a>
+        <button class="boton boton-barra" type="button" data-salir data-icono="salir">Salir</button>
+      </div>
+    </header>
+
+    <main class="obra" data-vista-panel="invitados">
+      <section class="cifras" aria-label="Resumen">
+        <dl class="contadores" data-contadores></dl>
+        <div class="reparto" data-reparto></div>
+      </section>
+
+      <div class="obra-cuerpo">
+        <section class="libro" aria-labelledby="libro-titulo">
+          <div class="libro-cabeza">
+            <h1 class="libro-titulo" id="libro-titulo">Invitados</h1>
+            <div class="libro-botones">
+              <button class="boton boton-secundario" type="button" data-importar data-icono="subir">Importar lista</button>
+              <button class="boton boton-secundario" type="button" data-exportar data-icono="descargar">Exportar CSV</button>
+              <button class="boton boton-principal" type="button" data-agregar data-icono="mas">Agregar invitado</button>
+            </div>
+          </div>
+
+          <div class="filtros">
+            <label class="buscador">
+              <span class="solo-lectores">Buscar invitado</span>
+              <span data-icono-solo="buscar"></span>
+              <input type="search" placeholder="Buscar por nombre, teléfono o código" data-buscar autocomplete="off">
+            </label>
+            <div class="segmentos" role="group" aria-label="Filtrar por estado" data-filtros></div>
+            <label class="selector">
+              <span class="solo-lectores">Invitado de</span>
+              <select data-lado>
+                <option value="">Invitados de todos</option>
+                <option value="diego">De Diego</option>
+                <option value="erika">De Erika</option>
+                <option value="ambos">De ambos</option>
+              </select>
+            </label>
+          </div>
+
+          <div class="tabla-marco" data-tabla></div>
+        </section>
+
+        <aside class="correo" aria-labelledby="correo-titulo">
+          <h2 class="correo-titulo" id="correo-titulo">Respuestas recientes</h2>
+          <ol class="correo-lista" data-correo></ol>
+        </aside>
+      </div>
+    </main>
+
+    <!-- La boda: fecha, lugares, itinerario y vestimenta -->
+    <main class="obra obra-boda" data-vista-panel="boda" hidden>
+      <form class="boda" id="form-boda" novalidate>
+        <header class="boda-cabeza">
+          <h1 class="libro-titulo">La boda</h1>
+          <p class="boda-sub">Lo que ven los invitados en su invitación. Lo que dejes vacío aparece como «por confirmar».</p>
+        </header>
+
+        <section class="hoja" aria-labelledby="hoja-estilo">
+          <h2 class="hoja-titulo" id="hoja-estilo">Estilo</h2>
+          <p class="hoja-ayuda">Los colores y la letra del sobre, de la tarjeta y de toda la invitación.</p>
+          <div class="estilo-editor">
+            <div class="estilo-opciones">
+              <fieldset class="campo">
+                <legend class="campo-etiqueta">Colores</legend>
+                <div class="paletas" data-paletas></div>
+              </fieldset>
+              <fieldset class="campo">
+                <legend class="campo-etiqueta">Letra</legend>
+                <div class="letras" data-letras></div>
+              </fieldset>
+            </div>
+            <div class="estilo-vista">
+              <div class="muestra" data-muestra aria-hidden="true"></div>
+              <a class="boton boton-secundario" href="index.html?vista=panel" target="_blank" rel="noopener" data-ver-estilo data-icono="ojo">Ver la invitación con este estilo</a>
+            </div>
+          </div>
+        </section>
+
+        <section class="hoja" aria-labelledby="hoja-portada">
+          <h2 class="hoja-titulo" id="hoja-portada">Foto principal</h2>
+          <p class="hoja-ayuda">Va en el arco de la portada de la tarjeta, con el ramo apoyado en su esquina de abajo a la izquierda. Mejor una foto vertical, con las caras en la mitad de arriba.</p>
+          <div data-portada></div>
+        </section>
+
+        <section class="hoja" aria-labelledby="hoja-fecha">
+          <h2 class="hoja-titulo" id="hoja-fecha">Fecha</h2>
+          <div class="campos-rejilla">
+            <label class="campo">
+              <span class="campo-etiqueta">Día</span>
+              <input type="date" name="fecha">
+            </label>
+            <label class="campo">
+              <span class="campo-etiqueta">Hora de la ceremonia</span>
+              <input type="time" name="hora" step="300">
+            </label>
+            <label class="campo">
+              <span class="campo-etiqueta">Ciudad</span>
+              <input type="text" name="ciudad" maxlength="80" placeholder="Por ejemplo, Bogotá" autocomplete="off">
+            </label>
+            <label class="campo">
+              <span class="campo-etiqueta">Responder antes del <em>(opcional)</em></span>
+              <input type="date" name="fechaLimiteRespuesta">
+            </label>
+          </div>
+          <p class="hoja-vista" data-vista-fecha></p>
+        </section>
+
+        <section class="hoja" aria-labelledby="hoja-ceremonia">
+          <h2 class="hoja-titulo" id="hoja-ceremonia">Ceremonia</h2>
+          <div data-editor="ceremonia"></div>
+        </section>
+
+        <section class="hoja" aria-labelledby="hoja-recepcion">
+          <h2 class="hoja-titulo" id="hoja-recepcion">Recepción</h2>
+          <div class="campos-rejilla">
+            <label class="campo">
+              <span class="campo-etiqueta">Hora de la recepción</span>
+              <input type="time" name="recepcion-hora" step="300">
+            </label>
+          </div>
+          <label class="casilla">
+            <input type="checkbox" name="recepcion-mismo">
+            <span>Es en el mismo lugar de la ceremonia</span>
+          </label>
+          <div data-editor="recepcion"></div>
+        </section>
+
+        <section class="hoja" aria-labelledby="hoja-itinerario">
+          <h2 class="hoja-titulo" id="hoja-itinerario">Itinerario</h2>
+          <p class="hoja-ayuda">Los momentos del día, en el orden en que pasan. Vacío, la invitación muestra la ceremonia y la recepción con sus horas.</p>
+          <ol class="itinerario-editor" data-itinerario></ol>
+          <div class="libro-botones">
+            <button class="boton boton-secundario" type="button" data-agregar-momento data-icono="mas">Agregar momento</button>
+            <button class="boton boton-secundario" type="button" data-sembrar-itinerario data-icono="reloj">Empezar con ceremonia y recepción</button>
+          </div>
+        </section>
+
+        <section class="hoja" aria-labelledby="hoja-fotos">
+          <h2 class="hoja-titulo" id="hoja-fotos">Fotos de la pareja</h2>
+          <p class="hoja-ayuda">Aparecen debajo del itinerario, como fotos sobre la mesa, en este orden. Hasta 6; los invitados las pueden ver en grande.</p>
+          <div data-galeria></div>
+        </section>
+
+        <section class="hoja" aria-labelledby="hoja-vestimenta">
+          <h2 class="hoja-titulo" id="hoja-vestimenta">Vestimenta y regalos</h2>
+          <div class="campos-rejilla">
+            <label class="campo">
+              <span class="campo-etiqueta">Código de vestimenta</span>
+              <input type="text" name="vestimenta-codigo" list="codigos-vestimenta" maxlength="60" placeholder="Formal" autocomplete="off">
+            </label>
+          </div>
+          <datalist id="codigos-vestimenta">
+            <option value="Etiqueta"></option>
+            <option value="Formal"></option>
+            <option value="Semiformal"></option>
+            <option value="Cóctel"></option>
+            <option value="Casual elegante"></option>
+          </datalist>
+          <label class="campo">
+            <span class="campo-etiqueta">Nota sobre la vestimenta <em>(opcional)</em></span>
+            <textarea name="vestimenta-nota" rows="2" maxlength="400" placeholder="Por ejemplo: evitar el blanco, que es de la novia."></textarea>
+          </label>
+          <div class="campo">
+            <span class="campo-etiqueta" id="etiqueta-vestimenta-fotos">Fotos de referencia <em>(opcional)</em></span>
+            <span class="campo-ayuda">Ejemplos de cómo pueden ir vestidos. Hasta 4; si quieres, ponle a cada una un nombre corto, como «Ellas» o «Ellos».</span>
+            <div data-vestimenta-fotos></div>
+          </div>
+          <label class="campo">
+            <span class="campo-etiqueta">Regalos <em>(opcional)</em></span>
+            <textarea name="regalos" rows="2" maxlength="600" placeholder="Por ejemplo: lluvia de sobres el día de la boda."></textarea>
+          </label>
+        </section>
+
+        <footer class="boda-pie">
+          <p class="boda-estado" data-estado-boda aria-live="polite"></p>
+          <a class="boton boton-secundario" href="index.html" target="_blank" rel="noopener" data-icono="ojo">Ver invitación</a>
+          <button class="boton boton-principal" type="submit" data-guardar-boda>Guardar cambios</button>
+        </footer>
+      </form>
+    </main>
+  </div>
+
+  <!-- Invitado: agregar o editar -->
+  <dialog class="dialogo" id="dialogo-invitado" aria-labelledby="dialogo-invitado-titulo">
+    <form method="dialog" class="dialogo-form" id="form-invitado" novalidate>
+      <header class="dialogo-cabeza">
+        <h2 id="dialogo-invitado-titulo">Agregar invitado</h2>
+        <button class="boton-icono" type="button" value="cancelar" data-cerrar aria-label="Cerrar" data-icono-solo="cerrar"></button>
+      </header>
+      <div class="dialogo-cuerpo">
+        <label class="campo">
+          <span class="campo-etiqueta">Nombre en el sobre</span>
+          <input name="nombre" type="text" maxlength="120" required placeholder="Familia Rodríguez Gómez" autocomplete="off">
+          <span class="campo-ayuda">Así aparecerá escrito a mano en el sobre y en la tarjeta.</span>
+        </label>
+        <div class="campo-fila">
+          <label class="campo">
+            <span class="campo-etiqueta">Cupos</span>
+            <span class="paso" data-paso>
+              <button type="button" data-paso-menos aria-label="Un cupo menos"></button>
+              <input name="cupos" type="number" min="1" max="20" step="1" value="2" required inputmode="numeric">
+              <button type="button" data-paso-mas aria-label="Un cupo más"></button>
+            </span>
+          </label>
+          <label class="campo campo-ancho">
+            <span class="campo-etiqueta">WhatsApp <em>(opcional)</em></span>
+            <input name="telefono" type="tel" placeholder="300 123 4567" autocomplete="off" inputmode="tel">
+          </label>
+        </div>
+        <fieldset class="campo">
+          <legend class="campo-etiqueta">Invitado de</legend>
+          <div class="segmentos segmentos-form">
+            <label><input type="radio" name="lado" value="diego"><span>Diego</span></label>
+            <label><input type="radio" name="lado" value="erika"><span>Erika</span></label>
+            <label><input type="radio" name="lado" value="ambos" checked><span>Ambos</span></label>
+          </div>
+        </fieldset>
+        <label class="campo">
+          <span class="campo-etiqueta">Notas internas <em>(opcional)</em></span>
+          <textarea name="notas" rows="2" maxlength="500" placeholder="Mesa, parentesco, alergias…"></textarea>
+        </label>
+
+        <div class="dialogo-respuesta" data-solo-edicion hidden>
+          <fieldset class="campo">
+            <legend class="campo-etiqueta">Respuesta</legend>
+            <div class="segmentos segmentos-form">
+              <label><input type="radio" name="estado" value="pendiente"><span>Pendiente</span></label>
+              <label><input type="radio" name="estado" value="confirmado"><span>Confirmado</span></label>
+              <label><input type="radio" name="estado" value="declinado"><span>No asiste</span></label>
+            </div>
+            <span class="campo-ayuda">Cámbiala solo si te respondieron por otro medio.</span>
+          </fieldset>
+          <label class="campo" data-asistentes-campo>
+            <span class="campo-etiqueta">Asistentes confirmados</span>
+            <span class="paso" data-paso>
+              <button type="button" data-paso-menos aria-label="Un asistente menos"></button>
+              <input name="asistentes" type="number" min="1" max="20" step="1" inputmode="numeric">
+              <button type="button" data-paso-mas aria-label="Un asistente más"></button>
+            </span>
+          </label>
+          <div class="campo" data-mensaje-invitado hidden>
+            <span class="campo-etiqueta">Su mensaje</span>
+            <blockquote class="mensaje-invitado" data-mensaje-texto></blockquote>
+          </div>
+          <div class="campo">
+            <span class="campo-etiqueta">Enlace personal</span>
+            <div class="enlace-caja">
+              <code data-enlace-texto></code>
+              <button class="boton boton-secundario boton-chico" type="button" data-copiar-enlace data-icono="copiar">Copiar</button>
+            </div>
+          </div>
+        </div>
+        <p class="campo-error" data-error-invitado role="alert"></p>
+      </div>
+      <footer class="dialogo-pie">
+        <button class="boton boton-secundario" type="button" data-cerrar>Cancelar</button>
+        <button class="boton boton-principal" type="submit" data-guardar>Guardar</button>
+      </footer>
+    </form>
+  </dialog>
+
+  <!-- Importar -->
+  <dialog class="dialogo" id="dialogo-importar" aria-labelledby="dialogo-importar-titulo">
+    <form method="dialog" class="dialogo-form" id="form-importar" novalidate>
+      <header class="dialogo-cabeza">
+        <h2 id="dialogo-importar-titulo">Importar lista</h2>
+        <button class="boton-icono" type="button" data-cerrar aria-label="Cerrar" data-icono-solo="cerrar"></button>
+      </header>
+      <div class="dialogo-cuerpo">
+        <label class="campo">
+          <span class="campo-etiqueta">Un invitado por línea: nombre; cupos; WhatsApp; de quién</span>
+          <textarea name="lista" rows="8" spellcheck="false" placeholder="Familia Rodríguez Gómez; 4; 3001234567; erika&#10;Lucía Méndez; 1&#10;Tíos Triana; 2; ; diego"></textarea>
+          <span class="campo-ayuda">También sirve copiar y pegar columnas desde Excel o Google Sheets. Solo el nombre es obligatorio; sin cupos se asume 1.</span>
+        </label>
+        <p class="importar-vista" data-vista-importar aria-live="polite"></p>
+        <p class="campo-error" data-error-importar role="alert"></p>
+      </div>
+      <footer class="dialogo-pie">
+        <button class="boton boton-secundario" type="button" data-cerrar>Cancelar</button>
+        <button class="boton boton-principal" type="submit" data-confirmar-importar disabled>Importar</button>
+      </footer>
+    </form>
+  </dialog>
+
+  <div class="avisos" id="avisos" aria-live="polite"></div>
+
+  <script src="assets/config.js"></script>
+  <script src="assets/estilos.js"></script>
+  <script src="assets/datos.js"></script>
+  <script src="assets/papeleria.js"></script>
+  <script src="assets/ramo.js"></script>
+  <script src="assets/admin.js"></script>
+</body>
+</html>

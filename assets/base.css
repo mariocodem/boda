@@ -1,0 +1,198 @@
+/* Fundamentos compartidos por la invitación y el panel. */
+
+:root {
+  /* Cartulina del sobre: el suelo de toda la invitación */
+  --verde: #1c3a2d;
+  --verde-hondo: #11261c;
+  --verde-medio: #24493a;
+  --verde-forro: #2a4d3c;
+  --verde-luz: #3e6a52;
+  --salvia: #a3bcaa;
+  --salvia-clara: #cfdcd2;
+  /* Lo que se escribe directamente sobre la cartulina (nombre del sobre, firma) */
+  --tinta-sobre: #f6f5ef;
+
+  /* Tarjetas de algodón y tinta */
+  --algodon: #f6f5ef;
+  --algodon-hondo: #ecebe2;
+  --algodon-sombra: #dcdfd3;
+  --tinta: #15271e;
+  --tinta-suave: #4b5f55;
+  --tinta-tenue: #5d7066;
+  --linea: #cdd5cb;
+
+  /* Polen del lirio: solo para responder y su sello */
+  --polen: #d6981f;
+  --polen-claro: #e8b44c;
+  --polen-hondo: #9a6a10;
+
+  --declinado: #9b4a3c;
+
+  /* Tono de las sombras y del anillo de foco; cada paleta los ajusta */
+  --sombra: #081810;
+  --foco: var(--polen);
+
+  --f-grabada: 'Castoro Titling', 'Castoro', Georgia, serif;
+  --f-texto: 'Castoro', Georgia, 'Times New Roman', serif;
+  --f-mano: 'Rouge Script', 'Castoro', cursive;
+  --f-ui: 'Hanken Grotesk', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  /* Las cifras nunca van en la romana grabada: su «1» se lee como «I». */
+  --f-cifras: 'Castoro', Georgia, serif;
+
+  --sal-papel: cubic-bezier(0.16, 1, 0.3, 1);
+  --sal-suave: cubic-bezier(0.22, 1, 0.36, 1);
+  --entra-papel: cubic-bezier(0.55, 0, 0.75, 0.2);
+
+  --sombra-tarjeta:
+    0 1px 1px color-mix(in srgb, var(--sombra) 18%, transparent),
+    0 10px 24px -8px color-mix(in srgb, var(--sombra) 50%, transparent),
+    0 32px 60px -24px color-mix(in srgb, var(--sombra) 60%, transparent);
+
+  --grano: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='g' x='0' y='0' width='100%25' height='100%25'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 .16 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23g)'/%3E%3C/svg%3E");
+  --fibra: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='512' height='512'%3E%3Cfilter id='f' x='0' y='0' width='100%25' height='100%25'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.035' numOctaves='4' seed='4' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0 0 0 .09 -.02'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23f)'/%3E%3C/svg%3E");
+
+  color-scheme: light;
+  accent-color: var(--verde-forro);
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  overflow-x: clip;
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+  scrollbar-color: var(--verde-luz) var(--verde-hondo);
+}
+
+body {
+  margin: 0;
+  font-family: var(--f-texto);
+  color: var(--tinta);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+}
+
+img,
+svg {
+  display: block;
+  max-width: 100%;
+}
+
+button,
+input,
+textarea,
+select {
+  font: inherit;
+  color: inherit;
+}
+
+button {
+  cursor: pointer;
+}
+
+::selection {
+  background: var(--polen-claro);
+  color: var(--tinta);
+}
+
+input,
+textarea {
+  caret-color: var(--polen-hondo);
+}
+
+[tabindex='-1']:focus {
+  outline: none;
+}
+
+:focus-visible {
+  outline: 3px solid var(--foco);
+  outline-offset: 3px;
+  border-radius: 4px;
+}
+
+a {
+  color: inherit;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 0.22em;
+}
+
+.solo-lectores {
+  position: absolute !important;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.icono {
+  width: 1.15em;
+  height: 1.15em;
+  flex: none;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.7;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+/* Sello postal con borde perforado */
+.sello-postal {
+  --perfo: 7px;
+  position: relative;
+  padding: 5px;
+  background: var(--algodon);
+  -webkit-mask:
+    linear-gradient(#000 0 0) content-box,
+    radial-gradient(circle at 50% 50%, transparent 2.3px, #000 2.7px) calc(var(--perfo) / -2) calc(var(--perfo) / -2) / var(--perfo) var(--perfo) round;
+  mask:
+    linear-gradient(#000 0 0) content-box,
+    radial-gradient(circle at 50% 50%, transparent 2.3px, #000 2.7px) calc(var(--perfo) / -2) calc(var(--perfo) / -2) / var(--perfo) var(--perfo) round;
+  filter: drop-shadow(0 1px 1px rgba(0, 0, 0, 0.2));
+}
+
+.sello-postal svg {
+  width: 100%;
+  height: 100%;
+}
+
+/* Matasellos: tinta de sello con textura */
+.matasellos {
+  pointer-events: none;
+}
+
+.matasellos text {
+  font-family: var(--f-grabada);
+  fill: currentColor;
+}
+
+.matasellos .cifra,
+.cifra {
+  font-family: var(--f-cifras);
+  font-variant-numeric: lining-nums;
+}
+
+.cifra {
+  letter-spacing: 0.04em;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 1ms !important;
+    animation-delay: 0ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 1ms !important;
+    transition-delay: 0ms !important;
+    scroll-behavior: auto !important;
+  }
+}

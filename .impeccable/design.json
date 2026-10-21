@@ -1,0 +1,585 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-10-20T03:48:02+00:00",
+  "title": "Design System: Diego & Erika · La suite del sobre",
+  "extensions": {
+    "colorMeta": {
+      "verde": {
+        "role": "primary",
+        "displayName": "Cartulina verde hoja",
+        "canonical": "#1c3a2d",
+        "tonalRamp": [
+          "oklch(15% 0.043 164.0)",
+          "oklch(25% 0.043 164.0)",
+          "oklch(37% 0.043 164.0)",
+          "oklch(49% 0.043 164.0)",
+          "oklch(61% 0.043 164.0)",
+          "oklch(73% 0.043 164.0)",
+          "oklch(85% 0.043 164.0)",
+          "oklch(95% 0.043 164.0)"
+        ]
+      },
+      "verde-hondo": {
+        "role": "primary",
+        "displayName": "Verde hondo",
+        "canonical": "#11261c",
+        "tonalRamp": [
+          "oklch(15% 0.033 161.9)",
+          "oklch(25% 0.033 161.9)",
+          "oklch(37% 0.033 161.9)",
+          "oklch(49% 0.033 161.9)",
+          "oklch(61% 0.033 161.9)",
+          "oklch(73% 0.033 161.9)",
+          "oklch(85% 0.033 161.9)",
+          "oklch(95% 0.033 161.9)"
+        ]
+      },
+      "verde-medio": {
+        "role": "primary",
+        "displayName": "Verde medio",
+        "canonical": "#24493a",
+        "tonalRamp": [
+          "oklch(15% 0.050 165.5)",
+          "oklch(25% 0.050 165.5)",
+          "oklch(37% 0.050 165.5)",
+          "oklch(49% 0.050 165.5)",
+          "oklch(61% 0.050 165.5)",
+          "oklch(73% 0.050 165.5)",
+          "oklch(85% 0.050 165.5)",
+          "oklch(95% 0.050 165.5)"
+        ]
+      },
+      "verde-forro": {
+        "role": "primary",
+        "displayName": "Verde forro",
+        "canonical": "#2a4d3c",
+        "tonalRamp": [
+          "oklch(15% 0.050 161.7)",
+          "oklch(25% 0.050 161.7)",
+          "oklch(37% 0.050 161.7)",
+          "oklch(49% 0.050 161.7)",
+          "oklch(61% 0.050 161.7)",
+          "oklch(73% 0.050 161.7)",
+          "oklch(85% 0.050 161.7)",
+          "oklch(95% 0.050 161.7)"
+        ]
+      },
+      "verde-luz": {
+        "role": "primary",
+        "displayName": "Verde luz",
+        "canonical": "#3e6a52",
+        "tonalRamp": [
+          "oklch(15% 0.063 159.0)",
+          "oklch(25% 0.063 159.0)",
+          "oklch(37% 0.063 159.0)",
+          "oklch(49% 0.063 159.0)",
+          "oklch(61% 0.063 159.0)",
+          "oklch(73% 0.063 159.0)",
+          "oklch(85% 0.063 159.0)",
+          "oklch(95% 0.063 159.0)"
+        ]
+      },
+      "salvia": {
+        "role": "tertiary",
+        "displayName": "Salvia",
+        "canonical": "#a3bcaa",
+        "tonalRamp": [
+          "oklch(15% 0.037 154.1)",
+          "oklch(25% 0.037 154.1)",
+          "oklch(37% 0.037 154.1)",
+          "oklch(49% 0.037 154.1)",
+          "oklch(61% 0.037 154.1)",
+          "oklch(73% 0.037 154.1)",
+          "oklch(85% 0.037 154.1)",
+          "oklch(95% 0.037 154.1)"
+        ]
+      },
+      "salvia-clara": {
+        "role": "tertiary",
+        "displayName": "Salvia clara",
+        "canonical": "#cfdcd2",
+        "tonalRamp": [
+          "oklch(15% 0.019 152.8)",
+          "oklch(25% 0.019 152.8)",
+          "oklch(37% 0.019 152.8)",
+          "oklch(49% 0.019 152.8)",
+          "oklch(61% 0.019 152.8)",
+          "oklch(73% 0.019 152.8)",
+          "oklch(85% 0.019 152.8)",
+          "oklch(95% 0.019 152.8)"
+        ]
+      },
+      "algodon": {
+        "role": "neutral",
+        "displayName": "Algodón",
+        "canonical": "#f6f5ef",
+        "tonalRamp": [
+          "oklch(15% 0.008 98.9)",
+          "oklch(25% 0.008 98.9)",
+          "oklch(37% 0.008 98.9)",
+          "oklch(49% 0.008 98.9)",
+          "oklch(61% 0.008 98.9)",
+          "oklch(73% 0.008 98.9)",
+          "oklch(85% 0.008 98.9)",
+          "oklch(95% 0.008 98.9)"
+        ]
+      },
+      "algodon-hondo": {
+        "role": "neutral",
+        "displayName": "Algodón hondo",
+        "canonical": "#ecebe2",
+        "tonalRamp": [
+          "oklch(15% 0.012 101.5)",
+          "oklch(25% 0.012 101.5)",
+          "oklch(37% 0.012 101.5)",
+          "oklch(49% 0.012 101.5)",
+          "oklch(61% 0.012 101.5)",
+          "oklch(73% 0.012 101.5)",
+          "oklch(85% 0.012 101.5)",
+          "oklch(95% 0.012 101.5)"
+        ]
+      },
+      "algodon-sombra": {
+        "role": "neutral",
+        "displayName": "Algodón sombra",
+        "canonical": "#dcdfd3",
+        "tonalRamp": [
+          "oklch(15% 0.016 118.1)",
+          "oklch(25% 0.016 118.1)",
+          "oklch(37% 0.016 118.1)",
+          "oklch(49% 0.016 118.1)",
+          "oklch(61% 0.016 118.1)",
+          "oklch(73% 0.016 118.1)",
+          "oklch(85% 0.016 118.1)",
+          "oklch(95% 0.016 118.1)"
+        ]
+      },
+      "tinta": {
+        "role": "neutral",
+        "displayName": "Tinta verde negra",
+        "canonical": "#15271e",
+        "tonalRamp": [
+          "oklch(15% 0.030 161.6)",
+          "oklch(25% 0.030 161.6)",
+          "oklch(37% 0.030 161.6)",
+          "oklch(49% 0.030 161.6)",
+          "oklch(61% 0.030 161.6)",
+          "oklch(73% 0.030 161.6)",
+          "oklch(85% 0.030 161.6)",
+          "oklch(95% 0.030 161.6)"
+        ]
+      },
+      "tinta-suave": {
+        "role": "neutral",
+        "displayName": "Tinta suave",
+        "canonical": "#4b5f55",
+        "tonalRamp": [
+          "oklch(15% 0.029 163.4)",
+          "oklch(25% 0.029 163.4)",
+          "oklch(37% 0.029 163.4)",
+          "oklch(49% 0.029 163.4)",
+          "oklch(61% 0.029 163.4)",
+          "oklch(73% 0.029 163.4)",
+          "oklch(85% 0.029 163.4)",
+          "oklch(95% 0.029 163.4)"
+        ]
+      },
+      "tinta-tenue": {
+        "role": "neutral",
+        "displayName": "Tinta tenue",
+        "canonical": "#5d7066",
+        "tonalRamp": [
+          "oklch(15% 0.028 162.4)",
+          "oklch(25% 0.028 162.4)",
+          "oklch(37% 0.028 162.4)",
+          "oklch(49% 0.028 162.4)",
+          "oklch(61% 0.028 162.4)",
+          "oklch(73% 0.028 162.4)",
+          "oklch(85% 0.028 162.4)",
+          "oklch(95% 0.028 162.4)"
+        ]
+      },
+      "linea": {
+        "role": "neutral",
+        "displayName": "Línea",
+        "canonical": "#cdd5cb",
+        "tonalRamp": [
+          "oklch(15% 0.016 139.4)",
+          "oklch(25% 0.016 139.4)",
+          "oklch(37% 0.016 139.4)",
+          "oklch(49% 0.016 139.4)",
+          "oklch(61% 0.016 139.4)",
+          "oklch(73% 0.016 139.4)",
+          "oklch(85% 0.016 139.4)",
+          "oklch(95% 0.016 139.4)"
+        ]
+      },
+      "polen": {
+        "role": "secondary",
+        "displayName": "Polen de lirio",
+        "canonical": "#d6981f",
+        "tonalRamp": [
+          "oklch(15% 0.143 77.7)",
+          "oklch(25% 0.143 77.7)",
+          "oklch(37% 0.143 77.7)",
+          "oklch(49% 0.143 77.7)",
+          "oklch(61% 0.143 77.7)",
+          "oklch(73% 0.143 77.7)",
+          "oklch(85% 0.143 77.7)",
+          "oklch(95% 0.143 77.7)"
+        ]
+      },
+      "polen-claro": {
+        "role": "secondary",
+        "displayName": "Polen claro",
+        "canonical": "#e8b44c",
+        "tonalRamp": [
+          "oklch(15% 0.134 81.9)",
+          "oklch(25% 0.134 81.9)",
+          "oklch(37% 0.134 81.9)",
+          "oklch(49% 0.134 81.9)",
+          "oklch(61% 0.134 81.9)",
+          "oklch(73% 0.134 81.9)",
+          "oklch(85% 0.134 81.9)",
+          "oklch(95% 0.134 81.9)"
+        ]
+      },
+      "polen-hondo": {
+        "role": "secondary",
+        "displayName": "Polen hondo",
+        "canonical": "#9a6a10",
+        "tonalRamp": [
+          "oklch(15% 0.113 76.1)",
+          "oklch(25% 0.113 76.1)",
+          "oklch(37% 0.113 76.1)",
+          "oklch(49% 0.113 76.1)",
+          "oklch(61% 0.113 76.1)",
+          "oklch(73% 0.113 76.1)",
+          "oklch(85% 0.113 76.1)",
+          "oklch(95% 0.113 76.1)"
+        ]
+      },
+      "declinado": {
+        "role": "tertiary",
+        "displayName": "Ladrillo declinado",
+        "canonical": "#9b4a3c",
+        "tonalRamp": [
+          "oklch(15% 0.111 31.4)",
+          "oklch(25% 0.111 31.4)",
+          "oklch(37% 0.111 31.4)",
+          "oklch(49% 0.111 31.4)",
+          "oklch(61% 0.111 31.4)",
+          "oklch(73% 0.111 31.4)",
+          "oklch(85% 0.111 31.4)",
+          "oklch(95% 0.111 31.4)"
+        ]
+      },
+      "mesa-panel": {
+        "role": "neutral",
+        "displayName": "Mesa salvia",
+        "canonical": "#edf1ec",
+        "tonalRamp": [
+          "oklch(15% 0.008 139.4)",
+          "oklch(25% 0.008 139.4)",
+          "oklch(37% 0.008 139.4)",
+          "oklch(49% 0.008 139.4)",
+          "oklch(61% 0.008 139.4)",
+          "oklch(73% 0.008 139.4)",
+          "oklch(85% 0.008 139.4)",
+          "oklch(95% 0.008 139.4)"
+        ]
+      },
+      "blanco": {
+        "role": "neutral",
+        "displayName": "Blanco",
+        "canonical": "#ffffff",
+        "tonalRamp": [
+          "oklch(15% 0.000 89.9)",
+          "oklch(25% 0.000 89.9)",
+          "oklch(37% 0.000 89.9)",
+          "oklch(49% 0.000 89.9)",
+          "oklch(61% 0.000 89.9)",
+          "oklch(73% 0.000 89.9)",
+          "oklch(85% 0.000 89.9)",
+          "oklch(95% 0.000 89.9)"
+        ]
+      }
+    },
+    "typographyMeta": {
+      "display": {
+        "displayName": "Nombres grabados",
+        "purpose": "Los nombres de la pareja en la invitación."
+      },
+      "headline": {
+        "displayName": "Título grabado",
+        "purpose": "Títulos de sección («El día», Vestimenta, Regalos)."
+      },
+      "title": {
+        "displayName": "Título de tarjeta",
+        "purpose": "Título de la respuesta; base del botón Responder y de los títulos del panel."
+      },
+      "label-grabada": {
+        "displayName": "Etiqueta grabada",
+        "purpose": "Apellidos, cupos, momentos, número de sobre y sellos de estado; caja alta espaciada."
+      },
+      "body": {
+        "displayName": "Texto",
+        "purpose": "Lugares, vestimenta, regalos y resúmenes."
+      },
+      "body-italica": {
+        "displayName": "Itálica de carta",
+        "purpose": "Texto de la invitación, «por confirmar», «Para» y mensajes."
+      },
+      "mano": {
+        "displayName": "Mano",
+        "purpose": "Solo el nombre del destinatario, el «&» y la firma."
+      },
+      "cifras": {
+        "displayName": "Cifras",
+        "purpose": "Todo número; nunca en Castoro Titling."
+      },
+      "ui": {
+        "displayName": "Control",
+        "purpose": "Enlaces de acción, botones y etiquetas del panel."
+      },
+      "ui-cuerpo": {
+        "displayName": "Cuerpo del panel",
+        "purpose": "Texto operativo del panel."
+      }
+    },
+    "shadows": [
+      {
+        "name": "sombra-tarjeta",
+        "value": "0 1px 1px rgba(8, 24, 16, 0.18), 0 10px 24px -8px rgba(6, 20, 13, 0.5), 0 32px 60px -24px rgba(4, 14, 9, 0.6)",
+        "purpose": "Toda tarjeta y foto de la invitación: grosor, contacto y caída sobre la cartulina."
+      },
+      {
+        "name": "canto-responder",
+        "value": "inset 0 1px 0 rgba(255, 255, 255, 0.35), 0 2px 0 #9a6a10, 0 8px 16px -8px rgba(8, 24, 16, 0.4)",
+        "purpose": "Canto del botón Responder; desaparece al pulsar."
+      },
+      {
+        "name": "vegetal",
+        "value": "0 22px 44px -26px rgba(8, 24, 16, 0.55)",
+        "purpose": "Papel vegetal translúcido sobre el forro (con backdrop-filter: blur(1px) y algodón al 87%)."
+      },
+      {
+        "name": "dialogo-panel",
+        "value": "0 40px 80px -30px rgba(4, 14, 9, 0.7)",
+        "purpose": "Diálogo del panel."
+      },
+      {
+        "name": "aviso-panel",
+        "value": "0 16px 30px -12px rgba(0, 0, 0, 0.5)",
+        "purpose": "Avisos flotantes del panel."
+      },
+      {
+        "name": "foco-campo",
+        "value": "0 0 0 3px rgba(42, 77, 60, 0.18)",
+        "purpose": "Anillo de foco de campos del panel."
+      }
+    ],
+    "motion": [
+      {
+        "name": "sal-papel",
+        "value": "cubic-bezier(0.16, 1, 0.3, 1)",
+        "purpose": "Salida con fricción de papel: deslizar tarjetas, estampar el matasellos, desplegar flores, abrir diálogos."
+      },
+      {
+        "name": "sal-suave",
+        "value": "cubic-bezier(0.22, 1, 0.36, 1)",
+        "purpose": "Trazos (rúbrica, palomita, tallos) y respuesta de botones."
+      },
+      {
+        "name": "entra-papel",
+        "value": "cubic-bezier(0.55, 0, 0.75, 0.2)",
+        "purpose": "Recoger: el sobre que gira antes del volteo."
+      },
+      {
+        "name": "estampar",
+        "value": "0.55s sal-papel",
+        "purpose": "Golpe del matasellos: escala 1.5 a 1, rotación a -11°."
+      },
+      {
+        "name": "reducido",
+        "value": "prefers-reduced-motion: 1ms",
+        "purpose": "Todas las animaciones llegan a su estado final al instante."
+      }
+    ],
+    "breakpoints": [
+      {
+        "name": "tablet",
+        "value": "640px"
+      },
+      {
+        "name": "panel-medio",
+        "value": "760px"
+      },
+      {
+        "name": "escritorio",
+        "value": "960px"
+      },
+      {
+        "name": "panel-ancho",
+        "value": "1100px"
+      },
+      {
+        "name": "flat-lay",
+        "value": "1200px"
+      }
+    ]
+  },
+  "components": [
+    {
+      "name": "Botón Responder",
+      "kind": "button",
+      "refersTo": "boton-responder",
+      "description": "La única acción en polen: enviar la respuesta del invitado.",
+      "html": "<button class=\"ds-responder\" type=\"button\">ENVIAR RESPUESTA</button>",
+      "css": ".ds-responder{min-height:58px;padding:0 22px;display:inline-flex;align-items:center;justify-content:center;gap:10px;border:0;border-radius:3px;background:var(--polen,#d6981f);color:var(--tinta,#15271e);font-family:'Castoro Titling','Castoro',Georgia,serif;font-size:1.02rem;letter-spacing:.16em;box-shadow:inset 0 1px 0 rgba(255,255,255,.35),0 2px 0 var(--polen-hondo,#9a6a10),0 8px 16px -8px rgba(8,24,16,.4);transition:background-color .2s,transform .15s cubic-bezier(.22,1,.36,1),box-shadow .15s;cursor:pointer}.ds-responder:hover{background:var(--polen-claro,#e8b44c)}.ds-responder:active{transform:translateY(2px);box-shadow:inset 0 1px 0 rgba(255,255,255,.35),0 0 0 var(--polen-hondo,#9a6a10),0 4px 10px -6px rgba(8,24,16,.4)}.ds-responder:focus-visible{outline:3px solid var(--polen,#d6981f);outline-offset:3px}"
+    },
+    {
+      "name": "Opción de respuesta",
+      "kind": "input",
+      "refersTo": "opcion-respuesta",
+      "description": "Casilla Sí / No de la tarjeta de respuesta; la palomita se traza al marcar.",
+      "html": "<label class=\"ds-opcion\"><input type=\"radio\" name=\"ds-r\" checked><span class=\"ds-caja\"><svg viewBox=\"0 0 30 30\"><path d=\"M6 15l6 6 13-15\"/></svg></span><span>Asistiremos con gusto</span></label>",
+      "css": ".ds-opcion{position:relative;display:grid;grid-template-columns:auto 1fr;align-items:center;gap:10px;min-height:60px;max-width:220px;padding:10px 12px;border:1px solid var(--linea,#cdd5cb);border-radius:3px;background:rgba(255,255,255,.5);font-family:'Castoro',Georgia,serif;font-size:1.04rem;line-height:1.2;color:var(--tinta,#15271e);cursor:pointer;transition:border-color .2s,background-color .2s}.ds-opcion:hover{border-color:var(--tinta-tenue,#5d7066);background:#fff}.ds-opcion input{position:absolute;opacity:0}.ds-caja{width:26px;height:26px;border:1.5px solid var(--tinta,#15271e);border-radius:2px;display:grid;place-items:center;background:#fff}.ds-caja svg{width:30px;height:30px;margin:-6px -4px 0 0;overflow:visible}.ds-caja path{fill:none;stroke:var(--tinta,#15271e);stroke-width:2.6;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:40;stroke-dashoffset:40;transition:stroke-dashoffset .35s cubic-bezier(.22,1,.36,1)}.ds-opcion input:checked+.ds-caja path{stroke-dashoffset:0}.ds-opcion:has(input:checked){border-color:var(--tinta,#15271e);background:#fff}.ds-opcion:has(input:focus-visible){outline:3px solid var(--polen,#d6981f);outline-offset:2px}"
+    },
+    {
+      "name": "Tarjeta de algodón",
+      "kind": "card",
+      "refersTo": "tarjeta-algodon",
+      "description": "Pieza de papel con filete interior, sombra de mesa y marca de sobre, sobre la cartulina verde.",
+      "html": "<div class=\"ds-mesa\"><article class=\"ds-tarjeta\"><h3 class=\"ds-grabado\">EL DÍA</h3><p class=\"ds-texto\"><i>Fecha por confirmar</i></p><p class=\"ds-marca\">SOBRE N.º <span class=\"ds-cifra\">027</span></p></article></div>",
+      "css": ".ds-mesa{padding:32px;background:var(--verde,#1c3a2d)}.ds-tarjeta{position:relative;max-width:440px;padding:30px 24px 40px;text-align:center;color:var(--tinta,#15271e);background:var(--algodon,#f6f5ef);border-radius:3px;box-shadow:0 1px 1px rgba(8,24,16,.18),0 10px 24px -8px rgba(6,20,13,.5),0 32px 60px -24px rgba(4,14,9,.6);transform:rotate(-.8deg)}.ds-tarjeta::before{content:'';position:absolute;inset:11px;border:1px solid rgba(21,39,30,.13);pointer-events:none}.ds-grabado{margin:0;font-family:'Castoro Titling','Castoro',Georgia,serif;font-weight:400;font-size:2rem;letter-spacing:.1em}.ds-texto{margin:.8rem 0 0;font-family:'Castoro',Georgia,serif;font-size:1.1rem;color:var(--tinta-tenue,#5d7066)}.ds-marca{position:absolute;right:22px;bottom:18px;margin:0;font-family:'Castoro Titling','Castoro',Georgia,serif;font-size:.66rem;letter-spacing:.22em;color:var(--tinta-tenue,#5d7066)}.ds-cifra{font-family:'Castoro',Georgia,serif;font-variant-numeric:lining-nums;letter-spacing:.04em}"
+    },
+    {
+      "name": "Enlace de acción",
+      "kind": "button",
+      "refersTo": "enlace-accion",
+      "description": "Acción secundaria en la invitación (mapa, calendario, cambiar respuesta).",
+      "html": "<button class=\"ds-enlace\" type=\"button\"><svg viewBox=\"0 0 24 24\" aria-hidden=\"true\"><path d=\"M12 20.5s6.5-5.6 6.5-11a6.5 6.5 0 0 0-13 0c0 5.4 6.5 11 6.5 11z\"/><circle cx=\"12\" cy=\"9.5\" r=\"2.3\"/></svg>Ver en el mapa</button>",
+      "css": ".ds-enlace{display:inline-flex;align-items:center;gap:8px;min-height:44px;padding:0;border:0;background:none;font-family:'Hanken Grotesk',system-ui,sans-serif;font-weight:600;font-size:.95rem;color:var(--verde-forro,#2a4d3c);text-decoration:underline;text-decoration-color:color-mix(in srgb,currentColor 40%,transparent);text-decoration-thickness:1px;text-underline-offset:.3em;cursor:pointer}.ds-enlace:hover{text-decoration-color:currentColor}.ds-enlace:focus-visible{outline:3px solid var(--polen,#d6981f);outline-offset:3px;border-radius:4px}.ds-enlace svg{width:1.15em;height:1.15em;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}"
+    },
+    {
+      "name": "Botón principal del panel",
+      "kind": "button",
+      "refersTo": "panel-boton-principal",
+      "description": "Acción principal del libro de sobres, en cartulina verde.",
+      "html": "<button class=\"ds-pboton\" type=\"button\"><svg viewBox=\"0 0 24 24\" aria-hidden=\"true\"><path d=\"M12 5v14M5 12h14\"/></svg>Agregar invitado</button>",
+      "css": ".ds-pboton{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:42px;padding:0 16px;border:1px solid transparent;border-radius:6px;background:var(--verde,#1c3a2d);color:var(--algodon,#f6f5ef);font-family:'Hanken Grotesk',system-ui,sans-serif;font-weight:600;font-size:.92rem;cursor:pointer;transition:background-color .15s}.ds-pboton:hover{background:var(--verde-medio,#24493a)}.ds-pboton:focus-visible{outline:3px solid var(--polen,#d6981f);outline-offset:3px}.ds-pboton svg{width:1.15em;height:1.15em;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round}"
+    },
+    {
+      "name": "Botón secundario del panel",
+      "kind": "button",
+      "refersTo": "panel-boton-secundario",
+      "description": "Importar, exportar y acciones de diálogo.",
+      "html": "<button class=\"ds-psec\" type=\"button\">Exportar CSV</button>",
+      "css": ".ds-psec{display:inline-flex;align-items:center;min-height:42px;padding:0 16px;border:1px solid var(--linea,#cdd5cb);border-radius:6px;background:#fff;color:var(--tinta,#15271e);font-family:'Hanken Grotesk',system-ui,sans-serif;font-weight:600;font-size:.92rem;cursor:pointer;transition:border-color .15s}.ds-psec:hover{border-color:var(--tinta-tenue,#5d7066)}.ds-psec:focus-visible{outline:3px solid var(--polen,#d6981f);outline-offset:3px}"
+    },
+    {
+      "name": "Campo del panel",
+      "kind": "input",
+      "refersTo": "panel-campo",
+      "description": "Campo de texto y buscador del panel.",
+      "html": "<input class=\"ds-pcampo\" placeholder=\"Buscar por nombre, teléfono o código\">",
+      "css": ".ds-pcampo{width:100%;max-width:360px;min-height:44px;padding:10px 12px;border:1px solid var(--linea,#cdd5cb);border-radius:6px;background:#fff;font-family:'Hanken Grotesk',system-ui,sans-serif;font-size:1rem;color:var(--tinta,#15271e);transition:border-color .15s,box-shadow .15s}.ds-pcampo::placeholder{color:var(--tinta-tenue,#5d7066)}.ds-pcampo:focus{outline:none;border-color:var(--verde-forro,#2a4d3c);box-shadow:0 0 0 3px rgba(42,77,60,.18)}"
+    },
+    {
+      "name": "Segmentos de filtro",
+      "kind": "chip",
+      "refersTo": "panel-segmento-activo",
+      "description": "Filtros por estado del libro de sobres.",
+      "html": "<div class=\"ds-seg\"><button aria-pressed=\"true\">Todos <b>6</b></button><button aria-pressed=\"false\">Confirmados <b>3</b></button></div>",
+      "css": ".ds-seg{display:flex;gap:6px}.ds-seg button{min-height:36px;padding:0 12px;border:1px solid var(--linea,#cdd5cb);border-radius:999px;background:#fff;font-family:'Hanken Grotesk',system-ui,sans-serif;font-weight:600;font-size:.86rem;color:var(--tinta-suave,#4b5f55);cursor:pointer;transition:background-color .15s,color .15s,border-color .15s}.ds-seg button:hover{border-color:var(--tinta-tenue,#5d7066);color:var(--tinta,#15271e)}.ds-seg button[aria-pressed='true']{background:var(--verde,#1c3a2d);border-color:var(--verde,#1c3a2d);color:var(--algodon,#f6f5ef)}.ds-seg button:focus-visible{outline:3px solid var(--polen,#d6981f);outline-offset:3px}.ds-seg b{font-weight:400;opacity:.7;margin-left:4px}"
+    },
+    {
+      "name": "Sellos de estado",
+      "kind": "chip",
+      "refersTo": "sello-confirmado",
+      "description": "El matasellos como insignia de estado en cada fila del panel.",
+      "html": "<div class=\"ds-sellos\"><span class=\"ds-sello ds-conf\">CONFIRMADO</span><span class=\"ds-sello ds-decl\">NO ASISTE</span><span class=\"ds-sello ds-pend\">PENDIENTE</span></div>",
+      "css": ".ds-sellos{display:flex;gap:14px;padding:8px;background:#fff}.ds-sello{display:inline-flex;align-items:center;padding:3px 10px 2px;border:1.5px solid currentColor;border-radius:999px;box-shadow:0 0 0 2px #fff,0 0 0 3px currentColor;font-family:'Castoro Titling','Castoro',Georgia,serif;font-size:.72rem;letter-spacing:.14em;line-height:1.5;white-space:nowrap;transform:rotate(-2deg)}.ds-conf{color:var(--polen-hondo,#9a6a10)}.ds-decl{color:var(--declinado,#9b4a3c)}.ds-pend{color:var(--tinta-tenue,#5d7066);border-style:dashed;box-shadow:none}"
+    },
+    {
+      "name": "Contador de casillero fijo",
+      "kind": "custom",
+      "refersTo": "panel-contador",
+      "description": "Cifras del panel con tres dígitos fijos y ceros a la izquierda apagados.",
+      "html": "<dl class=\"ds-cont\"><div><dt>Cupos en total</dt><dd><span class=\"ds-cero\">0</span>16</dd></div><div class=\"ds-dest\"><dt>Cupos confirmados</dt><dd><span class=\"ds-cero\">00</span>6</dd></div></dl>",
+      "css": ".ds-cont{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:1px;margin:0;overflow:hidden;background:var(--linea,#cdd5cb);border:1px solid var(--linea,#cdd5cb);border-radius:8px;max-width:420px}.ds-cont div{display:grid;gap:2px;padding:14px 16px 12px;background:#fff}.ds-cont dt{font-family:'Hanken Grotesk',system-ui,sans-serif;font-size:.82rem;font-weight:600;color:var(--tinta-suave,#4b5f55)}.ds-cont dd{margin:0;font-family:'Castoro',Georgia,serif;font-size:2.1rem;line-height:1.1;letter-spacing:.04em;font-variant-numeric:lining-nums tabular-nums;color:var(--tinta,#15271e)}.ds-cero{color:var(--algodon-sombra,#dcdfd3)}.ds-dest dd{color:var(--polen-hondo,#9a6a10)}"
+    }
+  ],
+  "narrative": {
+    "northStar": "La suite del sobre",
+    "overview": "**Creative North Star: \"La suite del sobre\"**\n\nLa invitación es un sobre que va y vuelve. Todo el sistema es papelería formal: una cartulina verde hoja que es el suelo de cada pantalla, tarjetas de algodón blanco impresas con tinta verde negra, títulos en romanas grabadas, el nombre del invitado escrito a mano, un sello postal del ramo, un número de sobre y un matasellos que se queda cuando el invitado responde. Nada flota sobre un fondo neutro de sitio web: cada superficie es una pieza de papel con su grosor, su filete y su sombra de mesa.\n\nLa densidad es baja y ceremonial en la invitación (una pieza a la vez, columnas estrechas, mucho verde alrededor) y tranquila y exacta en el panel, que hereda el mundo en voz baja: suelo salvia claro, barra de cartulina verde, cifras en casilleros fijos y estados estampados como matasellos. El movimiento es de papel: bisagras, volteos y deslizamientos con fricción, nunca rebotes. El ramo de rosas y lirios blancos florece una vez y luego solo se mece.\n\nSe rechaza el arreglo por defecto del género: sobre marfil con lacre, nombres dorados en script, acuarela y cuenta regresiva como protagonista.",
+    "keyCharacteristics": [
+      "Suelo de cartulina verde (`verde`) con fibra y grano en toda la invitación; nunca un fondo claro de página.",
+      "Tarjetas de algodón con filete interior a 11px y una ligera rotación, como piezas sobre una mesa.",
+      "Cuatro voces tipográficas con oficios separados: grabada, texto, mano y controles.",
+      "Las cifras siempre en Castoro con números de caja alta, nunca en la romana grabada.",
+      "Polen azafrán racionado a responder y a la confirmación.",
+      "El número de sobre (N.º 027) une sobre, tarjeta, respuesta y fila del panel."
+    ],
+    "rules": [
+      {
+        "name": "La regla del suelo verde",
+        "body": "La invitación entera, de la escena del sobre al remite, se apoya en la cartulina verde. El papel claro solo existe como pieza (tarjeta, vegetal, foto), nunca como fondo de página.",
+        "section": "colors"
+      },
+      {
+        "name": "La regla del polen",
+        "body": "El azafrán significa «responder» y «confirmado». Va en el botón de respuesta, en el foco, en el matasellos de confirmación y en sus reflejos del panel (sello, contador y tramo de confirmados). No se usa como decoración ni para otro estado.",
+        "section": "colors"
+      },
+      {
+        "name": "La regla del matasellos",
+        "body": "El estado persistente de una respuesta se marca con un matasellos en tinta de sello: polen hondo para confirmado, tinta suave (invitación) o ladrillo (panel) para declinado.",
+        "section": "colors"
+      },
+      {
+        "name": "La regla de las cifras",
+        "body": "Ningún número se compone en Castoro Titling: su «1» se lee como «I». Toda cifra va envuelta en la voz `--f-cifras` (Castoro, `lining-nums`), también dentro de etiquetas grabadas, matasellos y sellos de estado.",
+        "section": "typography"
+      },
+      {
+        "name": "La regla de la mano",
+        "body": "Rouge Script escribe solo lo que se escribiría a mano en un sobre real: el nombre del destinatario, el «&» y la firma. Nunca un título, un botón ni un párrafo.",
+        "section": "typography"
+      },
+      {
+        "name": "La regla del control",
+        "body": "Hanken Grotesk aparece donde hay que operar (enlaces de acción, errores, notas técnicas, el panel). En la invitación nunca compone contenido ceremonial.",
+        "section": "typography"
+      },
+      {
+        "name": "La regla del papel sobre la mesa",
+        "body": "Una sombra solo existe si hay una pieza de papel que la proyecta. Nada de resplandores ni sombras de color.",
+        "section": "elevation"
+      },
+      {
+        "name": "La regla del papel que se mueve",
+        "body": "Todo se mueve como papel: bisagra, volteo, deslizamiento con fricción, estampado. Nunca rebote ni elástico; con `prefers-reduced-motion` las animaciones se reducen a 1ms.",
+        "section": "components"
+      }
+    ],
+    "dos": [
+      "**Do** apoyar toda pantalla de la invitación sobre la cartulina verde (`verde`) con fibra y grano; el papel claro solo como pieza.",
+      "**Do** envolver toda cifra en la voz de cifras (Castoro, `lining-nums`), también dentro de textos grabados y matasellos.",
+      "**Do** reservar el polen para responder, el foco y el estado confirmado.",
+      "**Do** marcar el estado persistente con el matasellos o su sello de estado, nunca con un globo o un color de fondo.",
+      "**Do** repetir el número de sobre de tres cifras (N.º 027) en sobre, tarjeta, respuesta y fila del panel.",
+      "**Do** mostrar lo no confirmado en itálica tenue («Fecha por confirmar»), nunca como hueco o dato inventado.",
+      "**Do** mantener los objetivos táctiles de la invitación en 44px o más (58px el botón de respuesta, 60px las opciones)."
+    ],
+    "donts": [
+      "**Don't** componer números en Castoro Titling.",
+      "**Don't** usar Rouge Script para títulos, botones o párrafos.",
+      "**Don't** usar el polen como acento decorativo, para avisos o para estados distintos de confirmado.",
+      "**Don't** recurrir al sobre marfil con lacre, nombres dorados en script, acuarela o una cuenta regresiva como protagonista.",
+      "**Don't** animar con rebotes ni curvas elásticas.",
+      "**Don't** poner sombras a elementos que no sean piezas de papel."
+    ]
+  }
+}

@@ -1,0 +1,199 @@
+<!doctype html>
+<html lang="es-CO" class="intro">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Diego &amp; Erika · Invitación de boda</title>
+  <meta name="description" content="Diego Triana y Erika Ramos te invitan a celebrar su matrimonio. Abre tu invitación y confírmanos si nos acompañas.">
+  <meta name="theme-color" content="#1c3a2d">  <meta property="og:type" content="website">
+  <meta property="og:title" content="Diego &amp; Erika · Nos casamos">
+  <meta property="og:description" content="Abre tu invitación y confírmanos si nos acompañas.">
+  <link rel="icon" href="assets/icono.svg" type="image/svg+xml">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Castoro:ital@0;1&family=Castoro+Titling&family=Hanken+Grotesk:wght@400;500;600;700&family=Rouge+Script&display=swap">
+  <link rel="stylesheet" href="assets/base.css">
+  <link rel="stylesheet" href="assets/invitacion.css">
+  <!-- El estilo (colores y letra) se aplica antes de pintar -->
+  <script src="assets/config.js"></script>
+  <script src="assets/estilos.js"></script>
+  <script>Estilos.arrancar();</script>
+</head>
+<body>
+  <!-- Escena del sobre a pantalla completa: el forro y la tarjeta atrás, el bolsillo y la solapa delante -->
+  <div class="escena" id="escena">
+    <div class="escena-capa escena-atras" aria-hidden="true">
+      <div class="escena-fondo"></div>
+      <div class="sobre sobre-atras" data-cara="frente">
+        <div class="sobre-interior"></div>
+        <div class="sobre-carta"></div>
+      </div>
+    </div>
+    <div class="escena-capa escena-delante">
+      <button class="sobre sobre-delante" id="sobre" type="button" data-cara="frente" aria-describedby="escena-pista">
+        <span class="solo-lectores" data-sobre-etiqueta>Abrir la invitación de Diego y Erika</span>
+        <span class="sobre-frente" aria-hidden="true">
+          <span class="sobre-numero">N.º <span class="cifra" data-numero>···</span></span>
+          <span class="sobre-sello sello-postal"></span>
+          <span class="sobre-matasellos" data-matasellos-sobre></span>
+          <span class="sobre-direccion">
+            <span class="sobre-para">Para</span>
+            <span class="sobre-nombre" data-nombre-sobre></span>
+            <svg class="sobre-rubrica" viewBox="0 0 220 24" aria-hidden="true"><path d="M4 16c30-10 70-12 120-6 30 4 56 3 92-8" /></svg>
+            <span class="sobre-cupos" data-cupos-sobre></span>
+          </span>
+        </span>
+        <span class="sobre-dorso" aria-hidden="true">
+          <span class="sobre-bolsillo-sombra"><span class="sobre-bolsillo"></span></span>
+          <span class="solapa solapa-cerrada">
+            <span class="solapa-forma"></span>
+            <span class="solapa-remite">Diego <i>&amp;</i> Erika</span>
+            <span class="sobre-sello-cierre"><span>D</span><span>E</span></span>
+          </span>
+        </span>
+      </button>
+      <p class="escena-pista" id="escena-pista">Toca el sobre para abrirlo</p>
+    </div>
+  </div>
+
+  <main id="contenido">
+    <!-- La tarjeta ocupa toda la pantalla, con la foto de los novios y el ramo; al bajar se asienta sobre la mesa -->
+    <section class="portada" id="portada" aria-labelledby="nombres">
+      <div class="portada-escenario">
+        <article class="tarjeta tarjeta-invitacion" id="tarjeta">
+          <div class="retrato">
+            <figure class="retrato-marco">
+              <div class="retrato-foto" data-retrato></div>
+            </figure>
+            <div class="ramo-lugar" id="ramo"></div>
+          </div>
+          <div class="tarjeta-cuerpo">
+            <h1 class="nombres" id="nombres">
+              <span class="nombre">Diego</span>
+              <span class="apellido">Triana</span>
+              <span class="y" aria-label="y">&amp;</span>
+              <span class="nombre">Erika</span>
+              <span class="apellido">Ramos</span>
+            </h1>
+            <p class="invitacion-texto" data-texto-invitacion>tienen el gusto de invitarte a celebrar su matrimonio</p>
+            <div class="invitacion-cuando">
+              <p class="invitacion-fecha" data-fecha>Fecha por confirmar</p>
+              <p class="invitacion-ciudad" data-ciudad>Ciudad por confirmar</p>
+            </div>
+            <p class="invitacion-para">
+              <span class="para-de">Para</span>
+              <span class="para-nombre" data-nombre>ti</span>
+              <span class="para-cupos" data-cupos></span>
+            </p>
+            <a class="portada-pista" href="#altar">
+              <span>Desliza para ver los detalles</span>
+              <svg viewBox="0 0 24 40" aria-hidden="true"><path d="M12 3v32M5 28l7 8 7-8" /></svg>
+            </a>
+          </div>
+          <p class="tarjeta-marca">Sobre N.º <span class="cifra" data-numero>···</span></p>
+        </article>
+      </div>
+    </section>
+
+    <!-- El camino al altar: el video avanza con el scroll -->
+    <section class="altar" id="altar" aria-labelledby="altar-titulo">
+      <div class="altar-escenario">
+        <video class="altar-video" muted playsinline disablepictureinpicture aria-hidden="true" tabindex="-1"></video>
+        <div class="altar-velo" aria-hidden="true"></div>
+        <h2 class="solo-lectores" id="altar-titulo">Cuándo y dónde</h2>
+        <div class="capitulos">
+          <article class="tarjeta capitulo" data-capitulo>
+            <h3 class="capitulo-titulo">El día</h3>
+            <p class="capitulo-dato" data-fecha-larga>Fecha por confirmar</p>
+            <p class="capitulo-nota" data-cuenta hidden></p>
+          </article>
+          <article class="tarjeta capitulo" data-capitulo>
+            <h3 class="capitulo-titulo">La ceremonia</h3>
+            <p class="capitulo-dato capitulo-hora" data-hora-ceremonia>Hora por confirmar</p>
+            <p class="capitulo-nota" data-recepcion-nota hidden></p>
+          </article>
+          <article class="tarjeta capitulo" data-capitulo>
+            <h3 class="capitulo-titulo">El lugar</h3>
+            <p class="capitulo-dato capitulo-lugar" data-lugar-ceremonia>Lugar por confirmar</p>
+            <p class="capitulo-nota" data-direccion-ceremonia hidden></p>
+            <a class="enlace-accion" href="#llegar">Ver cómo llegar</a>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section class="llegar" id="llegar" aria-labelledby="llegar-titulo">
+      <article class="tarjeta tarjeta-llegar">
+        <h2 class="titulo-grabado" id="llegar-titulo">Cómo llegar</h2>
+        <div class="sitios" data-sitios></div>
+        <p class="llegar-calendario" data-calendario hidden></p>
+        <p class="tarjeta-marca">Cómo llegar · N.º <span class="cifra" data-numero>···</span></p>
+      </article>
+    </section>
+
+    <section class="programa" id="itinerario" aria-labelledby="itinerario-titulo">
+      <article class="tarjeta tarjeta-programa">
+        <h2 class="titulo-grabado" id="itinerario-titulo">Itinerario</h2>
+        <div class="dia">
+          <span class="dia-hilo" aria-hidden="true"></span>
+          <ol class="dia-lista" data-itinerario></ol>
+        </div>
+        <p class="tarjeta-marca">Itinerario · N.º <span class="cifra" data-numero>···</span></p>
+      </article>
+    </section>
+
+    <section class="fotos" id="fotos" aria-labelledby="fotos-titulo" hidden>
+      <h2 class="solo-lectores" id="fotos-titulo">Fotos de Diego y Erika</h2>
+      <div class="fotos-mesa" data-fotos></div>
+    </section>
+
+    <section class="forro" aria-labelledby="vestimenta-titulo">
+      <div class="vegetal vegetal-vestimenta">
+        <h2 class="titulo-grabado" id="vestimenta-titulo">Código de vestimenta</h2>
+        <p class="vestimenta-codigo" data-vestimenta-codigo></p>
+        <p class="vestimenta-nota" data-vestimenta-nota hidden></p>
+        <ul class="vestimenta-fotos" data-vestimenta-fotos aria-label="Fotos de referencia" hidden></ul>
+      </div>
+      <div class="vegetal vegetal-otros">
+        <div class="vegetal-bloque">
+          <h2 class="titulo-grabado">Regalos</h2>
+          <p data-regalos></p>
+        </div>
+        <div class="vegetal-bloque" data-contacto hidden>
+          <h2 class="titulo-grabado">Dudas</h2>
+          <p data-contacto-texto></p>
+        </div>
+      </div>
+    </section>
+
+    <section class="responder" id="responder" aria-label="Tu respuesta">
+      <article class="tarjeta tarjeta-respuesta" id="respuesta" aria-live="polite">
+        <p class="tarjeta-marca">Respuesta · N.º <span class="cifra" data-numero>···</span></p>
+        <div class="respuesta-cuerpo" data-respuesta></div>
+      </article>
+    </section>
+
+    <footer class="remite">
+      <div class="remite-solapa" aria-hidden="true"></div>
+      <div class="remite-sello" aria-hidden="true"><span>D</span><span>E</span></div>
+      <p class="remite-con">Con cariño,</p>
+      <p class="remite-firma">Diego <i>&amp;</i> Erika</p>
+      <button class="enlace-accion remite-volver" type="button" data-volver>Volver a cerrar el sobre</button>
+    </footer>
+  </main>
+
+  <!-- Una foto en grande -->
+  <dialog class="visor" id="visor" aria-label="Foto">
+    <div class="visor-foto" data-visor-foto></div>
+    <div class="visor-pie">
+      <p data-visor-pie></p>
+      <button class="enlace-accion visor-cerrar" type="button" data-visor-cerrar>Cerrar</button>
+    </div>
+  </dialog>
+
+  <script src="assets/datos.js"></script>
+  <script src="assets/papeleria.js"></script>
+  <script src="assets/ramo.js"></script>
+  <script src="assets/invitacion.js"></script>
+</body>
+</html>
