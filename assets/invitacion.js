@@ -1,6 +1,9 @@
 /*
  * La invitación: abre el sobre, llena la suite con los datos del invitado y de
- * la boda, mueve las escenas con el scroll y maneja la tarjeta de respuesta.
+ * la boda (lugares, alojamiento, itinerario, historia, fotos, vestimenta,
+ * regalos y preguntas frecuentes), mueve las escenas con el scroll, maneja la
+ * tarjeta de respuesta y, cuando el invitado confirmó y las mesas están
+ * publicadas, le muestra la suya.
  */
 (function () {
   const C = window.BODA;
@@ -14,14 +17,18 @@
   const codigo = window.Datos.limpiarCodigo(params.get('i'));
   const vistaPanel = params.get('vista') === 'panel';
   const reducido = matchMedia('(prefers-reduced-motion: reduce)').matches;
-  // Desde el panel se puede ver la invitación con un estilo aún sin guardar.
+  // Desde el panel se puede ver la invitación con un estilo aún sin guardar,
+  // con o sin la mariposa.
   const estiloVista = Estilos.desdeUrl(params);
+  const mariposaVista = vistaPanel ? params.get('mariposa') : null;
   const pareja = `${C.pareja.uno.nombre} y ${C.pareja.dos.nombre}`;
   const verVacios = () => window.Datos.modo === 'local' || vistaPanel;
   const CLAVE_ABIERTA = `boda-diego-erika:abierta:${codigo || 'general'}`;
 
   // Datos de la boda: config.js, reemplazado por lo que se guarde en el panel.
   let E = window.Datos.eventoBase();
+  // Plano del salón (pestaña «Mesas» del panel). null mientras no llega.
+  let salon = null;
 
   const estado = {
     invitacion: null, // { numero, nombre, cupos, estado, asistentes, mensaje, respondidoEn }
@@ -30,6 +37,9 @@
     eleccion: null,
     cuantos: 1,
     mensaje: '',
+    // Las preguntas opcionales de la tarjeta (se encienden en el panel).
+    alergias: '',
+    cancion: '',
     enviando: false,
     error: '',
     recienSellada: false,
@@ -74,12 +84,15 @@
     porConfirmar($('[data-ciudad]'), E.ciudad, 'Ciudad por confirmar');
     llenarCapitulos(fecha, larga);
     llenarSitios();
+    llenarAlojamiento();
     llenarItinerario();
     llenarCalendario(fecha);
+    llenarHistoria();
 
     porConfirmar($('[data-vestimenta-codigo]'), E.vestimenta.codigo, 'Por confirmar');
     mostrar($('[data-vestimenta-nota]'), E.vestimenta.nota ? conCifras(E.vestimenta.nota) : '');
-    porConfirmar($('[data-regalos]'), E.regalos, 'Por confirmar');
+    llenarRegalos();
+    llenarPreguntas();
 
     const tel = C.contacto && C.contacto.whatsapp ? String(C.contacto.whatsapp).replace(/\D/g, '') : '';
     if (tel) {
@@ -155,16 +168,108 @@
         </div>`;
     }).join('');
 
-    $$('[data-copiar]', caja).forEach((b) => b.addEventListener('click', async () => {
-      const etiqueta = $('span', b);
+    $$('[data-copiar]', caja).forEach((b) => copiable(b, b.dataset.copiar, 'Dirección copiada'));
+  }
+
+  // Un botón que copia un texto y lo cuenta un momento en su etiqueta.
+  function copiable(boton, valor, hecho) {
+    const etiqueta = $('span', boton);
+    const normal = etiqueta.textContent;
+    boton.addEventListener('click', async () => {
       let ok = false;
       try {
-        await navigator.clipboard.writeText(b.dataset.copiar);
+        await navigator.clipboard.writeText(valor);
         ok = true;
       } catch { /* sin portapapeles */ }
-      etiqueta.textContent = ok ? 'Dirección copiada' : 'No se pudo copiar';
-      setTimeout(() => { etiqueta.textContent = 'Copiar dirección'; }, 2200);
-    }));
+      etiqueta.textContent = ok ? hecho : 'No se pudo copiar';
+      setTimeout(() => { etiqueta.textContent = normal; }, 2200);
+    });
+  }
+
+  // Párrafos separados por una línea en blanco; dentro, cada salto se respeta.
+  function parrafos(texto) {
+    return String(texto || '').split(/\n\s*\n/).map((x) => x.trim()).filter(Boolean)
+      .map((x) => `<p>${conCifras(x).replace(/\n/g, '<br>')}</p>`).join('');
+  }
+
+  // En modo local y en la vista previa del panel, una sección todavía vacía se
+  // ve con un aviso de dónde se llena. Los invitados no la ven.
+  function pendiente(que, donde) {
+    return `<p class="seccion-pendiente"><b>${que}</b><span>Se llena en el panel: La boda → ${donde}. Mientras esté vacía, los invitados no ven esta tarjeta.</span></p>`;
+  }
+
+  // Hoteles para quienes vienen de lejos. Sin hoteles la sección no aparece.
+  function llenarAlojamiento() {
+    const a = E.alojamiento || { hoteles: [] };
+    $('#alojamiento').hidden = !a.hoteles.length && !verVacios();
+    if (!a.hoteles.length) {
+      mostrar($('[data-alojamiento-nota]'), a.nota ? conCifras(a.nota) : '');
+      $('[data-hoteles]').innerHTML = verVacios() ? `<li>${pendiente('Aún no hay hoteles', 'Alojamiento')}</li>` : '';
+      return;
+    }
+    mostrar($('[data-alojamiento-nota]'), a.nota ? conCifras(a.nota) : '');
+    $('[data-hoteles]').innerHTML = a.hoteles.map((h) => {
+      const m = P.mapas({ lugar: h.nombre, direccion: h.direccion }, E.ciudad);
+      const dir = [h.direccion, E.ciudad].filter(Boolean).join(', ');
+      return `<li class="hotel">
+          <h3 class="hotel-nombre">${conCifras(h.nombre)}</h3>
+          ${h.direccion ? `<p class="hotel-direccion">${conCifras(dir)}</p>` : ''}
+          ${h.nota ? `<p class="hotel-nota">${conCifras(h.nota)}</p>` : ''}
+          <div class="hotel-acciones">
+            ${h.enlace ? `<a class="enlace-accion" href="${esc(h.enlace)}" target="_blank" rel="noopener">${P.icono('cama')}<span>Ver el hotel</span></a>` : ''}
+            ${m ? `<a class="enlace-accion" href="${esc(m.google)}" target="_blank" rel="noopener">${P.icono('mapa')}<span>Cómo llegar</span></a>` : ''}
+          </div>
+        </li>`;
+    }).join('');
+  }
+
+  function llenarHistoria() {
+    const html = parrafos(E.historia);
+    $('#historia').hidden = !html && !verVacios();
+    $('[data-historia]').innerHTML = html || (verVacios() ? pendiente('Aún no está su historia', 'Nuestra historia') : '');
+    repartirFotos();
+  }
+
+  // El texto de regalos, la cuenta para transferencias y las listas de tiendas.
+  // Solo dice «por confirmar» si no hay nada de eso.
+  function llenarRegalos() {
+    const cuenta = E.cuentaRegalos;
+    const listas = E.listasRegalos || [];
+    const texto = $('[data-regalos]');
+    porConfirmar(texto, E.regalos, 'Por confirmar');
+    texto.hidden = !E.regalos && Boolean(cuenta || listas.length);
+
+    const caja = $('[data-regalos-cuenta]');
+    caja.hidden = !cuenta;
+    caja.innerHTML = '';
+    if (cuenta) {
+      const filas = [
+        ['Banco', [cuenta.banco, cuenta.tipo].filter(Boolean).join(' · ')],
+        ['Número', cuenta.numero, 'cuenta-numero'],
+        ['A nombre de', cuenta.titular],
+        ['Documento', cuenta.documento],
+      ].filter(([, v]) => v);
+      caja.innerHTML = `<dl class="cuenta">${filas.map(([e, v, c]) => `<div><dt>${e}</dt><dd${c ? ` class="${c}"` : ''}>${conCifras(v)}</dd></div>`).join('')}</dl>
+        <button class="enlace-accion" type="button">${P.icono('copiar')}<span>Copiar el número</span></button>`;
+      copiable($('button', caja), cuenta.numero.replace(/[\s.-]/g, ''), 'Número copiado');
+    }
+
+    const ul = $('[data-regalos-listas]');
+    ul.hidden = !listas.length;
+    ul.innerHTML = listas.map((l) => `<li><a class="enlace-accion" href="${esc(l.enlace)}" target="_blank" rel="noopener">${P.icono('regalo')}<span>Ver la lista en ${esc(l.nombre)}</span></a></li>`).join('');
+  }
+
+  function llenarPreguntas() {
+    const lista = E.preguntas || [];
+    $('#preguntas').hidden = !lista.length && !verVacios();
+    if (!lista.length) {
+      $('[data-preguntas]').innerHTML = verVacios() ? pendiente('Aún no hay preguntas', 'Preguntas frecuentes') : '';
+      return;
+    }
+    $('[data-preguntas]').innerHTML = lista.map((q) => `<details class="pregunta">
+        <summary><span class="pregunta-texto">${conCifras(q.pregunta)}</span><span class="pregunta-signo" aria-hidden="true"></span></summary>
+        <div class="pregunta-respuesta">${parrafos(q.respuesta)}</div>
+      </details>`).join('');
   }
 
   function momentosDelDia() {
@@ -227,6 +332,9 @@
       // Sin conexión con la base: la invitación sigue con config.js.
     }
     llenarEvento();
+    // La tarjeta pudo pintarse antes de saber qué preguntas lleva y hasta cuándo
+    // se responde; si nadie la está llenando, se vuelve a pintar.
+    if (estado.carga === 'lista' && !estado.enviando && !$('[data-respuesta]').contains(document.activeElement)) pintarRespuesta();
   }
 
   // ---------- Estilo y fotos (vienen de la pestaña «La boda» del panel) ----------
@@ -234,7 +342,9 @@
   function aplicarEstilo() {
     const e = Estilos.aplicar(estiloVista || E.estilo);
     if (!estiloVista) Estilos.recordar(e);
-    $('.sobre-sello').innerHTML = P.sello(Estilos.PALETAS[e.paleta].sello);
+    // La mariposa (assets/mariposa.js) mira este atributo.
+    doc.dataset.mariposa = (mariposaVista || (E.mariposa ? 'si' : 'no')) === 'no' ? 'no' : 'si';
+    $('.sobre-sello').innerHTML = P.sello(Estilos.paleta(e).sello);
     Estilos.listo(e).then(() => doc.classList.remove('estilo-pendiente'));
   }
 
@@ -279,20 +389,43 @@
     });
   }
 
+  // Las fotos de la pareja se reparten por la invitación (ver P.lugaresFotos):
+  // una al lado de cada pliego que le toca y las demás juntas, sueltas sobre
+  // la mesa.
   async function llenarFotos() {
-    const seccion = $('#fotos');
-    const mesa = $('[data-fotos]');
     const lista = E.fotos || [];
     const urls = await Promise.all(lista.map((f) => window.Datos.urlFoto(f.url)));
-    mesa.innerHTML = lista.map((f, i) => (urls[i]
-      ? fotoImpresa(f, urls[i], { alt: pareja, etiqueta: `Ver en grande la foto ${i + 1} de ${pareja}` })
-      : '')).join('');
-    const contar = () => {
-      mesa.dataset.cuantas = mesa.children.length;
-      seccion.hidden = !mesa.children.length;
-    };
-    retirarRotas(mesa, contar);
-    contar();
+    const buenas = lista.map((f, i) => ({ f, url: urls[i], i })).filter((x) => x.url);
+    const lugares = P.lugaresFotos(buenas.length, Boolean(parrafos(E.historia)));
+    const impresa = (x) => fotoImpresa(x.f, x.url, { alt: pareja, etiqueta: `Ver en grande la foto ${x.i + 1} de ${pareja}` });
+    const cajas = $$('[data-foto-pliego]');
+    cajas.forEach((caja) => {
+      const k = lugares.indexOf(caja.dataset.fotoPliego);
+      caja.innerHTML = k >= 0 ? impresa(buenas[k]) : '';
+    });
+    const mesa = $('[data-fotos]');
+    mesa.innerHTML = buenas.filter((x, k) => lugares[k] === 'momentos').map(impresa).join('');
+    cajas.concat(mesa).forEach((caja) => retirarRotas(caja, repartirFotos));
+    repartirFotos();
+  }
+
+  // Cada pliego sabe si lleva foto; en pantalla ancha la foto va un pliego a
+  // la derecha y el siguiente a la izquierda.
+  function repartirFotos() {
+    let lado = 'derecha';
+    $$('[data-foto-pliego]').forEach((caja) => {
+      const pliego = caja.closest('.pliego');
+      const con = Boolean(caja.children.length);
+      caja.hidden = !con;
+      pliego.classList.toggle('con-foto', con);
+      if (con && !pliego.hidden) {
+        pliego.dataset.lado = lado;
+        lado = lado === 'derecha' ? 'izquierda' : 'derecha';
+      }
+    });
+    const mesa = $('[data-fotos]');
+    mesa.dataset.cuantas = mesa.children.length;
+    $('#fotos').hidden = !mesa.children.length;
   }
 
   async function llenarVestimentaFotos() {
@@ -341,6 +474,9 @@
     $('[data-texto-invitacion]').textContent = inv && inv.cupos > 1
       ? 'tienen el gusto de invitarlos a celebrar su matrimonio'
       : 'tienen el gusto de invitarte a celebrar su matrimonio';
+    $('[data-titulo-responder]').textContent = inv && inv.cupos > 1
+      ? 'Esperamos compartir este día con ustedes'
+      : 'Esperamos compartir este día contigo';
 
     const nombreSobre = $('[data-nombre-sobre]');
     const ya = nombreSobre.textContent;
@@ -357,6 +493,8 @@
         el.classList.add('escribiendo');
       });
     }
+
+    pintarMesa();
 
     const ms = $('[data-matasellos-sobre]');
     if (inv && inv.estado !== 'pendiente') {
@@ -381,7 +519,11 @@
       const inv = await window.Datos.invitacion(codigo, { marcar: !vistaPanel });
       estado.invitacion = inv;
       estado.carga = inv ? 'lista' : 'no-encontrada';
-      if (inv) estado.cuantos = inv.estado === 'confirmado' && inv.asistentes ? inv.asistentes : inv.cupos;
+      if (inv) {
+        estado.cuantos = inv.estado === 'confirmado' && inv.asistentes ? inv.asistentes : inv.cupos;
+        estado.alergias = inv.alergias || '';
+        estado.cancion = inv.cancion || '';
+      }
     } catch (e) {
       estado.carga = 'error';
       estado.error = e.message;
@@ -436,6 +578,7 @@
 
   function pintarRespondida(caja, inv) {
     const va = inv.estado === 'confirmado';
+    const mesaVisible = (mesaDelInvitado() || {}).mesa;
     const titulo = va ? '¡Qué alegría!' : 'Gracias por avisarnos';
     let resumen;
     if (va) {
@@ -445,18 +588,25 @@
     } else {
       resumen = t('Te vamos a extrañar. Si tus planes cambian, puedes cambiar la respuesta aquí mismo.', 'Los vamos a extrañar. Si sus planes cambian, pueden cambiar la respuesta aquí mismo.');
     }
+    const datos = va ? [['Comida', inv.alergias], ['Canción', inv.cancion]].filter(([, v]) => v) : [];
     caja.innerHTML = `<div class="respuesta-hecha${estado.recienSellada ? ' recien-sellada' : ''}" data-estado="${inv.estado}">
         ${P.matasellos({ texto: va ? 'CONFIRMADO' : 'RESPONDIDO', fecha: inv.respondidoEn })}
         <h2 class="respuesta-titulo">${titulo}</h2>
         <p class="respuesta-resumen">${resumen}</p>
+        ${datos.length ? `<dl class="respuesta-datos">${datos.map(([e, v]) => `<div><dt>${e}</dt><dd>${esc(v)}</dd></div>`).join('')}</dl>` : ''}
         ${inv.mensaje ? `<blockquote class="respuesta-cita">${esc(inv.mensaje)}</blockquote>` : ''}
-        <button class="enlace-accion" type="button" data-cambiar>${P.icono('editar')}<span>Cambiar la respuesta</span></button>
+        <div class="respuesta-acciones">
+          ${mesaVisible ? `<a class="enlace-accion" href="#mesa">${P.icono('mesa')}<span>Ver ${t('tu', 'su')} mesa: la <span class="cifra">${mesaVisible.numero}</span></span></a>` : ''}
+          <button class="enlace-accion" type="button" data-cambiar>${P.icono('editar')}<span>Cambiar la respuesta</span></button>
+        </div>
       </div>`;
     estado.recienSellada = false;
     $('[data-cambiar]', caja).addEventListener('click', () => {
       estado.editando = true;
       estado.eleccion = inv.estado === 'confirmado' ? 'si' : 'no';
       estado.mensaje = inv.mensaje || '';
+      estado.alergias = inv.alergias || '';
+      estado.cancion = inv.cancion || '';
       pintarRespuesta();
       const marcado = $('input[name="asiste"]:checked', caja);
       if (marcado) marcado.focus();
@@ -468,6 +618,12 @@
     const sub = limite ? t(`Por favor responde antes del ${limite}.`, `Por favor respondan antes del ${limite}.`) : '';
     const si = t('Asistiré con gusto', 'Asistiremos con gusto');
     const no = t('Lamento no poder ir', 'Lamentamos no poder ir');
+    // Preguntas que solo se hacen a quien va, si los novios las encendieron.
+    const pide = E.respuesta || {};
+    const extra = (clave, etiqueta, ejemplo, max) => (pide[clave] ? `<label class="renglon-campo" data-solo-si${estado.eleccion === 'si' ? '' : ' hidden'}>
+            <span class="campo-etiqueta">${etiqueta} <em>(opcional)</em></span>
+            <input type="text" name="${clave}" maxlength="${max}" value="${esc(estado[clave])}" placeholder="${ejemplo}" autocomplete="off">
+          </label>` : '');
     caja.innerHTML = `<form class="respuesta-form" novalidate>
         <fieldset>
           <legend class="respuesta-titulo">${t('¿Nos acompañas?', '¿Nos acompañan?')}</legend>
@@ -487,6 +643,8 @@
               <span class="contador-de">de ${inv.cupos} cupos</span>
             </div>
           </div>` : ''}
+          ${extra('alergias', t('¿Tienes alguna alergia o restricción con la comida?', '¿Alguno tiene alergias o restricciones con la comida?'), 'Vegetariano, sin gluten, alergia al maní…', 300)}
+          ${extra('cancion', 'Una canción que no puede faltar en la fiesta', 'Canción y artista', 120)}
           <label class="mensaje-campo">
             <span class="campo-etiqueta">Unas palabras para Diego y Erika <em>(opcional)</em></span>
             <textarea name="mensaje" rows="3" maxlength="1000">${esc(estado.mensaje)}</textarea>
@@ -519,7 +677,9 @@
       $('.respuesta-error', form).textContent = '';
       detalle.hidden = false;
       if (cuantos) cuantos.hidden = r.value !== 'si';
+      $$('[data-solo-si]', form).forEach((el) => { el.hidden = r.value !== 'si'; });
     }));
+    $$('.renglon-campo input', form).forEach((i) => i.addEventListener('input', () => { estado[i.name] = i.value; }));
     if (menos) {
       menos.addEventListener('click', () => { estado.cuantos = Math.max(1, estado.cuantos - 1); actualizarContador(); });
       mas.addEventListener('click', () => { estado.cuantos = Math.min(inv.cupos, estado.cuantos + 1); actualizarContador(); });
@@ -540,16 +700,21 @@
       estado.enviando = true;
       boton.disabled = true;
       boton.innerHTML = '<span class="girando" aria-hidden="true"></span><span>Enviando…</span>';
+      const va = estado.eleccion === 'si';
       try {
         const actualizada = await window.Datos.responder(codigo, {
-          asiste: estado.eleccion === 'si',
+          asiste: va,
           asistentes: inv.cupos === 1 ? 1 : estado.cuantos,
           mensaje: estado.mensaje,
+          // Sin la pregunta en la tarjeta no se manda: lo que había se queda.
+          alergias: pide.alergias ? (va ? estado.alergias : '') : undefined,
+          cancion: pide.cancion ? (va ? estado.cancion : '') : undefined,
         });
         estado.invitacion = actualizada;
         estado.editando = false;
         estado.error = '';
         estado.recienSellada = !reducido;
+        estado.mesaRecien = true;
         llenarInvitado();
         pintarRespuesta();
         $('#respuesta').scrollIntoView({ behavior: reducido ? 'auto' : 'smooth', block: 'nearest' });
@@ -564,13 +729,103 @@
     });
   }
 
-  // ---------- Scroll: la tarjeta se asienta, el video avanza, el día se traza ----------
+  // ---------- Tarjeta de mesa ----------
+
+  async function cargarSalon() {
+    try {
+      salon = await window.Datos.salon();
+    } catch {
+      salon = null;
+    }
+    pintarMesa();
+    // La tarjeta ya respondida lleva el enlace a la mesa.
+    if (estado.invitacion && estado.invitacion.estado !== 'pendiente' && !estado.editando) pintarRespuesta();
+  }
+
+  // Qué mostrar: nada, la mesa, o «por confirmar» si aún no le asignan una.
+  function mesaDelInvitado() {
+    const inv = estado.invitacion;
+    if (!inv || inv.estado !== 'confirmado' || !salon || !salon.mostrar) return null;
+    const mesa = inv.mesa ? salon.piezas.find((p) => p.id === inv.mesa && Salon.esMesa(p)) : null;
+    return { mesa: mesa || null };
+  }
+
+  function pintarMesa() {
+    const tarjeta = $('#mesa');
+    const enlace = $('[data-para-mesa]');
+    const ver = mesaDelInvitado();
+    const mesa = ver && ver.mesa;
+    enlace.hidden = !mesa;
+    if (mesa) {
+      enlace.innerHTML = `Mesa <span class="cifra">${mesa.numero}</span>`;
+      enlace.setAttribute('aria-label', `${t('Tu mesa', 'Su mesa')}: la ${mesa.numero}. Ver dónde queda en el plano`);
+    }
+    if (!ver) {
+      tarjeta.hidden = true;
+      delete tarjeta.dataset.clave;
+      return;
+    }
+    // Se vuelve a pintar solo si algo cambió: así el círculo no se traza dos veces.
+    const clave = JSON.stringify([estado.invitacion.nombre, mesa, mesa && salon.piezas]);
+    if (tarjeta.dataset.clave === clave && !tarjeta.hidden) return;
+    tarjeta.dataset.clave = clave;
+    const nombre = `<p class="mesa-para">Para</p><p class="mesa-invitado">${esc(estado.invitacion.nombre)}</p>`;
+    if (!mesa) {
+      $('[data-mesa]', tarjeta).innerHTML = `${nombre}
+        <h2 class="mesa-titulo" id="mesa-titulo"><span class="mesa-palabra">${t('Tu mesa', 'Su mesa')}</span><span class="mesa-pendiente por-confirmar">por confirmar</span></h2>
+        <p class="mesa-nota">${t(
+          'Diego y Erika están organizando las mesas. Vuelve a abrir tu invitación más cerca del día para ver la tuya.',
+          'Diego y Erika están organizando las mesas. Vuelvan a abrir su invitación más cerca del día para ver la suya.',
+        )}</p>`;
+    } else {
+      const plano = Salon.dibujar(salon, {
+        modo: 'invitado',
+        destacada: mesa.id,
+        titulo: `Plano del salón con la mesa ${mesa.numero} encerrada en un círculo`,
+      });
+      $('[data-mesa]', tarjeta).innerHTML = `${nombre}
+        <h2 class="mesa-titulo" id="mesa-titulo"><span class="mesa-palabra">Mesa</span><span class="mesa-cifra cifra">${mesa.numero}</span></h2>
+        ${mesa.nombre ? `<p class="mesa-apodo">${conCifras(mesa.nombre)}</p>` : ''}
+        <figure class="mesa-plano">
+          ${plano}
+          <figcaption>${t('Tu mesa', 'Su mesa')} es la que está encerrada en el plano del salón.</figcaption>
+        </figure>`;
+    }
+    const aparece = tarjeta.hidden;
+    tarjeta.hidden = false;
+    repartirMesa(tarjeta, aparece);
+  }
+
+  // La tarjeta de mesa se reparte sobre la mesa verde al llegar a ella, y el
+  // círculo se traza a mano; al confirmar, llega enseguida.
+  let mirarMesa = null;
+  function repartirMesa(tarjeta, aparece) {
+    if (mirarMesa) mirarMesa.disconnect();
+    tarjeta.classList.remove('vista');
+    if (reducido || !('IntersectionObserver' in window)) {
+      tarjeta.classList.add('vista');
+      return;
+    }
+    if (aparece) tarjeta.classList.add('por-repartir');
+    mirarMesa = new IntersectionObserver((entradas) => {
+      if (!entradas.some((e) => e.isIntersecting)) return;
+      mirarMesa.disconnect();
+      const pausa = estado.mesaRecien ? 700 : 0;
+      estado.mesaRecien = false;
+      setTimeout(() => {
+        tarjeta.classList.remove('por-repartir');
+        tarjeta.classList.add('vista');
+      }, pausa);
+    }, { threshold: 0.25 });
+    mirarMesa.observe(tarjeta);
+  }
+
+  // ---------- Scroll: la tarjeta se asienta y el día se traza ----------
 
   const escenas = [];
   let pedido = false;
 
   const limitar = (x) => Math.min(1, Math.max(0, x));
-  const salir = (x) => 1 - Math.pow(1 - x, 3);
 
   // 0 cuando la sección llega arriba, 1 cuando su recorrido fijo termina.
   // Sin recorrido (movimiento reducido) la escena se queda en su inicio.
@@ -597,94 +852,6 @@
       if (r.bottom < 0) return;
       escenario.style.setProperty('--p', recorrido(r).toFixed(4));
     });
-  }
-
-  function escenaAltar() {
-    const seccion = $('#altar');
-    const video = $('.altar-video', seccion);
-    const capitulos = $$('[data-capitulo]', seccion);
-    // Tramo del recorrido en que se ve cada tarjetita; la última se queda.
-    const tramos = [[-1, 0.31], [0.33, 0.62], [0.64, 2]];
-    const giros = [-1.4, 1.2, -0.8];
-    const fuente = elegirVideo(video);
-    const scrub = { objetivo: 0, actual: 0, cuadros: 0, corriendo: false };
-
-    function avanzar() {
-      const d = scrub.objetivo - scrub.actual;
-      scrub.actual = Math.abs(d) < 0.004 ? scrub.objetivo : scrub.actual + d * 0.2;
-      if (!video.seeking && Math.abs(video.currentTime - scrub.actual) > 0.001) video.currentTime = scrub.actual;
-      scrub.cuadros += 1;
-      const listo = scrub.actual === scrub.objetivo && !video.seeking;
-      if (listo || scrub.cuadros > 240) {
-        scrub.corriendo = false;
-        return;
-      }
-      requestAnimationFrame(avanzar);
-    }
-
-    if (fuente && !reducido) {
-      video.addEventListener('loadedmetadata', pedirCuadro);
-      cargarVideo(video, fuente.archivo);
-    }
-
-    escenas.push(() => {
-      const r = seccion.getBoundingClientRect();
-      if (r.bottom < 0 || r.top > innerHeight) return;
-      const p = recorrido(r);
-
-      if (!reducido && video.duration && video.readyState >= 1) {
-        scrub.objetivo = p * Math.max(0, video.duration - 0.06);
-        if (!scrub.corriendo) {
-          scrub.corriendo = true;
-          scrub.cuadros = 0;
-          requestAnimationFrame(avanzar);
-        }
-      }
-
-      if (reducido) return;
-      capitulos.forEach((cap, i) => {
-        const [a, b] = tramos[i];
-        const entra = salir(limitar((p - a) / 0.07));
-        const sale = salir(limitar((p - (b - 0.07)) / 0.07));
-        const visible = entra * (1 - sale);
-        cap.style.opacity = visible.toFixed(3);
-        cap.style.transform = `translate3d(0, ${((1 - entra) * 64 - sale * 44).toFixed(1)}px, 0) rotate(${((1 - entra) * 5 + giros[i]).toFixed(2)}deg)`;
-        cap.classList.toggle('apagado', visible < 0.02);
-      });
-    });
-  }
-
-  function elegirVideo(video) {
-    const cfg = C.video || {};
-    const vertical = innerWidth / innerHeight < 0.9;
-    const fuente = (vertical ? cfg.vertical : cfg.horizontal) || cfg.horizontal || cfg.vertical;
-    if (!fuente || !fuente.archivo) {
-      $('#altar').classList.add('sin-video');
-      return null;
-    }
-    // Con movimiento reducido el altar queda quieto, en su último cuadro.
-    video.poster = (reducido ? fuente.final : fuente.inicio) || '';
-    return fuente;
-  }
-
-  // El video entero en memoria: así se puede ir a cualquier cuadro aunque el
-  // servidor no entregue el archivo por partes (iOS y Chrome lo necesitan).
-  async function cargarVideo(video, url) {
-    try {
-      const r = await fetch(url);
-      if (!r.ok) throw new Error(String(r.status));
-      video.src = URL.createObjectURL(await r.blob());
-    } catch {
-      video.src = url;
-    }
-    // iOS solo pinta cuadros de un video que ya arrancó una vez.
-    const intento = video.play();
-    if (intento && intento.then) {
-      intento.then(() => {
-        video.pause();
-        pedirCuadro();
-      }).catch(() => {});
-    }
   }
 
   function escenaDia() {
@@ -791,9 +958,9 @@
   }
 
   function iniciar() {
-    // Sin esta clase todo queda quieto y visible: la tarjeta, el altar y el día.
+    // Sin esta clase todo queda quieto y visible: la tarjeta y el día.
     if (!reducido) doc.classList.add('scroll-vivo');
-    $('.sobre-sello').innerHTML = P.sello(Estilos.PALETAS[Estilos.normalizar({ paleta: doc.dataset.paleta }).paleta].sello);
+    $('.sobre-sello').innerHTML = P.sello(Estilos.paleta({ paleta: doc.dataset.paleta, color: doc.dataset.color }).sello);
     // Si los datos de la boda tardan, la página se muestra con el estilo que tenga.
     setTimeout(() => doc.classList.remove('estilo-pendiente'), 3000);
     prepararVisor();
@@ -801,7 +968,6 @@
     ramoSvg = Ramo.crear($('#ramo'), { semilla: 7, sombra: false });
 
     escenaPortada();
-    escenaAltar();
     escenaDia();
     repartirRespuesta();
     addEventListener('scroll', pedirCuadro, { passive: true });
@@ -824,6 +990,7 @@
     });
 
     cargarEvento();
+    cargarSalon();
     cargar();
     pedirCuadro();
   }

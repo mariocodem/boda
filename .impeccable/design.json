@@ -303,6 +303,16 @@
           "oklch(85% 0.000 89.9)",
           "oklch(95% 0.000 89.9)"
         ]
+      },
+      "destello": {
+        "role": "secondary",
+        "displayName": "Oro de destello",
+        "canonical": "#f3d27e"
+      },
+      "destello-luz": {
+        "role": "secondary",
+        "displayName": "Luz del destello",
+        "canonical": "#fff7df"
       }
     },
     "typographyMeta": {
@@ -513,7 +523,7 @@
   ],
   "narrative": {
     "northStar": "La suite del sobre",
-    "overview": "**Creative North Star: \"La suite del sobre\"**\n\nLa invitación es un sobre que va y vuelve. Todo el sistema es papelería formal: una cartulina verde hoja que es el suelo de cada pantalla, tarjetas de algodón blanco impresas con tinta verde negra, títulos en romanas grabadas, el nombre del invitado escrito a mano, un sello postal del ramo, un número de sobre y un matasellos que se queda cuando el invitado responde. Nada flota sobre un fondo neutro de sitio web: cada superficie es una pieza de papel con su grosor, su filete y su sombra de mesa.\n\nLa densidad es baja y ceremonial en la invitación (una pieza a la vez, columnas estrechas, mucho verde alrededor) y tranquila y exacta en el panel, que hereda el mundo en voz baja: suelo salvia claro, barra de cartulina verde, cifras en casilleros fijos y estados estampados como matasellos. El movimiento es de papel: bisagras, volteos y deslizamientos con fricción, nunca rebotes. El ramo de rosas y lirios blancos florece una vez y luego solo se mece.\n\nSe rechaza el arreglo por defecto del género: sobre marfil con lacre, nombres dorados en script, acuarela y cuenta regresiva como protagonista.",
+    "overview": "**Creative North Star: \"La suite del sobre\"**\n\nLa invitación es un sobre que va y vuelve. Todo el sistema es papelería formal: una cartulina verde hoja salpicada de destellos dorados que es el suelo de cada pantalla, tarjetas de algodón blanco impresas con tinta verde negra, títulos en romanas grabadas, el nombre del invitado escrito a mano, un sello postal del ramo, un número de sobre y un matasellos que se queda cuando el invitado responde. Nada flota sobre un fondo neutro de sitio web: cada superficie es una pieza de papel con su grosor, su filete y su sombra de mesa.\n\nLa densidad es baja y ceremonial en la invitación (una pieza a la vez, columnas estrechas, mucho verde alrededor) y tranquila y exacta en el panel, que hereda el mundo en voz baja: suelo salvia claro, barra de cartulina verde, cifras en casilleros fijos y estados estampados como matasellos. El movimiento es de papel: bisagras, volteos y deslizamientos con fricción, nunca rebotes. El ramo de rosas y lirios blancos florece una vez y luego solo se mece.\n\nSe rechaza el arreglo por defecto del género: sobre marfil con lacre, nombres dorados en script, acuarela y cuenta regresiva como protagonista.",
     "keyCharacteristics": [
       "Suelo de cartulina verde (`verde`) con fibra y grano en toda la invitación; nunca un fondo claro de página.",
       "Tarjetas de algodón con filete interior a 11px y una ligera rotación, como piezas sobre una mesa.",
@@ -530,7 +540,7 @@
       },
       {
         "name": "La regla del polen",
-        "body": "El azafrán significa «responder» y «confirmado». Va en el botón de respuesta, en el foco, en el matasellos de confirmación y en sus reflejos del panel (sello, contador y tramo de confirmados). No se usa como decoración ni para otro estado.",
+        "body": "El azafrán significa «responder» y «confirmado». Va en el botón de respuesta, en el foco, en el matasellos de confirmación y en sus reflejos del panel (sello, contador y tramo de confirmados). No se usa como decoración ni para otro estado. Los destellos del fondo van en su propio oro (`destello`) y no cuentan como polen.",
         "section": "colors"
       },
       {
@@ -555,7 +565,7 @@
       },
       {
         "name": "La regla del papel sobre la mesa",
-        "body": "Una sombra solo existe si hay una pieza de papel que la proyecta. Nada de resplandores ni sombras de color.",
+        "body": "Una sombra solo existe si hay una pieza de papel que la proyecta. Nada de resplandores ni sombras de color. Los halos de los destellos son luz del fondo, no sombra de ninguna pieza: nunca rodean una tarjeta, una foto ni un botón.",
         "section": "elevation"
       },
       {

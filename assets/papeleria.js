@@ -34,6 +34,15 @@
     antes: '<path d="M14.5 6.5L9 12l5.5 5.5"/>',
     despues: '<path d="M9.5 6.5L15 12l-5.5 5.5"/>',
     guardar: '<path d="M5.5 4.5h10l3 3v11a1.5 1.5 0 0 1-1.5 1.5H7a1.5 1.5 0 0 1-1.5-1.5z"/><path d="M8.5 4.5v4h6v-4M8.5 20v-5.5h7V20"/>',
+    mesa: '<circle cx="12" cy="12" r="4.8"/><circle cx="12" cy="3.9" r="1.5"/><circle cx="12" cy="20.1" r="1.5"/><circle cx="3.9" cy="12" r="1.5"/><circle cx="20.1" cy="12" r="1.5"/>',
+    mesa_larga: '<rect x="4" y="9.3" width="16" height="5.4" rx="1"/><circle cx="8" cy="5.2" r="1.5"/><circle cx="12" cy="5.2" r="1.5"/><circle cx="16" cy="5.2" r="1.5"/><circle cx="8" cy="18.8" r="1.5"/><circle cx="12" cy="18.8" r="1.5"/><circle cx="16" cy="18.8" r="1.5"/>',
+    espacio: '<path d="M4.5 8V5.8c0-.7.6-1.3 1.3-1.3H8M16 4.5h2.2c.7 0 1.3.6 1.3 1.3V8M19.5 16v2.2c0 .7-.6 1.3-1.3 1.3H16M8 19.5H5.8c-.7 0-1.3-.6-1.3-1.3V16"/><path d="M11 4.5h2M11 19.5h2M4.5 11v2M19.5 11v2"/>',
+    regalo: '<rect x="4" y="9" width="16" height="4" rx="1"/><path d="M5.5 13v5.5a1.5 1.5 0 0 0 1.5 1.5h10a1.5 1.5 0 0 0 1.5-1.5V13M12 9v11"/><path d="M12 9c-1.2-2.6-4.6-4.4-5.6-2.4C5.6 8.2 9 9 12 9zM12 9c1.2-2.6 4.6-4.4 5.6-2.4.8 1.6-2.6 2.4-5.6 2.4z"/>',
+    telefono: '<path d="M8.2 4.5h-2a1.5 1.5 0 0 0-1.5 1.6c.6 7.2 6 12.6 13.2 13.2a1.5 1.5 0 0 0 1.6-1.5v-2.1a1 1 0 0 0-.7-1l-2.7-.9a1 1 0 0 0-1.1.3l-1.2 1.4a11 11 0 0 1-4.8-4.8l1.4-1.2a1 1 0 0 0 .3-1.1l-.9-2.7a1 1 0 0 0-1-.7z"/>',
+    cama: '<path d="M3.5 18.5v-12M3.5 15h17v3.5"/><path d="M20.5 15v-2.5a2.5 2.5 0 0 0-2.5-2.5h-7.5v5"/><circle cx="7" cy="11.8" r="1.8"/>',
+    tarea: '<rect x="4.5" y="4.5" width="15" height="15" rx="2"/><path d="M8.5 12.2l2.4 2.4 4.6-5"/>',
+    dinero: '<rect x="3.5" y="7" width="17" height="10" rx="1.5"/><circle cx="12" cy="12" r="2.4"/><path d="M6.5 10v4M17.5 10v4"/>',
+    tienda: '<path d="M4.5 9.5h15l-1.2-4h-12.6z"/><path d="M5.5 9.5v9h13v-9"/><path d="M10 18.5v-5h4v5"/>',
   };
 
   function icono(nombre, clase) {
@@ -179,5 +188,23 @@
     return { google, waze, apple, embebido: d.coords ? previa : '', previa, texto: d.texto };
   }
 
-  window.Papeleria = { icono, sello, matasellos, numeroSobre, escapar, fechaSello, fechaEvento, fechaLarga, diaMes, horaBonita, mapas };
+  // ---------- Fotos de la pareja: dónde va cada una ----------
+
+  // Se reparten por la invitación en el orden del panel: una junto a los
+  // detalles, otra junto al itinerario, otra junto a la historia (si la hay) y
+  // otra junto a la respuesta; las demás van juntas antes de la vestimenta.
+  const LUGARES_FOTO = {
+    detalles: 'Junto a «Los detalles»',
+    itinerario: 'Junto al itinerario',
+    historia: 'Junto a «Nuestra historia»',
+    responder: 'Junto a la respuesta',
+    momentos: 'Con las otras fotos, antes de la vestimenta',
+  };
+
+  function lugaresFotos(cuantas, conHistoria) {
+    const pliegos = ['detalles', 'itinerario'].concat(conHistoria ? ['historia'] : [], ['responder']);
+    return Array.from({ length: cuantas }, (_, i) => pliegos[i] || 'momentos');
+  }
+
+  window.Papeleria = { icono, sello, matasellos, numeroSobre, escapar, fechaSello, fechaEvento, fechaLarga, diaMes, horaBonita, mapas, LUGARES_FOTO, lugaresFotos };
 })();

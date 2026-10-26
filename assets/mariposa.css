@@ -1,0 +1,140 @@
+/*
+ * La mariposa de papel dorado (assets/mariposa.js). Una capa fija sobre las
+ * piezas: el script la mueve con transform y le da el ángulo de las alas
+ * (--ala, en grados), el brillo del oro (--brillo) y su altura sobre la mesa
+ * (--altura: 0 posada, 1 en el aire), que aleja y difumina la sombra.
+ */
+.mariposa {
+  --envergadura: clamp(50px, 3.2vw + 36px, 78px);
+  --alto-mariposa: calc(var(--envergadura) * 0.667);
+  --mariposa-oro: var(--destello, #f3d27e);
+  --mariposa-luz: var(--destello-luz, #fff7df);
+  --mariposa-medio: color-mix(in srgb, var(--mariposa-oro) 78%, #6b4a0a);
+  --mariposa-hondo: color-mix(in srgb, var(--mariposa-oro) 46%, #4a3206);
+  --mariposa-linea: color-mix(in srgb, var(--mariposa-oro) 32%, #2e1f03);
+  --ala: 20;
+  --brillo: 0;
+  --altura: 1;
+  position: fixed;
+  left: calc(var(--envergadura) / -2);
+  top: calc(var(--alto-mariposa) / -2);
+  z-index: 30;
+  width: var(--envergadura);
+  height: var(--alto-mariposa);
+  pointer-events: none;
+  will-change: transform;
+  /* La sombra se aleja y se difumina cuando vuela: está más lejos de la mesa */
+  filter: drop-shadow(
+    calc(1px + var(--altura) * 9px)
+    calc(2px + var(--altura) * 16px)
+    calc(1.5px + var(--altura) * 5px)
+    color-mix(in srgb, var(--sombra, #06140d) calc(42% - var(--altura) * 18%), transparent)
+  );
+}
+
+.mariposa[hidden] {
+  display: none;
+}
+
+.mariposa-tintas {
+  position: absolute;
+}
+
+.mariposa-alas {
+  position: absolute;
+  inset: 0;
+  perspective: calc(var(--envergadura) * 3.4);
+}
+
+.ala,
+.mariposa-cuerpo {
+  position: absolute;
+  top: 0;
+  height: 100%;
+  overflow: visible;
+}
+
+/* Cada ala es media mariposa, con la bisagra en el cuerpo */
+.ala {
+  width: 50%;
+}
+
+.ala-der {
+  left: 50%;
+  transform-origin: 0 50%;
+  transform: rotateY(calc(var(--ala) * -1deg));
+}
+
+.ala-izq {
+  right: 50%;
+  transform-origin: 100% 50%;
+  transform: rotateY(calc(var(--ala) * 1deg));
+}
+
+.ala-forma {
+  fill: url(#mariposa-oro);
+  stroke: var(--mariposa-linea);
+  stroke-width: 0.9;
+  stroke-linejoin: round;
+}
+
+/* La orilla de cada ala, en oro más hondo, con sus puntos de troquel */
+.ala-orilla {
+  fill: none;
+  stroke: var(--mariposa-hondo);
+  stroke-width: 3.4;
+  stroke-linecap: round;
+  opacity: 0.5;
+}
+
+.ala-brillo {
+  fill: url(#mariposa-brillo);
+  opacity: var(--brillo);
+  mix-blend-mode: soft-light;
+}
+
+/* Un filete grabado en el oro, como en un troquel */
+.ala-borde {
+  fill: none;
+  stroke: var(--mariposa-luz);
+  stroke-width: 0.7;
+  stroke-linecap: round;
+  opacity: 0.7;
+}
+
+.ala-nervios path {
+  fill: none;
+  stroke: var(--mariposa-linea);
+  stroke-width: 0.55;
+  stroke-linecap: round;
+  opacity: 0.5;
+}
+
+.ala-puntos circle {
+  fill: var(--mariposa-luz);
+  stroke: var(--mariposa-linea);
+  stroke-width: 0.4;
+}
+
+.mariposa-cuerpo {
+  left: 50%;
+  width: 20%;
+  translate: -50% 0;
+}
+
+.mariposa-cuerpo .cuerpo {
+  fill: var(--mariposa-hondo);
+  stroke: var(--mariposa-linea);
+  stroke-width: 0.5;
+}
+
+.mariposa-cuerpo .antena {
+  fill: none;
+  stroke: var(--mariposa-linea);
+  stroke-width: 0.8;
+  stroke-linecap: round;
+}
+
+.mariposa-cuerpo .antena-punta {
+  fill: var(--mariposa-hondo);
+}

@@ -1,6 +1,7 @@
 /*
- * Panel de administración: el libro de sobres y los datos de la boda (con su
- * estilo y sus fotos).
+ * Panel de administración: el libro de sobres, el plano de mesas y los datos
+ * de la boda (con su estilo y sus fotos). Las tareas, el presupuesto y los
+ * proveedores viven en planeacion.js.
  */
 (function () {
   const C = window.BODA;
@@ -186,8 +187,11 @@
 
   async function recargar({ silencioso } = {}) {
     try {
-      estado.lista = await D.listar();
+      const [lista] = await Promise.all([D.listar(), cargarPlano()]);
+      estado.lista = lista;
       pintar();
+      pintarMesas();
+      window.Planeacion.alCambiarInvitados();
     } catch (e) {
       if (!silencioso) aviso(e.message, { error: true });
       if (/sesión|permiso/i.test(e.message)) mostrarEntrada();
@@ -332,8 +336,11 @@
   }
 
   function fila(i) {
+    const mesa = mesaDe(i);
     const meta = [
       i.telefono ? `<span>${esc(telefonoBonito(i.telefono))}</span>` : '',
+      mesa ? `<span>Mesa ${mesa.numero}</span>` : '',
+      i.alergias ? `<span class="meta-pedido" title="${esc(i.alergias)}">Comida: ${esc(i.alergias)}</span>` : '',
       i.notas ? `<span>${esc(i.notas)}</span>` : '',
       `<span>${esc(i.codigo)}</span>`,
     ].join('');
@@ -387,11 +394,33 @@
     }).join('');
   }
 
+  // Lo que contestaron a las preguntas opcionales de la tarjeta, para pasárselo
+  // al banquete y a la música. Solo cuenta quien confirmó.
+  function pintarPedidos() {
+    const caja = $('[data-pedidos]');
+    const van = estado.lista.filter((i) => i.estado === 'confirmado');
+    const comida = van.filter((i) => i.alergias).sort((a, b) => a.nombre.localeCompare(b.nombre, 'es'));
+    const canciones = van.filter((i) => i.cancion).sort((a, b) => new Date(b.respondidoEn || 0) - new Date(a.respondidoEn || 0));
+    caja.hidden = !comida.length && !canciones.length;
+    const grupo = (titulo, lista, fila) => (lista.length ? `<h3 class="pedidos-titulo">${titulo} <b>${lista.length}</b></h3>
+        <ul class="correo-lista">${lista.map(fila).join('')}</ul>` : '');
+    caja.innerHTML = `<h2 class="correo-titulo">Lo que pidieron</h2>
+      ${grupo('Para el banquete', comida, (i) => `<li class="pedido">
+          <p class="correo-quien">${esc(i.nombre)} <span class="pedido-cuantos">· ${i.asistentes === 1 ? '1 persona' : `${i.asistentes} personas`}</span></p>
+          <p class="correo-mensaje">${esc(i.alergias)}</p>
+        </li>`)}
+      ${grupo('Para la música', canciones, (i) => `<li class="pedido">
+          <p class="correo-mensaje">${esc(i.cancion)}</p>
+          <p class="correo-que">Pedida por ${esc(i.nombre)}</p>
+        </li>`)}`;
+  }
+
   function pintar() {
     pintarCifras();
     pintarFiltros();
     pintarTabla();
     pintarCorreo();
+    pintarPedidos();
   }
 
   // ---------- Diálogo de invitado ----------
@@ -407,6 +436,7 @@
     $('#dialogo-invitado-titulo').innerHTML = inv ? `Sobre N.º <span class="cifra">${P.numeroSobre(inv.numero)}</span>` : 'Agregar invitado';
     $('[data-guardar]').textContent = inv ? 'Guardar cambios' : 'Agregar';
     $('[data-solo-edicion]').hidden = !inv;
+    opcionesMesa(inv ? inv.mesa : null);
     const f = formInv.elements;
     if (inv) {
       f.nombre.value = inv.nombre;
@@ -418,6 +448,8 @@
       f.asistentes.value = inv.estado === 'confirmado' ? inv.asistentes : inv.cupos;
       $('[data-mensaje-invitado]').hidden = !inv.mensaje;
       $('[data-mensaje-texto]').textContent = inv.mensaje || '';
+      f.alergias.value = inv.alergias || '';
+      f.cancion.value = inv.cancion || '';
       $('[data-enlace-texto]').textContent = D.enlace(inv.codigo);
     }
     sincronizarAsistentes();
@@ -430,6 +462,7 @@
     const f = formInv.elements;
     const conf = f.estado && f.estado.value === 'confirmado';
     $('[data-asistentes-campo]').hidden = !conf;
+    $$('[data-pedido-campo]', formInv).forEach((el) => { el.hidden = !conf; });
     f.asistentes.max = f.cupos.value || 20;
   }
 
@@ -486,6 +519,8 @@
       lado: f.lado.value || 'ambos',
       notas: f.notas.value.trim(),
     };
+    // Solo con mesas en el plano: así el esquema viejo de Supabase sigue sirviendo.
+    if (!$('[data-campo-mesa]', formInv).hidden) datos.mesa = f.mesa.value || null;
     if (!datos.nombre) {
       f.nombre.setAttribute('aria-invalid', 'true');
       error.textContent = 'Escribe el nombre que irá en el sobre.';
@@ -500,6 +535,11 @@
     }
     if (estado.editando) {
       datos.estado = f.estado.value;
+      // Solo se mandan si cambiaron: así el esquema viejo de Supabase sigue sirviendo.
+      ['alergias', 'cancion'].forEach((c) => {
+        const v = f[c].value.trim();
+        if (datos.estado === 'confirmado' && v !== (estado.editando[c] || '')) datos[c] = v;
+      });
       if (datos.estado === 'confirmado') {
         datos.asistentes = Number(f.asistentes.value);
         if (!Number.isInteger(datos.asistentes) || datos.asistentes < 1 || datos.asistentes > datos.cupos) {
@@ -605,13 +645,17 @@
   // ---------- Exportar ----------
 
   function exportar() {
-    const campos = ['N.º', 'Nombre', 'Cupos', 'De', 'WhatsApp', 'Respuesta', 'Asistentes', 'Mensaje', 'Notas', 'Abierta', 'Respondió', 'Enlace'];
+    const campos = ['N.º', 'Nombre', 'Cupos', 'De', 'WhatsApp', 'Respuesta', 'Asistentes', 'Mesa', 'Mensaje', 'Alergias o restricciones', 'Canción', 'Notas', 'Abierta', 'Respondió', 'Enlace'];
     const txt = { pendiente: 'Pendiente', confirmado: 'Confirmado', declinado: 'No asiste' };
     const celda = (v) => `"${String(v == null ? '' : v).replace(/"/g, '""')}"`;
     const fecha = (iso) => (iso ? new Date(iso).toLocaleString('es-CO') : '');
+    const mesa = (i) => {
+      const m = mesaDe(i);
+      return m ? `${m.numero}${m.nombre ? ` (${m.nombre})` : ''}` : '';
+    };
     const filas = estado.lista.map((i) => [
       P.numeroSobre(i.numero), i.nombre, i.cupos, LADOS[i.lado] || 'Ambos', i.telefono, txt[i.estado],
-      i.estado === 'confirmado' ? i.asistentes : 0, i.mensaje, i.notas, fecha(i.abiertoEn), fecha(i.respondidoEn), D.enlace(i.codigo),
+      i.estado === 'confirmado' ? i.asistentes : 0, mesa(i), i.mensaje, i.alergias, i.cancion, i.notas, fecha(i.abiertoEn), fecha(i.respondidoEn), D.enlace(i.codigo),
     ].map(celda).join(';'));
     const csv = '﻿' + [campos.map(celda).join(';')].concat(filas).join('\r\n');
     const a = document.createElement('a');
@@ -629,8 +673,8 @@
     await D.crearVarios([
       { nombre: 'Familia Rodríguez Gómez', cupos: 4, telefono: '3001234567', lado: 'erika', notas: 'Ejemplo' },
       { nombre: 'Lucía Méndez', cupos: 1, lado: 'diego', notas: 'Ejemplo', estado: 'confirmado', asistentes: 1, mensaje: '¡Allá estaré! Los quiero mucho.', abiertoEn: dias(5), respondidoEn: dias(4) },
-      { nombre: 'Tíos Triana Pardo', cupos: 2, telefono: '3109876543', lado: 'diego', notas: 'Ejemplo', estado: 'confirmado', asistentes: 2, mensaje: 'Felicitaciones, mijo. Ahí estaremos.', abiertoEn: dias(3), respondidoEn: dias(2) },
-      { nombre: 'Familia Ramos Ortiz', cupos: 5, lado: 'erika', notas: 'Ejemplo', estado: 'confirmado', asistentes: 3, abiertoEn: dias(2), respondidoEn: dias(1) },
+      { nombre: 'Tíos Triana Pardo', cupos: 2, telefono: '3109876543', lado: 'diego', notas: 'Ejemplo', estado: 'confirmado', asistentes: 2, mensaje: 'Felicitaciones, mijo. Ahí estaremos.', cancion: 'La bilirrubina, Juan Luis Guerra', abiertoEn: dias(3), respondidoEn: dias(2) },
+      { nombre: 'Familia Ramos Ortiz', cupos: 5, lado: 'erika', notas: 'Ejemplo', estado: 'confirmado', asistentes: 3, alergias: 'Uno es vegetariano', abiertoEn: dias(2), respondidoEn: dias(1) },
       { nombre: 'Andrés y Paula', cupos: 2, lado: 'ambos', notas: 'Ejemplo', estado: 'declinado', mensaje: 'Estaremos de viaje, ¡qué tristeza! Los celebramos a la vuelta.', abiertoEn: dias(6), respondidoEn: dias(6) },
       { nombre: 'Camila Herrera', cupos: 2, telefono: '3204567890', lado: 'erika', notas: 'Ejemplo', abiertoEn: dias(1) },
     ]);
@@ -758,6 +802,101 @@
     $('[data-sembrar-itinerario]', formBoda).hidden = filas.length > 0;
   }
 
+  // ---------- La boda: listas de filas (hoteles, listas de regalos, preguntas) ----------
+
+  const FILAS = {
+    hoteles: {
+      max: 6,
+      cual: 'este hotel',
+      campos: [
+        { c: 'nombre', etiqueta: 'Hotel', max: 80, ejemplo: 'Nombre del hotel', falta: 'A un hotel le falta el nombre.' },
+        { c: 'direccion', etiqueta: 'Dirección', max: 160, ejemplo: 'Calle 00 # 00-00, barrio' },
+        { c: 'enlace', etiqueta: 'Página o reservas', max: 600, ejemplo: 'https://…', url: true },
+        { c: 'nota', etiqueta: 'Nota', max: 200, ejemplo: 'Tarifa especial, a 10 minutos…' },
+      ],
+    },
+    listas: {
+      max: 4,
+      cual: 'esta lista',
+      campos: [
+        { c: 'nombre', etiqueta: 'Tienda', max: 60, ejemplo: 'Falabella, Éxito, Amazon…', falta: 'A una lista de regalos le falta la tienda.' },
+        { c: 'enlace', etiqueta: 'Enlace de la lista', max: 600, ejemplo: 'https://…', url: true, falta: 'A una lista de regalos le falta el enlace.' },
+      ],
+    },
+    preguntas: {
+      max: 12,
+      cual: 'esta pregunta',
+      campos: [
+        { c: 'pregunta', etiqueta: 'Pregunta', max: 160, ejemplo: '¿Pueden ir niños?', falta: 'A una respuesta le falta su pregunta.' },
+        { c: 'respuesta', etiqueta: 'Respuesta', max: 800, area: true, falta: 'A una pregunta le falta la respuesta.' },
+      ],
+    },
+  };
+
+  // Solo las preguntas: las respuestas las escriben los novios.
+  const PREGUNTAS_COMUNES = ['¿Pueden ir niños?', '¿Hay parqueadero?', '¿Hasta qué hora es la fiesta?', '¿Puedo llevar a alguien más?', '¿Habrá transporte de regreso?'];
+
+  function filaEditable(clave, x = {}) {
+    const cfg = FILAS[clave];
+    const campos = cfg.campos.map((k) => {
+      const ejemplo = k.ejemplo ? ` placeholder="${esc(k.ejemplo)}"` : '';
+      const control = k.area
+        ? `<textarea data-f="${k.c}" rows="2" maxlength="${k.max}"${ejemplo}>${esc(x[k.c] || '')}</textarea>`
+        : `<input type="${k.url ? 'url' : 'text'}" data-f="${k.c}" maxlength="${k.max}"${ejemplo} value="${esc(x[k.c] || '')}" autocomplete="off"${k.url ? ' inputmode="url"' : ''}>`;
+      return `<label class="campo">
+          <span class="campo-etiqueta">${k.etiqueta}${k.falta ? '' : ' <em>(opcional)</em>'}</span>
+          ${control}
+        </label>`;
+    }).join('');
+    return `<li class="fila-editor" data-campos="${cfg.campos.length}">
+        ${campos}
+        <div class="momento-acciones">
+          <button class="boton-icono" type="button" data-mover-fila="-1" title="Subir" aria-label="Subir ${cfg.cual}">${P.icono('subir_fila')}</button>
+          <button class="boton-icono" type="button" data-mover-fila="1" title="Bajar" aria-label="Bajar ${cfg.cual}">${P.icono('bajar_fila')}</button>
+          <button class="boton-icono peligro" type="button" data-quitar-fila title="Quitar" aria-label="Quitar ${cfg.cual}">${P.icono('eliminar')}</button>
+        </div>
+      </li>`;
+  }
+
+  function pintarFilas(clave, lista) {
+    $(`[data-filas="${clave}"]`, formBoda).innerHTML = lista.map((x) => filaEditable(clave, x)).join('');
+    sincronizarFilas(clave);
+  }
+
+  function sincronizarFilas(clave) {
+    const ol = $(`[data-filas="${clave}"]`, formBoda);
+    const filas = $$('.fila-editor', ol);
+    filas.forEach((li, i) => {
+      $('[data-mover-fila="-1"]', li).disabled = i === 0;
+      $('[data-mover-fila="1"]', li).disabled = i === filas.length - 1;
+    });
+    ol.hidden = !filas.length;
+    $(`[data-agregar-fila="${clave}"]`, formBoda).hidden = filas.length >= FILAS[clave].max;
+    if (clave === 'preguntas') $('[data-sembrar-preguntas]', formBoda).hidden = filas.length > 0;
+  }
+
+  function leerFilas(clave) {
+    return $$(`[data-filas="${clave}"] .fila-editor`, formBoda)
+      .map((li) => Object.fromEntries(FILAS[clave].campos.map((k) => [k.c, $(`[data-f="${k.c}"]`, li).value.trim()])))
+      .filter((x) => Object.values(x).some(Boolean));
+  }
+
+  // La primera fila empezada a la que le falta algo, o con un enlace que no es https.
+  function filaIncompleta() {
+    for (const clave of Object.keys(FILAS)) {
+      for (const li of $$(`[data-filas="${clave}"] .fila-editor`, formBoda)) {
+        const campos = FILAS[clave].campos.map((k) => [k, $(`[data-f="${k.c}"]`, li)]);
+        if (campos.every(([, el]) => !el.value.trim())) continue;
+        for (const [k, el] of campos) {
+          const v = el.value.trim();
+          if (k.falta && !v) return { el, texto: k.falta };
+          if (k.url && v && !/^https:\/\/\S+$/.test(v)) return { el, texto: 'Los enlaces deben empezar por https://' };
+        }
+      }
+    }
+    return null;
+  }
+
   function leerItinerario() {
     return $$('.momento-fila', formBoda)
       .map((li) => ({
@@ -787,11 +926,24 @@
         fotos: boda.fotos.vestimenta.filter((x) => x.url).map((x) => ({ url: x.url, forma: x.forma, nota: (x.nota || '').trim() })),
       },
       regalos: f.regalos.value.trim(),
+      cuentaRegalos: {
+        banco: f['cuenta-banco'].value.trim(),
+        tipo: f['cuenta-tipo'].value.trim(),
+        numero: f['cuenta-numero'].value.trim(),
+        titular: f['cuenta-titular'].value.trim(),
+        documento: f['cuenta-documento'].value.trim(),
+      },
+      listasRegalos: leerFilas('listas'),
+      historia: f.historia.value.trim(),
+      alojamiento: { nota: f['alojamiento-nota'].value.trim(), hoteles: leerFilas('hoteles') },
+      preguntas: leerFilas('preguntas'),
+      respuesta: { alergias: f['pedir-alergias'].checked, cancion: f['pedir-cancion'].checked },
       fotoPortada: boda.fotos.portada && boda.fotos.portada.url
         ? { url: boda.fotos.portada.url, forma: boda.fotos.portada.forma, encuadre: boda.fotos.portada.encuadre }
         : null,
       fotos: boda.fotos.galeria.filter((x) => x.url).map((x) => ({ url: x.url, forma: x.forma })),
       estilo: estiloElegido(),
+      mariposa: f.mariposa.checked,
     };
   }
 
@@ -809,9 +961,22 @@
     f['vestimenta-codigo'].value = ev.vestimenta.codigo || '';
     f['vestimenta-nota'].value = ev.vestimenta.nota || '';
     f.regalos.value = ev.regalos || '';
+    const cuenta = ev.cuentaRegalos || {};
+    ['banco', 'tipo', 'numero', 'titular', 'documento'].forEach((k) => { f[`cuenta-${k}`].value = cuenta[k] || ''; });
+    pintarFilas('listas', ev.listasRegalos);
+    f.historia.value = ev.historia || '';
+    f['alojamiento-nota'].value = ev.alojamiento.nota || '';
+    pintarFilas('hoteles', ev.alojamiento.hoteles);
+    pintarFilas('preguntas', ev.preguntas);
+    f['pedir-alergias'].checked = ev.respuesta.alergias;
+    f['pedir-cancion'].checked = ev.respuesta.cancion;
     const e = Estilos.normalizar(ev.estilo);
+    f.color.value = e.color || Estilos.COLOR_LIBRE;
+    f['color-codigo'].value = f.color.value;
+    f['color-codigo'].removeAttribute('aria-invalid');
     $(`input[name="paleta"][value="${e.paleta}"]`, formBoda).checked = true;
     $(`input[name="letra"][value="${e.letra}"]`, formBoda).checked = true;
+    f.mariposa.checked = ev.mariposa !== false;
     pintarEstilo();
     boda.cargandoFotos = cargarFotos(ev);
     sincronizarMismoLugar();
@@ -1004,7 +1169,8 @@
   const NOMBRES = { uno: C.pareja.uno.nombre, dos: C.pareja.dos.nombre };
 
   function opcionesEstilo() {
-    $('[data-paletas]', formBoda).innerHTML = Object.entries(Estilos.PALETAS).map(([clave, p]) => `<label class="paleta">
+    const paletas = Object.entries(Estilos.PALETAS).concat([[Estilos.LIBRE, { nombre: 'Color libre' }]]);
+    $('[data-paletas]', formBoda).innerHTML = paletas.map(([clave, p]) => `<label class="paleta${clave === Estilos.LIBRE ? ' paleta-libre' : ''}">
         <input type="radio" name="paleta" value="${clave}">
         <span class="paleta-muestra" data-paleta-muestra="${clave}" aria-hidden="true">
           <span class="paleta-sobre"></span>
@@ -1025,16 +1191,41 @@
 
   function estiloElegido() {
     const f = formBoda.elements;
-    return Estilos.normalizar({ paleta: f.paleta.value, letra: f.letra.value });
+    return Estilos.normalizar({ paleta: f.paleta.value, letra: f.letra.value, color: f.color.value });
   }
 
   // Cada opción se pinta con su paleta (o su letra) y lo demás elegido.
   function pintarEstilo() {
     const e = estiloElegido();
-    $$('[data-paleta-muestra]', formBoda).forEach((el) => Estilos.aplicar({ paleta: el.dataset.paletaMuestra, letra: e.letra }, el));
-    $$('[data-letra-muestra]', formBoda).forEach((el) => Estilos.aplicar({ paleta: e.paleta, letra: el.dataset.letraMuestra }, el));
-    $('[data-ver-estilo]', formBoda).href = `index.html?vista=panel&paleta=${e.paleta}&letra=${e.letra}`;
+    $$('[data-paleta-muestra]', formBoda).forEach((el) => Estilos.aplicar({ paleta: el.dataset.paletaMuestra, letra: e.letra, color: e.color }, el));
+    $$('[data-letra-muestra]', formBoda).forEach((el) => Estilos.aplicar(Object.assign({}, e, { letra: el.dataset.letraMuestra }), el));
+    const color = e.paleta === Estilos.LIBRE ? `&color=${encodeURIComponent(e.color)}` : '';
+    const mariposa = formBoda.elements.mariposa.checked ? '' : '&mariposa=no';
+    $('[data-ver-estilo]', formBoda).href = `index.html?vista=panel&paleta=${e.paleta}&letra=${e.letra}${color}${mariposa}`;
     pintarMuestra();
+  }
+
+  // El selector de color y su código van juntos; tocar cualquiera elige «Color libre».
+  let pintandoColor = 0;
+  function elegirColor(t) {
+    const f = formBoda.elements;
+    if (t.name === 'color-codigo') {
+      let v = t.value.trim().toLowerCase();
+      if (!v.startsWith('#')) v = `#${v}`;
+      if (/^#[0-9a-f]{3}$/.test(v)) v = `#${[...v.slice(1)].map((x) => x + x).join('')}`;
+      if (!/^#[0-9a-f]{6}$/.test(v)) {
+        t.setAttribute('aria-invalid', 'true');
+        return;
+      }
+      f.color.value = v;
+    } else {
+      f['color-codigo'].value = t.value;
+      f['color-codigo'].removeAttribute('aria-invalid');
+    }
+    $(`input[name="paleta"][value="${Estilos.LIBRE}"]`, formBoda).checked = true;
+    // Al arrastrar el selector llegan muchos cambios: se pinta una vez por cuadro.
+    cancelAnimationFrame(pintandoColor);
+    pintandoColor = requestAnimationFrame(pintarEstilo);
   }
 
   // Vista previa: el sobre y la tarjeta en pequeño, con la foto principal.
@@ -1046,7 +1237,7 @@
     caja.innerHTML = `
       <div class="muestra-sobre">
         <span class="muestra-numero">N.º <span class="cifra">027</span></span>
-        <span class="muestra-sello sello-postal">${P.sello(Estilos.PALETAS[e.paleta].sello)}</span>
+        <span class="muestra-sello sello-postal">${P.sello(Estilos.paleta(e).sello)}</span>
         <span class="muestra-para">Para</span>
         <span class="muestra-nombre">Familia Rodríguez</span>
         <span class="muestra-rubrica"></span>
@@ -1058,9 +1249,10 @@
         <span class="muestra-nombres">${esc(NOMBRES.dos)}</span>
         <span class="muestra-texto">tienen el gusto de invitarte a celebrar su matrimonio</span>
       </div>`;
-    const forro = await Estilos.forro(e.paleta);
+    const forro = await Estilos.forro(e);
+    const ahora = estiloElegido();
     // Ruta absoluta: dentro de una variable, una ruta relativa se leería desde admin.css.
-    if (estiloElegido().paleta === e.paleta) caja.style.setProperty('--forro-img', forro || `url("${new URL('assets/forro.svg', location.href).href}")`);
+    if (ahora.paleta === e.paleta && ahora.color === e.color) caja.style.setProperty('--forro-img', forro || `url("${new URL('assets/forro.svg', location.href).href}")`);
   }
 
   // ---------- La boda: fotos ----------
@@ -1229,6 +1421,7 @@
             ${f.blob ? '<span class="foto-nueva-sello">Sin guardar</span>' : ''}
           </div>
           ${cfg.nota ? `<label class="foto-item-nota"><span class="solo-lectores">Nombre de la ${n}</span><input type="text" maxlength="40" placeholder="Nombre (opcional)" value="${esc(f.nota || '')}" data-nota-foto autocomplete="off"></label>` : ''}
+          ${clave === 'galeria' ? '<p class="foto-item-lugar" data-lugar-foto></p>' : ''}
           <div class="foto-item-acciones">
             <button class="boton-icono" type="button" data-mover-foto="-1" title="Mover antes" aria-label="Mover la ${n} antes"${i === 0 ? ' disabled' : ''}>${P.icono('antes')}</button>
             <button class="boton-icono" type="button" data-mover-foto="1" title="Mover después" aria-label="Mover la ${n} después"${i === lista.length - 1 ? ' disabled' : ''}>${P.icono('despues')}</button>
@@ -1241,6 +1434,15 @@
         ? zonaSubir({ clave, multiple: true, texto: lista.length ? 'Agregar más fotos' : 'Agregar fotos', detalle: `Toca para elegirlas o arrástralas aquí · ${quedan === 1 ? 'cabe 1 más' : `caben ${quedan}`}` })
         : `<p class="hoja-vista">Ya están las ${cfg.max}. Quita una para poner otra.</p>`}`;
     marcarFaltantes(caja, () => boda.fotos[clave]);
+    if (clave === 'galeria') rotularGaleria();
+  }
+
+  // Debajo de cada foto de la pareja, en qué parte de la invitación queda
+  // (ver P.lugaresFotos): depende del orden y de si hay historia.
+  function rotularGaleria() {
+    const rotulos = $$('[data-lugar-foto]', formBoda);
+    const lugares = P.lugaresFotos(rotulos.length, Boolean(formBoda.elements.historia.value.trim()));
+    rotulos.forEach((p, i) => { p.textContent = P.LUGARES_FOTO[lugares[i]]; });
   }
 
   async function recibirArchivos(clave, archivos) {
@@ -1343,6 +1545,8 @@
       const f = boda.fotos.vestimenta[Number(t.closest('[data-i]').dataset.i)];
       if (f) f.nota = t.value;
     }
+    if (t.name === 'color' || t.name === 'color-codigo') elegirColor(t);
+    if (t.name === 'historia') rotularGaleria();
   });
 
   // Arrastrar fotos a las zonas de subida.
@@ -1376,7 +1580,12 @@
       t.value = '';
       return;
     }
-    if (t.name === 'paleta' || t.name === 'letra') pintarEstilo();
+    if (t.name === 'paleta' || t.name === 'letra' || t.name === 'mariposa') pintarEstilo();
+    // Un código a medio escribir vuelve al color elegido al salir del campo.
+    if (t.name === 'color-codigo') {
+      t.value = formBoda.elements.color.value;
+      t.removeAttribute('aria-invalid');
+    }
     if (t.name === 'recepcion-mismo') sincronizarMismoLugar();
     if (t.dataset.campo === 'mapa') {
       const ed = t.closest('[data-lugar]');
@@ -1406,6 +1615,42 @@
     }
     const t = e.target.closest('button');
     if (!t) return;
+    if (t.matches('[data-agregar-fila]')) {
+      const clave = t.dataset.agregarFila;
+      const ol = $(`[data-filas="${clave}"]`, formBoda);
+      ol.insertAdjacentHTML('beforeend', filaEditable(clave));
+      sincronizarFilas(clave);
+      marcarSucio();
+      $('.fila-editor:last-child [data-f]', ol).focus();
+      return;
+    }
+    if (t.matches('[data-sembrar-preguntas]')) {
+      pintarFilas('preguntas', PREGUNTAS_COMUNES.map((pregunta) => ({ pregunta })));
+      marcarSucio();
+      $('[data-filas="preguntas"] [data-f="respuesta"]', formBoda).focus();
+      return;
+    }
+    if (t.matches('[data-mover-fila], [data-quitar-fila]')) {
+      const li = t.closest('li');
+      const clave = li.closest('[data-filas]').dataset.filas;
+      if (t.dataset.moverFila) {
+        const otro = t.dataset.moverFila === '-1' ? li.previousElementSibling : li.nextElementSibling;
+        if (!otro) return;
+        if (t.dataset.moverFila === '-1') otro.before(li);
+        else otro.after(li);
+        sincronizarFilas(clave);
+        const mismo = $(`[data-mover-fila="${t.dataset.moverFila}"]`, li);
+        (mismo.disabled ? $('[data-f]', li) : mismo).focus();
+      } else {
+        const foco = li.nextElementSibling || li.previousElementSibling;
+        li.remove();
+        sincronizarFilas(clave);
+        if (foco) $('[data-f]', foco).focus();
+        else $(`[data-agregar-fila="${clave}"]`, formBoda).focus();
+      }
+      marcarSucio();
+      return;
+    }
     if (t.matches('[data-quitar-portada]')) {
       soltarVista(boda.fotos.portada);
       boda.fotos.portada = null;
@@ -1494,6 +1739,20 @@
       aviso('A un momento del itinerario le falta el nombre.', { error: true });
       return;
     }
+    const incompleta = filaIncompleta();
+    if (incompleta) {
+      incompleta.el.setAttribute('aria-invalid', 'true');
+      incompleta.el.focus();
+      aviso(incompleta.texto, { error: true });
+      return;
+    }
+    const cuenta = ['banco', 'tipo', 'titular', 'documento'].some((k) => formBoda.elements[`cuenta-${k}`].value.trim());
+    if (cuenta && !formBoda.elements['cuenta-numero'].value.trim()) {
+      formBoda.elements['cuenta-numero'].setAttribute('aria-invalid', 'true');
+      formBoda.elements['cuenta-numero'].focus();
+      aviso('Falta el número de la cuenta para los regalos.', { error: true });
+      return;
+    }
     const enlaceMalo = $$('[data-campo="mapa"]', formBoda).find((i) => i.value.trim() && !/^https:\/\/\S+$/.test(i.value.trim()));
     if (enlaceMalo) {
       enlaceMalo.setAttribute('aria-invalid', 'true');
@@ -1527,15 +1786,811 @@
   });
 
   addEventListener('beforeunload', (e) => {
-    if (!boda.sucio) return;
+    if (mesas.pendiente) guardarPlano();
+    if (!boda.sucio && !mesas.pendiente && !mesas.guardando) return;
     e.preventDefault();
     e.returnValue = '';
   });
 
-  // ---------- Vistas: invitados y la boda ----------
+  // ---------- Mesas: el plano del salón ----------
+
+  const S = window.Salon;
+  const vistaMesas = $('[data-vista-panel="mesas"]');
+  const marcoPlano = $('[data-plano]', vistaMesas);
+  const inspector = $('[data-inspector]', vistaMesas);
+  const listaFamilias = $('[data-familias]', vistaMesas);
+  const mesas = {
+    plan: S.normalizar(null),
+    error: '',
+    seleccion: null,   // id de la pieza elegida en el plano
+    sentando: null,    // id de la familia que espera que le toquen su mesa
+    busqueda: '',
+    pendiente: false,  // cambios del plano que aún no se guardan
+    guardando: false,
+    otraVez: false,
+    temporizador: null,
+    arrastre: null,    // una pieza que se mueve (o un espacio que cambia de tamaño)
+    familia: null,     // una familia que se lleva con el ratón hasta su mesa
+    cuadro: 0,
+    ignorarClic: false,
+  };
+
+  // En el teléfono el plano entra completo y los nombres de los espacios crecen.
+  const planoChico = matchMedia('(max-width: 759px)');
+  planoChico.addEventListener('change', () => { if (!vistaMesas.hidden) pintarPlano(); });
+
+  const pieza = (id) => mesas.plan.piezas.find((p) => p.id === id) || null;
+  const cuantas =(n, uno, varios) => `${n} ${n === 1 ? uno : varios}`;
+  const sinTildes = (t) => String(t || '').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '');
+
+  // La mesa de una familia, si sigue en el plano.
+  function mesaDe(i) {
+    const p = i && i.mesa ? pieza(i.mesa) : null;
+    return S.esMesa(p) ? p : null;
+  }
+
+  // Puestos que ocupa una familia: sus confirmados o, si no ha respondido, sus cupos.
+  function personas(i) {
+    if (i.estado === 'confirmado') return i.asistentes;
+    return i.estado === 'pendiente' ? i.cupos : 0;
+  }
+
+  function ocupacion() {
+    const o = {};
+    estado.lista.forEach((i) => {
+      const m = mesaDe(i);
+      if (!m) return;
+      const x = o[m.id] || (o[m.id] = { confirmados: 0, pendientes: 0, familias: [] });
+      if (i.estado === 'confirmado') x.confirmados += i.asistentes;
+      else if (i.estado === 'pendiente') x.pendientes += i.cupos;
+      x.familias.push(i);
+    });
+    return o;
+  }
+
+  const porSentar = () => estado.lista.filter((i) => i.estado !== 'declinado' && !mesaDe(i));
+
+  async function cargarPlano() {
+    // Lo que se está editando no se pisa con lo guardado.
+    if (mesas.pendiente || mesas.guardando || mesas.arrastre) return;
+    try {
+      mesas.plan = await D.salon();
+      mesas.error = '';
+    } catch (err) {
+      mesas.error = err.message;
+    }
+  }
+
+  function opcionesMesa(actual) {
+    const o = ocupacion();
+    const lista = mesas.plan.piezas.filter(S.esMesa).sort((a, b) => a.numero - b.numero);
+    $('[data-campo-mesa]', formInv).hidden = !lista.length;
+    const select = formInv.elements.mesa;
+    select.innerHTML = '<option value="">Sin mesa</option>' + lista.map((m) => {
+      const x = o[m.id] || { confirmados: 0, pendientes: 0 };
+      return `<option value="${esc(m.id)}">Mesa ${m.numero}${m.nombre ? ` · ${esc(m.nombre)}` : ''} (${x.confirmados + x.pendientes} de ${m.puestos})</option>`;
+    }).join('');
+    select.value = actual && mesaDe({ mesa: actual }) ? actual : '';
+  }
+
+  // ---------- Mesas: pintar ----------
+
+  function pintarMesas({ inspector: completo = true } = {}) {
+    if (vistaMesas.hidden) return;
+    const o = ocupacion();
+    pintarCifrasMesas(o);
+    pintarPublicar();
+    pintarSentando();
+    pintarPlano(o);
+    if (completo) pintarInspector(o);
+    else pintarResumen(o);
+    pintarFamilias();
+  }
+
+  function pintarCifrasMesas() {
+    const lista = mesas.plan.piezas.filter(S.esMesa);
+    const puestos = lista.reduce((s, m) => s + m.puestos, 0);
+    let con = 0;
+    let sin = 0;
+    estado.lista.forEach((i) => {
+      if (mesaDe(i)) con += personas(i);
+      else sin += personas(i);
+    });
+    const libres = puestos - con;
+    const ancho = Math.max(3, String(Math.max(puestos, con, sin)).length);
+    $('[data-contadores-mesas]').innerHTML = [
+      ['Mesas', cifra(lista.length, ancho)],
+      ['Puestos', `${cifra(puestos, ancho)}<small>${libres < 0 ? `faltan ${-libres}` : cuantas(libres, 'libre', 'libres')}</small>`],
+      ['Personas con mesa', cifra(con, ancho)],
+      ['Personas sin mesa', cifra(sin, ancho)],
+    ].map(([e, v]) => `<div class="contador"><dt>${e}</dt><dd>${v}</dd></div>`).join('');
+  }
+
+  function pintarPublicar() {
+    const casilla = $('[data-mostrar-mesas]', vistaMesas);
+    casilla.checked = mesas.plan.mostrar;
+    casilla.closest('.publicar').dataset.publicado = mesas.plan.mostrar;
+    $('[data-nota-publicar]', vistaMesas).textContent = mesas.plan.mostrar
+      ? 'Encendido: cada invitado que confirmó ve su mesa y el plano del salón en su invitación.'
+      : 'Apagado: nadie ve su mesa todavía. Organiza el salón con calma y enciéndelo cuando esté listo.';
+  }
+
+  function pintarSentando() {
+    const caja = $('[data-sentando]', vistaMesas);
+    const i = mesas.sentando && estado.lista.find((x) => x.id === mesas.sentando);
+    if (!i) {
+      mesas.sentando = null;
+      caja.hidden = true;
+      return;
+    }
+    caja.hidden = false;
+    caja.innerHTML = `<span>Sentando a <b>${esc(i.nombre)}</b> (${cuantas(personas(i), 'persona', 'personas')}). Toca su mesa en el plano.</span>
+      <button class="boton boton-barra boton-chico" type="button" data-cancelar-sentar>Cancelar</button>`;
+  }
+
+  function pintarPlano(o = ocupacion()) {
+    const activo = document.activeElement;
+    const foco = activo && marcoPlano.contains(activo) && activo.closest('[data-pieza]') ? activo.closest('[data-pieza]').dataset.pieza : null;
+    let vacio = '';
+    if (!mesas.plan.piezas.length) {
+      vacio = mesas.error
+        ? `<div class="plano-vacio"><h2>No se pudo traer el plano</h2><p>${esc(mesas.error)}</p>
+            <div class="libro-botones"><button class="boton boton-secundario" type="button" data-reintentar-plano data-icono="actualizar">Intentar de nuevo</button></div></div>`
+        : `<div class="plano-vacio"><h2>El salón está vacío</h2>
+            <p>Agrega las mesas y los espacios que ayudan a ubicarse (la pista, la entrada, la música) y arrástralos a su lugar. O empieza con un salón de ejemplo y ajústalo.</p>
+            <div class="libro-botones">
+              <button class="boton boton-principal" type="button" data-nueva="redonda" data-icono="mesa">Agregar la primera mesa</button>
+              <button class="boton boton-secundario" type="button" data-ejemplo-salon>Empezar con un salón de ejemplo</button>
+            </div></div>`;
+    }
+    marcoPlano.innerHTML = S.dibujar(mesas.plan, {
+      modo: 'editor',
+      seleccion: mesas.seleccion,
+      ocupacion: o,
+      eligiendo: Boolean(mesas.sentando),
+      tamZona: planoChico.matches ? 34 : 22,
+      titulo: 'Plano del salón',
+    }) + vacio;
+    if (vacio) iconos(marcoPlano);
+    if (foco) {
+      const g = $(`[data-pieza="${CSS.escape(foco)}"]`, marcoPlano);
+      if (g) g.focus({ preventScroll: true });
+    }
+  }
+
+  function paso(nombre, valor, { min, max, salto = 1, menos, mas }) {
+    return `<span class="paso" data-paso>
+        <button type="button" data-paso-menos aria-label="${menos}">${P.icono('menos')}</button>
+        <input type="number" data-pz="${nombre}" min="${min}" max="${max}" step="${salto}" value="${valor}" inputmode="numeric">
+        <button type="button" data-paso-mas aria-label="${mas}">${P.icono('mas')}</button>
+      </span>`;
+  }
+
+  function sincronizarPasosMesa() {
+    $$('[data-paso]', inspector).forEach((caja) => {
+      const input = $('input', caja);
+      const v = Number(input.value) || 0;
+      $('[data-paso-menos]', caja).disabled = v <= Number(input.min);
+      $('[data-paso-mas]', caja).disabled = v >= Number(input.max);
+    });
+  }
+
+  function metaFamilia(i) {
+    if (i.estado === 'confirmado') return `<i class="punto confirmado"></i>${cuantas(i.asistentes, 'confirmado', 'confirmados')}`;
+    if (i.estado === 'pendiente') return `<i class="punto pendiente"></i>${cuantas(i.cupos, 'cupo', 'cupos')} sin confirmar`;
+    return '<i class="punto declinado"></i>No asiste: no ocupa puesto';
+  }
+
+  function resumenMesa(p, x) {
+    const sentados = x.confirmados + x.pendientes;
+    const libres = p.puestos - sentados;
+    const repetida = mesas.plan.piezas.some((q) => q !== p && S.esMesa(q) && q.numero === p.numero);
+    const ocupa = libres < 0
+      ? `<p class="ocupacion de-mas"><b>${sentados}</b> personas en ${cuantas(p.puestos, 'puesto', 'puestos')}: se pasa por ${-libres}.</p>`
+      : `<p class="ocupacion"><b>${sentados}</b> de ${cuantas(p.puestos, 'puesto ocupado', 'puestos ocupados')}${x.pendientes ? ` · ${x.pendientes} sin confirmar` : ''}</p>`;
+    return ocupa + (repetida ? `<p class="campo-error">Ya hay otra mesa con el número ${p.numero}.</p>` : '');
+  }
+
+  function filaSentado(i) {
+    const n = esc(i.nombre);
+    return `<li class="sentado" data-sentado="${esc(i.id)}">
+        <span class="sentado-texto"><span class="familia-nombre">${n}</span><span class="familia-meta">${metaFamilia(i)}</span></span>
+        ${i.estado !== 'declinado' ? `<button class="boton boton-secundario boton-chico" type="button" data-cambiar-mesa aria-label="Cambiar de mesa a ${n}">Cambiar</button>` : ''}
+        <button class="boton-icono" type="button" data-sacar title="Quitar de la mesa" aria-label="Quitar a ${n} de la mesa">${P.icono('cerrar')}</button>
+      </li>`;
+  }
+
+  function pintarInspector(o = ocupacion()) {
+    const p = pieza(mesas.seleccion);
+    if (!p) {
+      mesas.seleccion = null;
+      inspector.innerHTML = `<p class="inspector-vacio">${mesas.plan.piezas.length
+        ? 'Toca una mesa del plano para cambiarle el número o los puestos y ver quién se sienta en ella.'
+        : 'Aquí vas a editar cada mesa y ver quién se sienta en ella.'}</p>
+        <p class="inspector-vacio">Para sentar a una familia, tócala en «Por sentar» y después toca su mesa. Con el ratón también puedes arrastrarla hasta la mesa.</p>`;
+      return;
+    }
+    const titulo = p.forma === 'zona' ? esc(p.nombre || 'Espacio') : `Mesa <span class="cifra">${p.numero}</span>`;
+    const que = p.forma === 'zona' ? `el espacio ${esc(p.nombre || '')}`.trim() : `la mesa ${p.numero}`;
+    const cabeza = `<header class="inspector-cabeza">
+        <h2 class="inspector-titulo" data-titulo-pieza>${titulo}</h2>
+        <button class="boton-icono peligro" type="button" data-quitar-pieza title="Quitar del plano" aria-label="Quitar ${que} del plano">${P.icono('eliminar')}</button>
+      </header>`;
+    if (p.forma === 'zona') {
+      inspector.innerHTML = `${cabeza}
+        <p class="campo-ayuda">Un espacio que ayuda a ubicarse en el salón. Arrastra su esquina para cambiarle el tamaño.</p>
+        <label class="campo">
+          <span class="campo-etiqueta">Nombre</span>
+          <input type="text" data-pz="nombre" maxlength="40" list="nombres-espacio" placeholder="Pista de baile" value="${esc(p.nombre || '')}" autocomplete="off">
+        </label>
+        <div class="campo-fila campo-pasos">
+          <label class="campo"><span class="campo-etiqueta">Ancho</span>${paso('ancho', p.ancho, { min: 60, max: S.ANCHO, salto: 20, menos: 'Más angosto', mas: 'Más ancho' })}</label>
+          <label class="campo"><span class="campo-etiqueta">Alto</span>${paso('alto', p.alto, { min: 60, max: S.ALTO, salto: 20, menos: 'Más bajo', mas: 'Más alto' })}</label>
+        </div>`;
+      sincronizarPasosMesa();
+      return;
+    }
+    const x = o[p.id] || { confirmados: 0, pendientes: 0, familias: [] };
+    const familias = x.familias.slice().sort((a, b) => a.nombre.localeCompare(b.nombre, 'es'));
+    const radio = (name, value, texto, actual) => `<label><input type="radio" name="${name}" value="${value}"${actual ? ' checked' : ''}><span>${texto}</span></label>`;
+    inspector.innerHTML = `${cabeza}
+      <div data-resumen-mesa>${resumenMesa(p, x)}</div>
+      <div class="campo-fila campo-pasos">
+        <label class="campo"><span class="campo-etiqueta">Número</span>${paso('numero', p.numero, { min: 1, max: 999, menos: 'Número anterior', mas: 'Número siguiente' })}</label>
+        <label class="campo"><span class="campo-etiqueta">Puestos</span>${paso('puestos', p.puestos, { min: 1, max: 30, menos: 'Un puesto menos', mas: 'Un puesto más' })}</label>
+      </div>
+      <label class="campo">
+        <span class="campo-etiqueta">Nombre <em>(opcional)</em></span>
+        <input type="text" data-pz="nombre" maxlength="40" placeholder="Por ejemplo, Los padrinos" value="${esc(p.nombre || '')}" autocomplete="off">
+        <span class="campo-ayuda">El invitado lo ve debajo del número de su mesa.</span>
+      </label>
+      <fieldset class="campo">
+        <legend class="campo-etiqueta">Forma</legend>
+        <div class="segmentos segmentos-form">${radio('pz-forma', 'redonda', 'Redonda', p.forma === 'redonda')}${radio('pz-forma', 'larga', 'Larga', p.forma === 'larga')}</div>
+      </fieldset>
+      ${p.forma === 'larga' ? `<fieldset class="campo">
+        <legend class="campo-etiqueta">Sentido</legend>
+        <div class="segmentos segmentos-form">${radio('pz-giro', '0', 'Horizontal', p.giro !== 90)}${radio('pz-giro', '90', 'Vertical', p.giro === 90)}</div>
+      </fieldset>` : ''}
+      <div class="campo">
+        <span class="campo-etiqueta">Se sientan aquí</span>
+        ${familias.length
+          ? `<ul class="sentados">${familias.map(filaSentado).join('')}</ul>`
+          : '<p class="campo-ayuda">Nadie todavía. Toca una familia de «Por sentar» para traerla a esta mesa.</p>'}
+      </div>`;
+    sincronizarPasosMesa();
+  }
+
+  // Lo que cambia mientras se edita un campo, sin volver a pintar el campo.
+  function pintarResumen(o) {
+    const p = pieza(mesas.seleccion);
+    if (!p) return;
+    const titulo = $('[data-titulo-pieza]', inspector);
+    if (p.forma === 'zona') {
+      if (titulo) titulo.textContent = p.nombre || 'Espacio';
+      return;
+    }
+    if (titulo) titulo.innerHTML = `Mesa <span class="cifra">${p.numero}</span>`;
+    const caja = $('[data-resumen-mesa]', inspector);
+    if (caja) caja.innerHTML = resumenMesa(p, o[p.id] || { confirmados: 0, pendientes: 0 });
+  }
+
+  function pintarFamilias() {
+    const todas = porSentar();
+    const total = todas.reduce((s, i) => s + personas(i), 0);
+    $('[data-por-sentar-cuenta]', vistaMesas).textContent = todas.length
+      ? `${cuantas(todas.length, 'familia', 'familias')} · ${cuantas(total, 'persona', 'personas')}`
+      : '';
+    $('[data-buscar-familia]', vistaMesas).closest('.buscador').hidden = todas.length < 8 && !mesas.busqueda;
+    if (!estado.lista.length) {
+      listaFamilias.innerHTML = '<li class="familias-vacio">Aún no hay invitados. Agrégalos en la pestaña <a href="#invitados">Invitados</a>.</li>';
+      return;
+    }
+    if (!todas.length) {
+      listaFamilias.innerHTML = '<li class="familias-vacio">Todas las familias que van ya tienen mesa.</li>';
+      return;
+    }
+    const q = sinTildes(mesas.busqueda.trim());
+    const lista = todas
+      .filter((i) => !q || sinTildes(i.nombre).includes(q))
+      .sort((a, b) => (a.estado !== 'confirmado') - (b.estado !== 'confirmado') || a.nombre.localeCompare(b.nombre, 'es'));
+    if (!lista.length) {
+      listaFamilias.innerHTML = '<li class="familias-vacio">Ninguna familia por sentar se llama así.</li>';
+      return;
+    }
+    const elegida = pieza(mesas.seleccion);
+    const destino = S.esMesa(elegida) && !mesas.sentando ? elegida : null;
+    listaFamilias.innerHTML = lista.map((i) => {
+      const armada = mesas.sentando === i.id;
+      const accion = destino ? `Sentar en la mesa ${destino.numero}` : armada ? 'Toca su mesa' : 'Elegir mesa';
+      return `<li><button class="familia" type="button" data-familia="${esc(i.id)}"${destino ? '' : ` aria-pressed="${armada}"`}>
+          <span class="familia-nombre">${esc(i.nombre)}</span>
+          <span class="familia-meta">${metaFamilia(i)}</span>
+          <span class="familia-accion">${accion}</span>
+        </button></li>`;
+    }).join('');
+  }
+
+  // ---------- Mesas: guardar ----------
+
+  function estadoPlano(texto, tono) {
+    const el = $('[data-estado-plano]', vistaMesas);
+    el.textContent = texto;
+    if (tono) el.dataset.tono = tono;
+    else delete el.dataset.tono;
+  }
+
+  function cambioPlano() {
+    mesas.pendiente = true;
+    estadoPlano('Cambios sin guardar', 'sucio');
+    clearTimeout(mesas.temporizador);
+    mesas.temporizador = setTimeout(guardarPlano, 700);
+  }
+
+  async function guardarPlano() {
+    clearTimeout(mesas.temporizador);
+    if (mesas.guardando) {
+      mesas.otraVez = true;
+      return false;
+    }
+    mesas.guardando = true;
+    mesas.pendiente = false;
+    estadoPlano('Guardando…');
+    let ok = false;
+    try {
+      await D.guardarSalon(mesas.plan);
+      ok = true;
+      if (!mesas.pendiente) estadoPlano(D.modo === 'local' ? 'Guardado en este navegador' : 'Guardado', 'listo');
+    } catch (err) {
+      mesas.pendiente = true;
+      estadoPlano('No se guardó', 'error');
+      aviso(err.message, { error: true, accion: 'Reintentar', alHacer: guardarPlano });
+    } finally {
+      mesas.guardando = false;
+      if (mesas.otraVez) {
+        mesas.otraVez = false;
+        guardarPlano();
+      }
+    }
+    return ok;
+  }
+
+  // ---------- Mesas: piezas ----------
+
+  function siguienteNumero() {
+    return mesas.plan.piezas.filter(S.esMesa).reduce((m, p) => Math.max(m, p.numero), 0) + 1;
+  }
+
+  // El primer hueco libre, de arriba abajo y de izquierda a derecha.
+  function ubicar(p) {
+    const h = S.huella(p);
+    const choca = (x, y) => mesas.plan.piezas.some((o) => {
+      const k = S.huella(o);
+      return Math.abs(o.x - x) < h.x + k.x + 16 && Math.abs(o.y - y) < h.y + k.y + 16;
+    });
+    for (let y = Math.ceil((h.y + 20) / 10) * 10; y <= S.ALTO - h.y - 10; y += 20) {
+      for (let x = Math.ceil((h.x + 20) / 10) * 10; x <= S.ANCHO - h.x - 10; x += 20) {
+        if (!choca(x, y)) {
+          p.x = x;
+          p.y = y;
+          return S.encajar(p);
+        }
+      }
+    }
+    p.x = S.ANCHO / 2;
+    p.y = S.ALTO / 2;
+    return S.encajar(p);
+  }
+
+  function agregarPieza(forma) {
+    if (mesas.plan.piezas.length >= 150) {
+      aviso('El plano ya tiene 150 piezas: quita alguna para agregar otra.', { error: true });
+      return;
+    }
+    const base = { id: S.nuevoId(), forma };
+    if (forma === 'zona') {
+      const hayPista = mesas.plan.piezas.some((p) => p.forma === 'zona' && /pista/i.test(p.nombre || ''));
+      Object.assign(base, { nombre: hayPista ? null : 'Pista de baile', ancho: 280, alto: 180 });
+    } else {
+      Object.assign(base, { numero: siguienteNumero(), puestos: forma === 'larga' ? 10 : 8, giro: 0 });
+    }
+    const p = ubicar(S.normalizarPieza(base));
+    mesas.plan.piezas.push(p);
+    mesas.seleccion = p.id;
+    mesas.sentando = null;
+    cambioPlano();
+    pintarMesas();
+    const g = $(`[data-pieza="${p.id}"]`, marcoPlano);
+    if (g) {
+      g.focus({ preventScroll: true });
+      g.scrollIntoView({ block: 'nearest', inline: 'nearest' });
+    }
+  }
+
+  // Un punto de partida: la música, la pista, la entrada y 12 mesas de 8.
+  function salonDeEjemplo() {
+    const piezas = [
+      { forma: 'zona', nombre: 'Música', x: 600, y: 100, ancho: 220, alto: 80 },
+      { forma: 'zona', nombre: 'Pista de baile', x: 600, y: 320, ancho: 320, alto: 220 },
+      { forma: 'zona', nombre: 'Entrada', x: 600, y: 750, ancho: 200, alto: 60 },
+    ];
+    [170, 370, 570].forEach((y) => [150, 330, 870, 1050].forEach((x) => {
+      piezas.push({ forma: 'redonda', numero: piezas.length - 2, puestos: 8, x, y });
+    }));
+    mesas.plan.piezas = piezas.map((p) => S.normalizarPieza(Object.assign({ id: S.nuevoId() }, p)));
+    mesas.seleccion = null;
+    cambioPlano();
+    pintarMesas();
+    aviso('Listo: 12 mesas de 8 puestos, la pista, la música y la entrada. Muévelas a su lugar.');
+  }
+
+  function quitarPieza(id) {
+    const pos = mesas.plan.piezas.findIndex((p) => p.id === id);
+    if (pos < 0) return;
+    const [p] = mesas.plan.piezas.splice(pos, 1);
+    const ids = estado.lista.filter((x) => x.mesa === p.id).map((x) => x.id);
+    estado.lista.forEach((x) => { if (ids.includes(x.id)) x.mesa = null; });
+    if (mesas.seleccion === id) mesas.seleccion = null;
+    cambioPlano();
+    pintarMesas();
+    pintarTabla();
+    D.asignarMesa(ids, null).catch((err) => aviso(err.message, { error: true }));
+    const que = S.esMesa(p) ? `Mesa ${p.numero} eliminada.` : `Espacio «${p.nombre || 'sin nombre'}» eliminado.`;
+    aviso(`${que}${ids.length ? ` ${cuantas(ids.length, 'familia quedó', 'familias quedaron')} sin mesa.` : ''}`, {
+      accion: 'Deshacer',
+      alHacer: async () => {
+        mesas.plan.piezas.splice(Math.min(pos, mesas.plan.piezas.length), 0, p);
+        estado.lista.forEach((x) => { if (ids.includes(x.id)) x.mesa = p.id; });
+        mesas.seleccion = p.id;
+        cambioPlano();
+        pintarMesas();
+        pintarTabla();
+        try {
+          await D.asignarMesa(ids, p.id);
+        } catch (err) {
+          aviso(err.message, { error: true });
+        }
+      },
+    });
+  }
+
+  // ---------- Mesas: sentar ----------
+
+  async function sentar(invId, mesaId) {
+    const i = estado.lista.find((x) => x.id === invId);
+    if (!i) return;
+    const antes = i.mesa || null;
+    const destino = mesaId ? pieza(mesaId) : null;
+    mesas.sentando = null;
+    if (antes === (destino ? destino.id : null)) {
+      pintarMesas();
+      return;
+    }
+    i.mesa = destino ? destino.id : null;
+    if (destino) mesas.seleccion = destino.id;
+    pintarMesas();
+    pintarTabla();
+    try {
+      await D.asignarMesa([i.id], i.mesa);
+    } catch (err) {
+      i.mesa = antes;
+      pintarMesas();
+      pintarTabla();
+      aviso(err.message, { error: true });
+      return;
+    }
+    const x = destino ? ocupacion()[destino.id] : null;
+    const exceso = x ? x.confirmados + x.pendientes - destino.puestos : 0;
+    const texto = destino
+      ? `${i.nombre} quedó en la mesa ${destino.numero}${exceso > 0 ? `, que ahora se pasa por ${cuantas(exceso, 'puesto', 'puestos')}` : ''}.`
+      : `${i.nombre} quedó sin mesa.`;
+    aviso(texto, { accion: 'Deshacer', alHacer: () => sentar(i.id, antes) });
+  }
+
+  function armar(id) {
+    mesas.sentando = mesas.sentando === id ? null : id;
+    pintarMesas();
+    if (!mesas.sentando) return;
+    // En el teléfono el plano queda arriba de la lista: se trae a la vista.
+    const r = marcoPlano.getBoundingClientRect();
+    if (r.top < 60 || r.top > innerHeight * 0.6) $('[data-sentando]', vistaMesas).scrollIntoView({ block: 'start', behavior: 'smooth' });
+  }
+
+  function cancelarSentar() {
+    if (!mesas.sentando) return;
+    const id = mesas.sentando;
+    mesas.sentando = null;
+    pintarMesas();
+    const b = $(`[data-familia="${CSS.escape(id)}"]`, listaFamilias);
+    if (b) b.focus();
+  }
+
+  function tocarPieza(id) {
+    const p = pieza(id);
+    if (!p) return;
+    if (mesas.sentando) {
+      if (S.esMesa(p)) sentar(mesas.sentando, p.id);
+      else aviso('Elige una mesa: los espacios no tienen puestos.', { error: true });
+      return;
+    }
+    mesas.seleccion = id;
+    pintarMesas();
+  }
+
+  // ---------- Mesas: el plano con el ratón, el dedo y el teclado ----------
+
+  function puntoPlano(e) {
+    const svg = $('svg', marcoPlano);
+    const m = svg && svg.getScreenCTM();
+    if (!m) return { x: 0, y: 0 };
+    const q = new DOMPoint(e.clientX, e.clientY).matrixTransform(m.inverse());
+    return { x: q.x, y: q.y };
+  }
+
+  const redondear = (n, salto = 10) => Math.round(n / salto) * salto;
+
+  marcoPlano.addEventListener('pointerdown', (e) => {
+    if (e.button !== 0 || mesas.arrastre) return;
+    const g = e.target.closest('[data-pieza]');
+    const p = g && pieza(g.dataset.pieza);
+    if (!p) return;
+    e.preventDefault();
+    g.focus({ preventScroll: true });
+    mesas.arrastre = {
+      id: p.id,
+      tipo: e.target.closest('[data-tirador]') ? 'tamano' : 'mover',
+      inicio: puntoPlano(e),
+      pantalla: { x: e.clientX, y: e.clientY },
+      desde: { x: p.x, y: p.y, ancho: p.ancho, alto: p.alto },
+      movido: false,
+      puntero: e.pointerId,
+    };
+    marcoPlano.setPointerCapture(e.pointerId);
+  });
+
+  marcoPlano.addEventListener('pointermove', (e) => {
+    const a = mesas.arrastre;
+    if (!a || e.pointerId !== a.puntero) return;
+    if (!a.movido && Math.hypot(e.clientX - a.pantalla.x, e.clientY - a.pantalla.y) < 5) return;
+    const p = pieza(a.id);
+    if (!p) return;
+    a.movido = true;
+    marcoPlano.classList.add('arrastrando');
+    const q = puntoPlano(e);
+    const dx = q.x - a.inicio.x;
+    const dy = q.y - a.inicio.y;
+    if (a.tipo === 'tamano') {
+      // La esquina de arriba a la izquierda queda quieta.
+      p.ancho = Math.min(S.ANCHO, Math.max(60, redondear(a.desde.ancho + dx, 20)));
+      p.alto = Math.min(S.ALTO, Math.max(60, redondear(a.desde.alto + dy, 20)));
+      p.x = a.desde.x + (p.ancho - a.desde.ancho) / 2;
+      p.y = a.desde.y + (p.alto - a.desde.alto) / 2;
+    } else {
+      p.x = redondear(a.desde.x + dx);
+      p.y = redondear(a.desde.y + dy);
+    }
+    S.encajar(p);
+    if (mesas.cuadro) return;
+    mesas.cuadro = requestAnimationFrame(() => {
+      mesas.cuadro = 0;
+      const g = $(`[data-pieza="${a.id}"]`, marcoPlano);
+      if (a.tipo === 'mover' && g) g.setAttribute('transform', `translate(${p.x} ${p.y})`);
+      else pintarPlano();
+    });
+  });
+
+  function soltarPieza(e) {
+    const a = mesas.arrastre;
+    if (!a || e.pointerId !== a.puntero) return;
+    mesas.arrastre = null;
+    marcoPlano.classList.remove('arrastrando');
+    if (marcoPlano.hasPointerCapture(e.pointerId)) marcoPlano.releasePointerCapture(e.pointerId);
+    if (a.movido) {
+      mesas.ignorarClic = true;
+      setTimeout(() => { mesas.ignorarClic = false; });
+      if (!mesas.sentando) mesas.seleccion = a.id;
+      cambioPlano();
+      pintarMesas();
+      return;
+    }
+    if (e.type === 'pointerup') tocarPieza(a.id);
+  }
+  marcoPlano.addEventListener('pointerup', soltarPieza);
+  marcoPlano.addEventListener('pointercancel', soltarPieza);
+
+  marcoPlano.addEventListener('keydown', (e) => {
+    const g = e.target.closest('[data-pieza]');
+    const p = g && pieza(g.dataset.pieza);
+    if (!p) return;
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault();
+      tocarPieza(p.id);
+      return;
+    }
+    if (e.key === 'Delete' || e.key === 'Backspace') {
+      e.preventDefault();
+      const siguiente = g.nextElementSibling && g.nextElementSibling.dataset.pieza;
+      quitarPieza(p.id);
+      const el = (siguiente && $(`[data-pieza="${CSS.escape(siguiente)}"]`, marcoPlano)) || $('[data-pieza]', marcoPlano) || $('[data-nueva="redonda"]', vistaMesas);
+      el.focus({ preventScroll: true });
+      return;
+    }
+    const salto = e.shiftKey ? 50 : 10;
+    const mov = { ArrowLeft: [-salto, 0], ArrowRight: [salto, 0], ArrowUp: [0, -salto], ArrowDown: [0, salto] }[e.key];
+    if (!mov) return;
+    e.preventDefault();
+    p.x += mov[0];
+    p.y += mov[1];
+    S.encajar(p);
+    if (!mesas.sentando) mesas.seleccion = p.id;
+    cambioPlano();
+    pintarMesas();
+  });
+
+  // Una familia de «Por sentar» se puede llevar con el ratón hasta su mesa.
+  listaFamilias.addEventListener('pointerdown', (e) => {
+    if (e.pointerType !== 'mouse' || e.button !== 0) return;
+    const b = e.target.closest('[data-familia]');
+    if (!b) return;
+    e.preventDefault();
+    mesas.familia = { id: b.dataset.familia, x: e.clientX, y: e.clientY, fantasma: null, destino: null };
+  });
+
+  document.addEventListener('pointermove', (e) => {
+    const f = mesas.familia;
+    if (!f) return;
+    if (!f.fantasma) {
+      if (Math.hypot(e.clientX - f.x, e.clientY - f.y) < 6) return;
+      const i = estado.lista.find((x) => x.id === f.id);
+      f.fantasma = Object.assign(document.createElement('div'), { className: 'familia-fantasma', textContent: i ? i.nombre : '' });
+      document.body.appendChild(f.fantasma);
+      document.body.classList.add('llevando-familia');
+    }
+    f.fantasma.style.transform = `translate(${e.clientX + 14}px, ${e.clientY + 12}px)`;
+    const debajo = document.elementFromPoint(e.clientX, e.clientY);
+    const g = debajo && debajo.closest('[data-pieza]');
+    const destino = g && S.esMesa(pieza(g.dataset.pieza)) ? g.dataset.pieza : null;
+    if (destino === f.destino) return;
+    f.destino = destino;
+    $$('.destino', marcoPlano).forEach((x) => x.classList.remove('destino'));
+    if (g && destino) g.classList.add('destino');
+  });
+
+  document.addEventListener('pointerup', () => {
+    const f = mesas.familia;
+    if (!f) return;
+    mesas.familia = null;
+    if (!f.fantasma) return; // fue un clic: lo atiende el botón
+    f.fantasma.remove();
+    document.body.classList.remove('llevando-familia');
+    mesas.ignorarClic = true;
+    setTimeout(() => { mesas.ignorarClic = false; });
+    if (f.destino) sentar(f.id, f.destino);
+    else pintarPlano();
+  });
+
+  // ---------- Mesas: botones y campos ----------
+
+  vistaMesas.addEventListener('click', (e) => {
+    if (mesas.ignorarClic) return;
+    const b = e.target.closest('button');
+    if (!b) {
+      // Tocar el piso del salón suelta la mesa elegida.
+      if (e.target.closest('[data-plano]') && !e.target.closest('[data-pieza], .plano-vacio') && mesas.seleccion && !mesas.sentando) {
+        mesas.seleccion = null;
+        pintarMesas();
+      }
+      return;
+    }
+    // Con teclado (detail 0) el foco sigue a la tarea: lo que se pinta de nuevo no lo pierde.
+    const teclado = e.detail === 0;
+    const enfocar = (selector, raiz, i) => {
+      const todos = $$(selector, raiz);
+      const el = todos[Math.min(i, todos.length - 1)];
+      if (el) el.focus();
+    };
+    if (b.matches('[data-nueva]')) agregarPieza(b.dataset.nueva);
+    else if (b.matches('[data-ejemplo-salon]')) salonDeEjemplo();
+    else if (b.matches('[data-reintentar-plano]')) cargarPlano().then(() => pintarMesas());
+    else if (b.matches('[data-familia]')) {
+      const elegida = pieza(mesas.seleccion);
+      const i = $$('[data-familia]', listaFamilias).indexOf(b);
+      if (S.esMesa(elegida) && !mesas.sentando) {
+        sentar(b.dataset.familia, elegida.id);
+        if (teclado) enfocar('[data-familia]', listaFamilias, i);
+      } else {
+        armar(b.dataset.familia);
+        if (teclado) enfocar(mesas.sentando ? '.es-mesa' : '[data-familia]', mesas.sentando ? marcoPlano : listaFamilias, mesas.sentando ? 0 : i);
+      }
+    } else if (b.matches('[data-cancelar-sentar]')) cancelarSentar();
+    else if (b.matches('[data-quitar-pieza]')) {
+      quitarPieza(mesas.seleccion);
+      $('[data-nueva="redonda"]', vistaMesas).focus();
+    } else if (b.matches('[data-cambiar-mesa]')) {
+      armar(b.closest('[data-sentado]').dataset.sentado);
+      if (teclado) enfocar('.es-mesa', marcoPlano, 0);
+    } else if (b.matches('[data-sacar]')) {
+      const i = $$('[data-sacar]', inspector).indexOf(b);
+      sentar(b.closest('[data-sentado]').dataset.sentado, null);
+      if (!$('[data-sacar]', inspector)) $('[data-titulo-pieza]', inspector).setAttribute('tabindex', '-1');
+      enfocar('[data-sacar], [data-titulo-pieza]', inspector, i);
+    } else if (b.matches('[data-paso-menos], [data-paso-mas]')) {
+      const input = $('input', b.closest('[data-paso]'));
+      const salto = Number(input.step) || 1;
+      const v = (Number(input.value) || 0) + (b.matches('[data-paso-mas]') ? salto : -salto);
+      input.value = Math.min(Number(input.max), Math.max(Number(input.min), v));
+      input.dispatchEvent(new Event('change', { bubbles: true }));
+    }
+  });
+
+  inspector.addEventListener('input', (e) => {
+    const t = e.target;
+    const p = pieza(mesas.seleccion);
+    if (!p || t.dataset.pz !== 'nombre') return;
+    p.nombre = t.value.trim().slice(0, 40) || null;
+    cambioPlano();
+    pintarMesas({ inspector: false });
+  });
+
+  inspector.addEventListener('change', (e) => {
+    const t = e.target;
+    const p = pieza(mesas.seleccion);
+    if (!p) return;
+    if (t.name === 'pz-forma' || t.name === 'pz-giro') {
+      if (t.name === 'pz-forma') {
+        p.forma = t.value;
+        if (p.forma === 'larga') p.giro = p.giro || 0;
+        else delete p.giro;
+      } else {
+        p.giro = Number(t.value) === 90 ? 90 : 0;
+      }
+      S.encajar(p);
+      cambioPlano();
+      pintarMesas();
+      const igual = $(`input[name="${t.name}"][value="${t.value}"]`, inspector);
+      if (igual) igual.focus();
+      return;
+    }
+    const campo = t.dataset.pz;
+    if (!['numero', 'puestos', 'ancho', 'alto'].includes(campo)) return;
+    const salto = Number(t.step) || 1;
+    const v = redondear(Number(t.value), salto);
+    p[campo] = Number.isFinite(v) && t.value !== '' ? Math.min(Number(t.max), Math.max(Number(t.min), v)) : p[campo];
+    t.value = p[campo];
+    S.encajar(p);
+    sincronizarPasosMesa();
+    cambioPlano();
+    pintarMesas({ inspector: false });
+  });
+
+  $('[data-mostrar-mesas]', vistaMesas).addEventListener('change', async (e) => {
+    mesas.plan.mostrar = e.target.checked;
+    pintarPublicar();
+    if (await guardarPlano()) {
+      aviso(mesas.plan.mostrar ? 'Listo: los invitados que confirmaron ya ven su mesa.' : 'Las mesas ya no se ven en las invitaciones.');
+    }
+  });
+
+  $('[data-buscar-familia]', vistaMesas).addEventListener('input', (e) => {
+    mesas.busqueda = e.target.value;
+    pintarFamilias();
+  });
+
+  document.addEventListener('keydown', (e) => {
+    if (e.key !== 'Escape' || vistaMesas.hidden || dlg.open || dlgImp.open) return;
+    if (mesas.sentando) cancelarSentar();
+    else if (mesas.seleccion && marcoPlano.contains(document.activeElement)) {
+      mesas.seleccion = null;
+      pintarMesas();
+    }
+  });
+
+  // ---------- Vistas: invitados, mesas y la boda ----------
+
+  const VISTAS = ['invitados', 'mesas', 'tareas', 'presupuesto', 'proveedores', 'boda'];
 
   function mostrarVista(nombre) {
-    const vista = nombre === 'boda' ? 'boda' : 'invitados';
+    const vista = VISTAS.includes(nombre) ? nombre : 'invitados';
     const panelVista = $(`[data-vista-panel="${vista}"]`);
     if (panelVista.hidden) window.scrollTo(0, 0);
     $$('[data-vista-panel]').forEach((el) => { el.hidden = el.dataset.vistaPanel !== vista; });
@@ -1543,7 +2598,15 @@
       if (a.dataset.vista === vista) a.setAttribute('aria-current', 'page');
       else a.removeAttribute('aria-current');
     });
+    // En pantallas angostas las pestañas se deslizan: la elegida queda a la vista.
+    const nav = $('.vistas');
+    const activa = $(`[data-vista="${vista}"]`, nav);
+    if (nav.scrollWidth > nav.clientWidth) {
+      nav.scrollLeft += activa.getBoundingClientRect().left - nav.getBoundingClientRect().left - (nav.clientWidth - activa.offsetWidth) / 2;
+    }
     if (vista === 'boda') abrirBoda();
+    if (vista === 'mesas') pintarMesas();
+    window.Planeacion.mostrar(vista);
   }
 
   addEventListener('hashchange', () => {
@@ -1630,10 +2693,12 @@
   });
 
   document.addEventListener('visibilitychange', () => {
-    if (document.visibilityState === 'visible' && !$('#panel').hidden && !dlg.open && !dlgImp.open) recargar({ silencioso: true });
+    if (document.visibilityState === 'visible' && !$('#panel').hidden && !dlg.open && !dlgImp.open && !mesas.arrastre && !mesas.familia) recargar({ silencioso: true });
   });
 
   // ---------- Arranque ----------
+
+  window.Planeacion.iniciar({ aviso, iconos, cifra, hace, telefonoWa, telefonoBonito, invitados: () => estado.lista });
 
   (async function arrancar() {
     iconos();

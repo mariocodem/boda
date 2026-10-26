@@ -1,0 +1,637 @@
+/*
+ * Mock editorial (Fase 0). Dos capas:
+ *  1. La paleta «Terracota» y la letra «Editorial», escritas como las
+ *     variables que hoy pone assets/estilos.js: la tarjeta, la respuesta, el
+ *     remite, los destellos y la mariposa se repintan solos con ellas.
+ *  2. La página editorial que va después de la tarjeta.
+ */
+
+/* ---------- 1. Paleta Terracota y letra Editorial ---------- */
+
+:root {
+  /* El suelo: crema de papel, como la referencia */
+  --verde: #f6f2e7;
+  --verde-medio: #ece4d3;
+  --verde-hondo: #4a2a22;
+  --verde-forro: #8f4c3f;
+  --verde-luz: #b9796a;
+  --salvia: #8a5244;
+  --salvia-clara: #74402f;
+  /* Lo que va escrito sobre el suelo: los titulares en terracota */
+  --tinta-sobre: #9d594d;
+  --cartulina-luz: #faf6ee;
+  --cartulina-media: #f3ecdf;
+  --cartulina-honda: #ebe2d1;
+  /* El papel de las tarjetas, un poco más claro que el suelo */
+  --algodon: #fdfaf4;
+  --algodon-hondo: #f4ede1;
+  --algodon-sombra: #e8dfcf;
+  --tinta: #5c3027;
+  --tinta-suave: #7a4c42;
+  --tinta-tenue: #8a5c52;
+  --linea: #e4d7c4;
+  --brillo-suelo: rgba(255, 255, 255, 0.5);
+  /* Destellos más suaves (pedido de Mario): oro viejo, halo tenue */
+  --destello: #b8862b;
+  --destello-luz: #fffaf0;
+  --destello-halo: rgba(255, 246, 222, 0.34);
+  --destello-sombra: color-mix(in srgb, var(--sombra) 7%, transparent);
+  --sombra: #4a2a22;
+  --matasellos-sobre: #8f4c3f;
+  --foco: #8f4c3f;
+  --barra-riel: #f6f2e7;
+  --grano-suelo: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='g' x='0' y='0' width='100%25' height='100%25'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 .06 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23g)'/%3E%3C/svg%3E");
+  /* Responder deja el azafrán: en este mundo la acción es terracota */
+  --polen: #9d594d;
+  --polen-claro: #e9c9bd;
+  --polen-hondo: #74402f;
+
+  /* Letra Editorial: Gloock para titulares (caja mixta), Hanken Grotesk para el texto */
+  --f-grabada: 'Gloock', Georgia, serif;
+  --f-texto: 'Hanken Grotesk', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --f-mano: 'Rouge Script', cursive;
+  --f-cifras: 'Hanken Grotesk', system-ui, sans-serif;
+  --escala-nombres: 1;
+  --escala-mano: 1;
+
+  /* Tinta del texto corrido sobre el suelo: terracota honda, 6.4:1 */
+  --tinta-texto: #84463a;
+  --margen: clamp(20px, 5.5vw, 80px);
+  --entre-secciones: clamp(150px, 16vh, 200px);
+}
+
+body {
+  font-family: var(--f-texto);
+}
+
+::selection {
+  background: #ecd3c9;
+  color: var(--tinta);
+}
+
+/* La voz grabada de Editorial va en caja mixta; las etiquetas chicas pasan a la sans */
+[data-letra='editorial'] .nombre {
+  text-transform: none;
+  letter-spacing: -0.01em;
+  line-height: 0.95;
+}
+
+[data-letra='editorial'] :is(.apellido, .para-cupos, .tarjeta-marca, .invitacion-fecha) {
+  font-family: var(--f-ui);
+  font-weight: 500;
+  letter-spacing: 0.2em;
+}
+
+/* La marca de sobre no baja de 11px (se lee en cualquier pantalla) */
+[data-letra='editorial'] .tarjeta-marca {
+  font-size: 0.72rem;
+}
+
+[data-letra='editorial'] .invitacion-fecha {
+  font-size: 0.92rem;
+  letter-spacing: 0.16em;
+}
+
+[data-letra='editorial'] :is(.invitacion-texto, .para-de, .invitacion-ciudad) {
+  font-style: normal;
+  font-weight: 300;
+}
+
+[data-letra='editorial'] .invitacion-texto {
+  font-size: 1.08rem;
+}
+
+[data-letra='editorial'] :is(.respuesta-titulo, .dia-titulo) {
+  text-transform: none;
+  letter-spacing: -0.005em;
+}
+
+/* ---------- Aviso del mock ---------- */
+
+.mock-aviso {
+  position: relative;
+  z-index: 2;
+  margin: 0;
+  padding: 9px 16px;
+  text-align: center;
+  font: 500 0.78rem/1.3 var(--f-ui);
+  letter-spacing: 0.04em;
+  color: var(--tinta-texto);
+  background: color-mix(in srgb, var(--tinta-sobre) 9%, var(--verde));
+}
+
+/* ---------- 2. La página editorial ---------- */
+
+.pagina {
+  position: relative;
+  z-index: 1;
+  overflow-x: clip;
+  padding-top: clamp(56px, 9vh, 120px);
+}
+
+.seccion {
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  max-width: 1360px;
+  margin: 0 auto var(--entre-secciones);
+  padding-inline: var(--margen);
+}
+
+/* El titular: Gloock enorme, terracota, apretado */
+.titular {
+  position: relative;
+  z-index: 3;
+  margin: 0;
+  font-family: var(--f-grabada);
+  font-weight: 400;
+  font-size: clamp(3.1rem, 1.25rem + 6vw, 6.6rem);
+  line-height: 0.9;
+  letter-spacing: -0.025em;
+  color: var(--tinta-sobre);
+  text-wrap: balance;
+}
+
+.seccion p,
+.datos {
+  font-size: clamp(1.02rem, 0.97rem + 0.2vw, 1.14rem);
+  line-height: 1.6;
+  color: var(--tinta-texto);
+}
+
+/* Las fotos: rectas, sin marco, como impresas en la página. Conservan la
+   clase .foto (la mariposa se posa en ellas), sin el marco de algodón de antes. */
+.pagina .foto {
+  position: relative;
+  z-index: 2;
+  margin: 0;
+  padding: 0;
+  background: none;
+  box-shadow: none;
+}
+
+.foto > img:first-child {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  background: var(--verde-medio);
+}
+
+/* Las láminas: sobre el fondo se imprimen como tinta sobre el papel crema
+   (multiply: el blanco del recorte desaparece); sobre una foto van opacas.
+   Para que el multiply alcance el fondo, main y la página no aíslan su capa. */
+main,
+.pagina {
+  z-index: auto;
+}
+
+.flor {
+  position: absolute;
+  z-index: 2;
+  height: auto;
+  pointer-events: none;
+  user-select: none;
+  mix-blend-mode: multiply;
+}
+
+.pagina .foto .flor {
+  z-index: 4;
+  mix-blend-mode: normal;
+  filter: drop-shadow(0 10px 14px color-mix(in srgb, var(--sombra) 18%, transparent));
+}
+
+/* El texto siempre por encima de las flores */
+.seccion > :is(.titular, p, .datos, .dia, .pildora, .historia-texto, .inicio-texto) {
+  position: relative;
+  z-index: 3;
+}
+
+/* El botón píldora: filete de 1px, se llena al pasar */
+.pildora {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 50px;
+  padding: 0 32px;
+  border: 1px solid currentColor;
+  border-radius: 999px;
+  font: 500 0.98rem/1 var(--f-ui);
+  letter-spacing: 0.03em;
+  color: var(--tinta-sobre);
+  text-decoration: none;
+  background: transparent;
+  transition: background-color 0.3s var(--sal-suave), color 0.3s var(--sal-suave);
+}
+
+.pildora:hover {
+  background: var(--tinta-sobre);
+  color: var(--algodon);
+}
+
+.pildora:focus-visible {
+  outline-offset: 4px;
+  border-radius: 999px;
+}
+
+/* Inicio: frase, nombres gigantes, píldora; la foto con su rosa al lado */
+.seccion-inicio {
+  row-gap: 56px;
+  padding-top: clamp(40px, 8vh, 96px);
+}
+
+.inicio-texto {
+  position: relative;
+  z-index: 3;
+  display: grid;
+  justify-items: center;
+  text-align: center;
+}
+
+.inicio-frase {
+  margin: 0 0 18px;
+  font-weight: 400;
+}
+
+.inicio-nombres {
+  display: grid;
+  margin: 0 0 36px;
+  font-family: var(--f-grabada);
+  font-weight: 400;
+  font-size: clamp(4.6rem, 2rem + 9vw, 8.4rem);
+  line-height: 0.86;
+  letter-spacing: -0.03em;
+  color: var(--tinta-sobre);
+}
+
+.inicio-y {
+  font-size: 0.78em;
+  line-height: 0.95;
+}
+
+.foto-inicio {
+  justify-self: center;
+  width: min(100%, 520px);
+  aspect-ratio: 4 / 5;
+}
+
+/* La rosa queda casi toda por fuera de la foto: solo muerde su orilla.
+   (La regla vieja .foto img le daría todo el alto y el ancho de la foto.) */
+.pagina .foto .flor {
+  height: auto;
+  object-fit: fill;
+}
+
+.pagina .foto .flor-esquina {
+  right: -22%;
+  bottom: -12%;
+  width: 40%;
+  transform: rotate(-6deg);
+}
+
+/* El ramillete cuelga del borde de arriba, lejos de la frase y los nombres */
+.flor-colgante {
+  top: clamp(-150px, -22vw, -70px);
+  left: -10%;
+  width: 34%;
+  max-width: 260px;
+  transform: rotate(166deg);
+}
+
+/* Historia: titular a la izquierda con el lirio en el borde; texto y foto a la derecha */
+.seccion-historia {
+  row-gap: 28px;
+}
+
+/* En el teléfono las flores se asoman en el aire entre secciones, desde el
+   borde, alternando de lado; nunca encima del texto. */
+.flor-borde {
+  top: -158px;
+  left: -9%;
+  width: 30%;
+  max-width: 400px;
+  transform: rotate(-10deg);
+}
+
+.historia-texto p {
+  max-width: 38ch;
+  margin: 0;
+}
+
+.foto-historia {
+  aspect-ratio: 3 / 2;
+  margin-right: calc(var(--margen) * -1);
+}
+
+/* Detalles: la rosa grande en el borde, el titular y los datos en dos columnas */
+.seccion-detalles {
+  row-gap: 36px;
+}
+
+.flor-lateral {
+  top: -160px;
+  right: -9%;
+  width: 30%;
+  max-width: 440px;
+  transform: rotate(12deg);
+}
+
+.datos {
+  display: grid;
+  gap: 18px;
+  margin: 0;
+}
+
+.datos-grupo {
+  display: grid;
+  gap: 6px;
+  align-content: start;
+}
+
+.datos dt,
+.datos dd {
+  display: inline;
+  margin: 0;
+}
+
+.datos dt::after {
+  content: ': ';
+}
+
+.datos dd {
+  font-weight: 400;
+}
+
+.datos-nota {
+  display: block;
+  font-size: 0.92em;
+  opacity: 0.9;
+}
+
+.seccion .enlace-accion {
+  color: var(--tinta-sobre);
+  min-height: 0;
+}
+
+/* El día: titular y el hilo que se traza, como hoy */
+.seccion-itinerario {
+  row-gap: 40px;
+}
+
+.flor-derecha {
+  top: -150px;
+  left: -9%;
+  width: 30%;
+  max-width: 320px;
+  transform: rotate(-8deg);
+}
+
+.seccion-itinerario .dia {
+  max-width: 560px;
+}
+
+.seccion-itinerario .dia-punto {
+  background: var(--verde);
+}
+
+.seccion-itinerario .alcanzado .dia-punto {
+  background: var(--tinta-sobre);
+  border-color: var(--tinta-sobre);
+}
+
+.seccion-itinerario .dia::before {
+  background: color-mix(in srgb, var(--tinta-sobre) 22%, transparent);
+}
+
+.seccion-itinerario .dia-hilo {
+  background: var(--tinta-sobre);
+}
+
+.seccion-itinerario .dia-hora {
+  font-family: var(--f-ui);
+  font-weight: 500;
+  font-size: 0.9rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--tinta-texto);
+}
+
+.seccion-itinerario .dia-titulo {
+  font-family: var(--f-grabada);
+  font-size: clamp(1.7rem, 1.2rem + 1.4vw, 2.3rem);
+  line-height: 1.05;
+  color: var(--tinta-sobre);
+}
+
+.seccion-itinerario .dia-detalle {
+  margin-top: 4px;
+  font-style: normal;
+  color: var(--tinta-texto);
+}
+
+.otras-secciones {
+  max-width: 52ch;
+  margin: calc(var(--entre-secciones) * -0.4) auto var(--entre-secciones);
+  padding: 18px 22px;
+  border: 1px dashed color-mix(in srgb, var(--tinta-sobre) 45%, transparent);
+  border-radius: 6px;
+  text-align: center;
+  font: 400 0.92rem/1.5 var(--f-ui);
+  color: var(--tinta-texto);
+}
+
+/* Cierre: el titular, la foto, el contacto, la píldora y la tarjeta de respuesta */
+.seccion-cierre {
+  row-gap: 32px;
+  margin-bottom: clamp(64px, 10vh, 120px);
+}
+
+.flor-pie {
+  top: -156px;
+  right: -9%;
+  width: 30%;
+  max-width: 380px;
+  transform: rotate(14deg);
+}
+
+.foto-cierre {
+  aspect-ratio: 4 / 5;
+  width: min(100%, 520px);
+}
+
+.cierre-contacto {
+  max-width: 34ch;
+  margin: 0;
+}
+
+.cierre-contacto a {
+  color: var(--tinta-sobre);
+}
+
+.cierre-pildora {
+  justify-self: start;
+}
+
+/* La tarjeta de respuesta conserva su papel, su giro y su reparto */
+.seccion-cierre .tarjeta-respuesta {
+  justify-self: center;
+  margin-top: 40px;
+}
+
+.boton-responder {
+  border-radius: 999px;
+  color: var(--algodon);
+  font-family: var(--f-ui);
+  font-weight: 500;
+  text-transform: none;
+  letter-spacing: 0.03em;
+  box-shadow: 0 2px 0 var(--polen-hondo), 0 10px 18px -10px color-mix(in srgb, var(--sombra) 45%, transparent);
+}
+
+.boton-responder:hover:not(:disabled) {
+  background: #8a4d42;
+}
+
+/* ---------- Escritorio: dos columnas que alternan ---------- */
+
+@media (min-width: 960px) {
+  .seccion {
+    grid-template-columns: repeat(12, minmax(0, 1fr));
+    column-gap: clamp(20px, 2.4vw, 40px);
+  }
+
+  .seccion-inicio {
+    align-items: center;
+    min-height: min(92svh, 980px);
+    padding-top: 0;
+  }
+
+  .inicio-texto {
+    grid-column: 1 / 7;
+    grid-row: 1;
+  }
+
+  .foto-inicio {
+    grid-column: 7 / 13;
+    grid-row: 1;
+    width: 100%;
+    max-height: 86svh;
+  }
+
+  .flor-colgante {
+    top: -64px;
+    left: 0;
+    width: 16%;
+  }
+
+  .pagina .foto .flor-esquina {
+    right: -30%;
+    bottom: 3%;
+    width: 46%;
+  }
+
+  .seccion-historia .titular {
+    grid-column: 1 / 7;
+    grid-row: 1 / 3;
+    align-self: start;
+    padding-left: 6%;
+  }
+
+  .historia-texto {
+    grid-column: 8 / 13;
+    grid-row: 1;
+  }
+
+  .foto-historia {
+    grid-column: 8 / 13;
+    grid-row: 2;
+  }
+
+  .flor-borde {
+    top: -6px;
+    left: -6%;
+    width: 22%;
+    transform: rotate(-14deg);
+  }
+
+  .flor-lateral {
+    top: 8px;
+    right: auto;
+    left: -7%;
+    width: 27%;
+    transform: rotate(18deg);
+  }
+
+  .seccion-detalles .titular {
+    grid-column: 5 / 12;
+  }
+
+  .datos {
+    grid-column: 5 / 13;
+    grid-template-columns: 1fr 1fr;
+    column-gap: 40px;
+    margin-top: 24px;
+  }
+
+  .seccion-itinerario {
+    align-items: start;
+  }
+
+  .seccion-itinerario .titular {
+    grid-column: 1 / 6;
+  }
+
+  .seccion-itinerario .dia {
+    grid-column: 7 / 12;
+    padding-top: 12px;
+  }
+
+  .flor-derecha {
+    top: -90px;
+    right: -4%;
+    left: auto;
+    width: 19%;
+    transform: rotate(10deg);
+  }
+
+  .seccion-cierre .titular {
+    grid-column: 1 / 7;
+    grid-row: 1;
+    align-self: start;
+    padding-top: 40px;
+  }
+
+  .foto-cierre {
+    grid-column: 8 / 13;
+    grid-row: 1 / 3;
+    width: 100%;
+    margin-right: calc(var(--margen) * -1);
+  }
+
+  .cierre-contacto {
+    grid-column: 8 / 13;
+    grid-row: 3;
+  }
+
+  .cierre-pildora {
+    grid-column: 2 / 6;
+    grid-row: 2;
+    align-self: end;
+    justify-self: start;
+  }
+
+  .flor-pie {
+    top: auto;
+    right: auto;
+    bottom: 2%;
+    left: -8%;
+    width: 19%;
+    transform: rotate(-18deg);
+  }
+
+  .seccion-cierre .tarjeta-respuesta {
+    grid-column: 4 / 10;
+    grid-row: 4;
+    margin-top: 72px;
+  }
+}

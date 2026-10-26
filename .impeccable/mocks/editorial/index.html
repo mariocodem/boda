@@ -1,0 +1,281 @@
+<!doctype html>
+<!--
+  Mock de la Fase 0: la página editorial para que Mario la apruebe antes de
+  tocar la invitación real. Usa el código real de la tarjeta, el ramo, los
+  destellos, la mariposa, el hilo del itinerario y la tarjeta de respuesta;
+  los colores y las letras nuevas van en editorial.css como variables.
+  data-paleta="rosa" solo le dice a destellos.js que el suelo es claro.
+-->
+<html lang="es-CO" class="scroll-vivo" data-paleta="rosa" data-letra="editorial">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Diego &amp; Erika · Mock editorial</title>
+  <meta name="robots" content="noindex">
+  <meta name="theme-color" content="#f6f2e7">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Gloock&family=Hanken+Grotesk:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400&family=Rouge+Script&display=swap">
+  <link rel="stylesheet" href="../../../assets/base.css">
+  <link rel="stylesheet" href="../../../assets/invitacion.css">
+  <link rel="stylesheet" href="../../../assets/mariposa.css">
+  <link rel="stylesheet" href="editorial.css">
+  <script src="../../../assets/estilos.js"></script>
+</head>
+<body>
+  <div class="destellos" aria-hidden="true"><canvas></canvas></div>
+
+  <p class="mock-aviso">Mock de diseño · fotos y datos de ejemplo · el sobre sigue igual antes de esta tarjeta</p>
+
+  <main id="contenido">
+    <!-- La tarjeta a pantalla completa, como hoy: al bajar se asienta sobre la mesa -->
+    <section class="portada" id="portada" aria-labelledby="nombres">
+      <div class="portada-escenario">
+        <article class="tarjeta tarjeta-invitacion" id="tarjeta">
+          <div class="retrato">
+            <figure class="retrato-marco">
+              <div class="retrato-foto"><img src="fotos/portada.jpg" alt="" style="object-position: 50% 30%"></div>
+            </figure>
+            <div class="ramo-lugar" id="ramo"></div>
+          </div>
+          <div class="tarjeta-cuerpo">
+            <h1 class="nombres" id="nombres">
+              <span class="nombre">Diego</span>
+              <span class="apellido">Triana</span>
+              <span class="y" aria-label="y">&amp;</span>
+              <span class="nombre">Erika</span>
+              <span class="apellido">Ramos</span>
+            </h1>
+            <p class="invitacion-texto">tienen el gusto de invitarte a celebrar su matrimonio</p>
+            <div class="invitacion-cuando">
+              <p class="invitacion-fecha">20 de marzo de 2027</p>
+              <p class="invitacion-ciudad">Chía, Cundinamarca</p>
+            </div>
+            <p class="invitacion-para">
+              <span class="para-de">Para</span>
+              <span class="para-nombre">Familia Rodríguez</span>
+              <span class="para-cupos">2 cupos</span>
+            </p>
+            <a class="portada-pista" href="#inicio">
+              <span>Desliza para ver los detalles</span>
+              <svg viewBox="0 0 24 40" aria-hidden="true"><path d="M12 3v32M5 28l7 8 7-8" /></svg>
+            </a>
+          </div>
+          <p class="tarjeta-marca">Sobre N.º <span class="cifra">027</span></p>
+        </article>
+      </div>
+    </section>
+
+    <!-- La página editorial -->
+    <div class="pagina">
+      <section class="seccion seccion-inicio" id="inicio" aria-labelledby="inicio-titulo">
+        <img class="flor flor-colgante" src="../../../assets/flores/rosa-sepium-600.webp"
+          srcset="../../../assets/flores/rosa-sepium-600.webp 494w, ../../../assets/flores/rosa-sepium.webp 987w"
+          sizes="(min-width: 960px) 17vw, 34vw" width="987" height="1200" alt="" loading="lazy" decoding="async">
+        <div class="inicio-texto">
+          <p class="inicio-frase">¡Guarda la fecha!</p>
+          <h2 class="inicio-nombres" id="inicio-titulo">
+            <span>Diego</span>
+            <span class="inicio-y">y</span>
+            <span>Erika</span>
+          </h2>
+          <a class="pildora" href="#responder">Confirmar asistencia</a>
+        </div>
+        <figure class="foto foto-inicio">
+          <img src="fotos/hero.jpg" width="933" height="1400" alt="Diego y Erika" loading="lazy" decoding="async">
+          <img class="flor flor-esquina" src="../../../assets/flores/rosa-multiflora-carnea-600.webp"
+            srcset="../../../assets/flores/rosa-multiflora-carnea-600.webp 415w, ../../../assets/flores/rosa-multiflora-carnea.webp 830w"
+            sizes="(min-width: 960px) 15vw, 36vw" width="830" height="1200" alt="" loading="lazy" decoding="async">
+        </figure>
+      </section>
+
+      <section class="seccion seccion-historia" id="historia" aria-labelledby="historia-titulo">
+        <img class="flor flor-borde" src="../../../assets/flores/lilium-candidum-600.webp"
+          srcset="../../../assets/flores/lilium-candidum-600.webp 507w, ../../../assets/flores/lilium-candidum.webp 1014w"
+          sizes="(min-width: 960px) 22vw, 44vw" width="1014" height="1200" alt="" loading="lazy" decoding="async">
+        <h2 class="titular" id="historia-titulo">Nuestra historia de amor</h2>
+        <div class="historia-texto">
+          <p>Aquí contamos cómo nos conocimos, la primera cita y el día en que decidimos casarnos: unas pocas líneas que escribimos desde el panel. Queremos que nos acompañes cuando digamos «sí, acepto».</p>
+        </div>
+        <figure class="foto foto-historia">
+          <img src="fotos/historia.jpg" width="1400" height="865" alt="Diego y Erika bailando en un jardín" loading="lazy" decoding="async">
+        </figure>
+      </section>
+
+      <section class="seccion seccion-detalles" id="detalles" aria-labelledby="detalles-titulo">
+        <img class="flor flor-lateral" src="../../../assets/flores/rosa-indica-fragrans-600.webp"
+          srcset="../../../assets/flores/rosa-indica-fragrans-600.webp 501w, ../../../assets/flores/rosa-indica-fragrans.webp 1003w"
+          sizes="(min-width: 960px) 26vw, 50vw" width="1003" height="1200" alt="" loading="lazy" decoding="async">
+        <h2 class="titular" id="detalles-titulo">Detalles de la boda</h2>
+        <dl class="datos">
+          <div class="datos-grupo">
+            <div><dt>Fecha</dt><dd>sábado 20 de marzo de 2027</dd></div>
+            <div><dt>Hora</dt><dd>4:00 p. m.</dd></div>
+            <div><dt>Faltan</dt><dd>148 días</dd></div>
+          </div>
+          <div class="datos-grupo">
+            <div><dt>Lugar</dt><dd>Hacienda Los Arrayanes, Chía <span class="datos-nota">(con acceso para sillas de ruedas)</span></dd></div>
+            <div><dt>Código de vestimenta</dt><dd>formal</dd></div>
+            <div><a class="enlace-accion" href="#llegar">Ver cómo llegar</a></div>
+          </div>
+        </dl>
+      </section>
+
+      <section class="seccion seccion-itinerario" id="itinerario" aria-labelledby="itinerario-titulo">
+        <img class="flor flor-derecha" src="../../../assets/flores/rosa-damascena-subalba-600.webp"
+          srcset="../../../assets/flores/rosa-damascena-subalba-600.webp 452w, ../../../assets/flores/rosa-damascena-subalba.webp 905w"
+          sizes="(min-width: 960px) 20vw, 40vw" width="905" height="1200" alt="" loading="lazy" decoding="async">
+        <h2 class="titular" id="itinerario-titulo">El día</h2>
+        <div class="dia">
+          <span class="dia-hilo" aria-hidden="true"></span>
+          <ol class="dia-lista">
+            <li class="dia-momento"><p class="dia-hora">4:00 p. m.</p><span class="dia-punto" aria-hidden="true"></span><div class="dia-texto"><h3 class="dia-titulo">Ceremonia</h3><p class="dia-detalle">Capilla de la hacienda</p></div></li>
+            <li class="dia-momento"><p class="dia-hora">5:30 p. m.</p><span class="dia-punto" aria-hidden="true"></span><div class="dia-texto"><h3 class="dia-titulo">Cóctel</h3><p class="dia-detalle">En el jardín</p></div></li>
+            <li class="dia-momento"><p class="dia-hora">7:00 p. m.</p><span class="dia-punto" aria-hidden="true"></span><div class="dia-texto"><h3 class="dia-titulo">Recepción</h3><p class="dia-detalle">Cena, brindis y baile</p></div></li>
+            <li class="dia-momento"><p class="dia-hora">1:00 a. m.</p><span class="dia-punto" aria-hidden="true"></span><div class="dia-texto"><h3 class="dia-titulo">Despedida</h3></div></li>
+          </ol>
+        </div>
+      </section>
+
+      <p class="otras-secciones">Cómo llegar, dónde quedarse, la vestimenta, los regalos y las preguntas frecuentes siguen el mismo patrón: titular grande, su contenido y, si les toca, foto y flor.</p>
+
+      <section class="seccion seccion-cierre" id="responder" aria-labelledby="cierre-titulo">
+        <img class="flor flor-pie" src="../../../assets/flores/rosa-centifolia-foliacea-600.webp"
+          srcset="../../../assets/flores/rosa-centifolia-foliacea-600.webp 439w, ../../../assets/flores/rosa-centifolia-foliacea.webp 877w"
+          sizes="(min-width: 960px) 21vw, 46vw" width="877" height="1200" alt="" loading="lazy" decoding="async">
+        <h2 class="titular" id="cierre-titulo">Esperamos compartir este día contigo</h2>
+        <figure class="foto foto-cierre">
+          <img src="fotos/cierre.jpg" width="1041" height="1400" alt="Diego y Erika en el jardín" loading="lazy" decoding="async">
+        </figure>
+        <p class="cierre-contacto">Si tienes alguna duda, escríbenos por WhatsApp al <a href="#responder">300 123 4567</a>.</p>
+        <a class="pildora cierre-pildora" href="#respuesta" data-abrir-respuesta>Confirmar asistencia</a>
+
+        <!-- La tarjeta de respuesta de hoy: se reparte sobre la mesa al llegar a ella -->
+        <article class="tarjeta tarjeta-respuesta" id="respuesta" aria-live="polite">
+          <p class="tarjeta-marca">Respuesta · N.º <span class="cifra">027</span></p>
+          <div class="respuesta-cuerpo">
+            <form class="respuesta-form" novalidate>
+              <fieldset>
+                <legend class="respuesta-titulo">¿Nos acompañan?</legend>
+                <p class="respuesta-sub">Por favor respondan antes del 20 de febrero.</p>
+                <div class="eleccion-opciones">
+                  <label class="opcion"><input type="radio" name="asiste" value="si"><span class="opcion-caja"><svg viewBox="0 0 30 30" aria-hidden="true"><path d="M6 16l6 7L26 4"/></svg></span><span>Asistiremos con gusto</span></label>
+                  <label class="opcion"><input type="radio" name="asiste" value="no"><span class="opcion-caja"><svg viewBox="0 0 30 30" aria-hidden="true"><path d="M6 16l6 7L26 4"/></svg></span><span>Lamentamos no poder ir</span></label>
+                </div>
+              </fieldset>
+              <div class="respuesta-detalle" hidden>
+                <div class="cuantos" data-cuantos>
+                  <span class="campo-etiqueta" id="cuantos-etiqueta">¿Cuántos irán?</span>
+                  <div class="contador" role="group" aria-labelledby="cuantos-etiqueta">
+                    <button type="button" class="contador-boton" data-menos aria-label="Uno menos"><svg class="icono" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14"/></svg></button>
+                    <output class="contador-valor" aria-live="polite">2</output>
+                    <button type="button" class="contador-boton" data-mas aria-label="Uno más" disabled><svg class="icono" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></button>
+                    <span class="contador-de">de 2 cupos</span>
+                  </div>
+                </div>
+                <label class="mensaje-campo">
+                  <span class="campo-etiqueta">Unas palabras para Diego y Erika <em>(opcional)</em></span>
+                  <textarea name="mensaje" rows="3" maxlength="1000"></textarea>
+                </label>
+                <button class="boton-responder" type="submit">Enviar respuesta</button>
+              </div>
+            </form>
+          </div>
+        </article>
+      </section>
+    </div>
+
+    <footer class="remite">
+      <div class="remite-solapa" aria-hidden="true"></div>
+      <div class="remite-sello" aria-hidden="true"><span>D</span><span>E</span></div>
+      <p class="remite-con">Con cariño,</p>
+      <p class="remite-firma">Diego <i>&amp;</i> Erika</p>
+      <button class="enlace-accion remite-volver" type="button">Volver a cerrar el sobre</button>
+    </footer>
+  </main>
+
+  <script src="../../../assets/destellos.js"></script>
+  <script src="../../../assets/ramo.js"></script>
+  <script src="../../../assets/mariposa.js"></script>
+  <script>
+    // Las escenas de la invitación real, copiadas tal cual de invitacion.js
+    // (la tarjeta que se asienta, el hilo del día y la respuesta que se reparte).
+    (function () {
+      const doc = document.documentElement;
+      const $ = (s, r = document) => r.querySelector(s);
+      const $$ = (s, r = document) => Array.from(r.querySelectorAll(s));
+      const reducido = matchMedia('(prefers-reduced-motion: reduce)').matches;
+      if (reducido) doc.classList.remove('scroll-vivo');
+
+      const ramo = Ramo.crear($('#ramo'), { semilla: 7, sombra: false });
+      if (!reducido) document.fonts.ready.then(() => Ramo.florecer(ramo));
+
+      const escenas = [];
+      let pedido = false;
+      const limitar = (x) => Math.min(1, Math.max(0, x));
+      function recorrido(r) {
+        const largo = r.height - innerHeight;
+        return largo > 0 ? limitar(-r.top / largo) : 0;
+      }
+      function pedirCuadro() {
+        if (pedido) return;
+        pedido = true;
+        requestAnimationFrame(() => { pedido = false; escenas.forEach((s) => s()); });
+      }
+      if (!reducido) {
+        const seccion = $('#portada');
+        const escenario = $('.portada-escenario', seccion);
+        escenas.push(() => {
+          const r = seccion.getBoundingClientRect();
+          if (r.bottom < 0) return;
+          escenario.style.setProperty('--p', recorrido(r).toFixed(4));
+        });
+      }
+      const caja = $('.dia');
+      escenas.push(() => {
+        const r = caja.getBoundingClientRect();
+        if (r.bottom < -innerHeight || r.top > innerHeight * 2) return;
+        const linea = innerHeight * 0.62;
+        const puntos = $$('.dia-punto', caja).map((p) => p.getBoundingClientRect());
+        caja.style.setProperty('--hilo', reducido ? 1 : limitar((linea - r.top) / r.height).toFixed(4));
+        $$('.dia-momento', caja).forEach((m, i) => {
+          m.classList.toggle('alcanzado', reducido || puntos[i].top + puntos[i].height / 2 <= linea);
+        });
+      });
+      addEventListener('scroll', pedirCuadro, { passive: true });
+      addEventListener('resize', pedirCuadro);
+      pedirCuadro();
+
+      const tarjeta = $('#respuesta');
+      if (!reducido && 'IntersectionObserver' in window) {
+        tarjeta.classList.add('por-repartir');
+        const io = new IntersectionObserver((e) => {
+          if (!e.some((x) => x.isIntersecting)) return;
+          tarjeta.classList.remove('por-repartir');
+          io.disconnect();
+        });
+        io.observe(tarjeta);
+      }
+
+      // Lo justo del formulario para probar el diseño.
+      const detalle = $('.respuesta-detalle');
+      $$('input[name="asiste"]').forEach((r) => r.addEventListener('change', () => {
+        detalle.hidden = false;
+        $('[data-cuantos]').hidden = r.value !== 'si';
+      }));
+      const valor = $('.contador-valor');
+      $('[data-menos]').addEventListener('click', () => {
+        valor.value = valor.textContent = Math.max(1, +valor.textContent - 1);
+        $('[data-menos]').disabled = valor.textContent === '1';
+        $('[data-mas]').disabled = false;
+      });
+      $('[data-mas]').addEventListener('click', () => {
+        valor.value = valor.textContent = Math.min(2, +valor.textContent + 1);
+        $('[data-mas]').disabled = valor.textContent === '2';
+        $('[data-menos]').disabled = false;
+      });
+      $('.respuesta-form').addEventListener('submit', (e) => e.preventDefault());
+    })();
+  </script>
+</body>
+</html>

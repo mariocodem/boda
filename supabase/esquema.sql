@@ -10,6 +10,12 @@
 --    la invitación impresa; solo los administradores la cambian.
 --  * Las fotos van en el bucket público «fotos» de Storage: cualquiera con el
 --    enlace las ve; solo los administradores las suben o las borran.
+--  * El plano de mesas (tabla salon) también es público, como un plano impreso
+--    a la entrada; solo los administradores lo cambian. La mesa de cada
+--    invitado vive en su fila: ver_invitacion la devuelve solo cuando ese
+--    invitado confirmó y los novios publicaron las mesas.
+--  * La planeación de los novios (tareas, presupuesto y proveedores) vive en la
+--    tabla planeacion: solo la leen y la cambian los administradores.
 --
 -- Se puede volver a ejecutar completo sin perder datos.
 
@@ -32,6 +38,14 @@ create table if not exists public.invitados (
   creado_en     timestamptz not null default now(),
   constraint asistentes_dentro_de_cupos check (asistentes <= cupos)
 );
+
+-- La mesa de cada invitación: el id de una mesa del plano (tabla salon).
+alter table public.invitados add column if not exists mesa text check (mesa ~ '^[a-z0-9]{4,24}$');
+
+-- Lo que contesta el invitado a las preguntas opcionales de la tarjeta de
+-- respuesta (se encienden en el panel, pestaña «La boda»).
+alter table public.invitados add column if not exists alergias text check (char_length(alergias) <= 300);
+alter table public.invitados add column if not exists cancion text check (char_length(cancion) <= 120);
 
 create table if not exists public.administradores (
   email text primary key
@@ -66,6 +80,54 @@ create policy "administradores se ven"
   to authenticated
   using (public.es_admin());
 
+-- Plano del salón que se arma en el panel (pestaña «Mesas»): mesas, espacios
+-- y si los invitados ya pueden ver su mesa. Una sola fila, como evento.
+create table if not exists public.salon (
+  id             smallint primary key default 1 check (id = 1),
+  datos          jsonb not null default '{}'::jsonb,
+  actualizado_en timestamptz not null default now()
+);
+
+alter table public.salon enable row level security;
+
+drop policy if exists "todos leen el salon" on public.salon;
+create policy "todos leen el salon"
+  on public.salon for select
+  to anon, authenticated
+  using (true);
+
+drop policy if exists "administradores editan el salon" on public.salon;
+create policy "administradores editan el salon"
+  on public.salon for all
+  to authenticated
+  using (public.es_admin())
+  with check (public.es_admin());
+
+grant select on public.salon to anon, authenticated;
+grant insert, update on public.salon to authenticated;
+
+-- La mesa que le toca ver a un invitado: solo si confirmó y las mesas están
+-- publicadas («Mostrar su mesa a los invitados» en el panel).
+create or replace function public.mesa_a_la_vista(p_estado text, p_mesa text)
+returns text
+language sql
+stable
+security definer
+set search_path = public
+as $$
+  select case
+    when p_estado = 'confirmado'
+     and coalesce((select (s.datos ->> 'mostrar')::boolean from public.salon s where s.id = 1), false)
+    then p_mesa
+  end;
+$$;
+
+-- Estas dos funciones ganaron la mesa, las alergias y la canción: se borran
+-- para poder crearlas con su nueva forma (no se pierde ningún dato).
+drop function if exists public.ver_invitacion(text, boolean);
+drop function if exists public.responder_invitacion(text, boolean, integer, text);
+drop function if exists public.responder_invitacion(text, boolean, integer, text, text, text);
+
 -- Lo que ve un invitado al abrir su enlace. p_marcar = false para las vistas
 -- previas desde el panel, que no deben contar como "abierta".
 create or replace function public.ver_invitacion(p_codigo text, p_marcar boolean default true)
@@ -76,7 +138,10 @@ returns table (
   estado text,
   asistentes integer,
   mensaje text,
-  respondido_en timestamptz
+  respondido_en timestamptz,
+  mesa text,
+  alergias text,
+  cancion text
 )
 language plpgsql
 security definer
@@ -91,18 +156,23 @@ begin
   end if;
 
   return query
-    select i.numero, i.nombre, i.cupos, i.estado, i.asistentes, i.mensaje, i.respondido_en
+    select i.numero, i.nombre, i.cupos, i.estado, i.asistentes, i.mensaje, i.respondido_en,
+           public.mesa_a_la_vista(i.estado, i.mesa), i.alergias, i.cancion
       from public.invitados i
      where i.codigo = upper(p_codigo);
 end;
 $$;
 
--- La respuesta del invitado, validada contra sus cupos.
+-- La respuesta del invitado, validada contra sus cupos. p_alergias y p_cancion
+-- llegan solo si la tarjeta hizo esas preguntas; sin ellas (null) lo que había
+-- se queda, y vacías lo borran.
 create or replace function public.responder_invitacion(
   p_codigo text,
   p_asiste boolean,
   p_asistentes integer,
-  p_mensaje text
+  p_mensaje text,
+  p_alergias text default null,
+  p_cancion text default null
 )
 returns table (
   numero integer,
@@ -111,7 +181,10 @@ returns table (
   estado text,
   asistentes integer,
   mensaje text,
-  respondido_en timestamptz
+  respondido_en timestamptz,
+  mesa text,
+  alergias text,
+  cancion text
 )
 language plpgsql
 security definer
@@ -133,11 +206,14 @@ begin
      set estado = case when p_asiste then 'confirmado' else 'declinado' end,
          asistentes = case when p_asiste then p_asistentes else 0 end,
          mensaje = nullif(left(btrim(coalesce(p_mensaje, '')), 1000), ''),
+         alergias = case when p_alergias is null then i.alergias else nullif(left(btrim(p_alergias), 300), '') end,
+         cancion = case when p_cancion is null then i.cancion else nullif(left(btrim(p_cancion), 120), '') end,
          respondido_en = now()
    where i.id = v.id;
 
   return query
-    select i.numero, i.nombre, i.cupos, i.estado, i.asistentes, i.mensaje, i.respondido_en
+    select i.numero, i.nombre, i.cupos, i.estado, i.asistentes, i.mensaje, i.respondido_en,
+           public.mesa_a_la_vista(i.estado, i.mesa), i.alergias, i.cancion
       from public.invitados i
      where i.id = v.id;
 end;
@@ -169,6 +245,27 @@ create policy "administradores editan el evento"
 
 grant select on public.evento to anon, authenticated;
 grant insert, update on public.evento to authenticated;
+
+-- La planeación de los novios: las tareas, el presupuesto y los proveedores.
+-- Una fila por herramienta. Es privada: ni los invitados ni nadie sin sesión
+-- de administrador la puede leer.
+create table if not exists public.planeacion (
+  clave          text primary key check (clave in ('tareas', 'presupuesto', 'proveedores')),
+  datos          jsonb not null default '{}'::jsonb,
+  actualizado_en timestamptz not null default now()
+);
+
+alter table public.planeacion enable row level security;
+
+drop policy if exists "administradores gestionan la planeacion" on public.planeacion;
+create policy "administradores gestionan la planeacion"
+  on public.planeacion for all
+  to authenticated
+  using (public.es_admin())
+  with check (public.es_admin());
+
+revoke all on public.planeacion from anon;
+grant select, insert, update on public.planeacion to authenticated;
 
 -- Fotos que se suben desde el panel: la principal, las de la pareja y las de
 -- referencia de vestimenta. El panel las reduce a JPG antes de subirlas.
@@ -205,11 +302,12 @@ create policy "administradores borran fotos"
   using (bucket_id = 'fotos' and public.es_admin());
 
 revoke all on function public.ver_invitacion(text, boolean) from public;
-revoke all on function public.responder_invitacion(text, boolean, integer, text) from public;
+revoke all on function public.responder_invitacion(text, boolean, integer, text, text, text) from public;
 revoke all on function public.es_admin() from public;
+revoke all on function public.mesa_a_la_vista(text, text) from public, anon, authenticated;
 
 grant execute on function public.ver_invitacion(text, boolean) to anon, authenticated;
-grant execute on function public.responder_invitacion(text, boolean, integer, text) to anon, authenticated;
+grant execute on function public.responder_invitacion(text, boolean, integer, text, text, text) to anon, authenticated;
 grant execute on function public.es_admin() to authenticated;
 
 -- Después de crear tu usuario en Authentication → Users, autorízalo aquí:

@@ -10,8 +10,8 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Castoro:ital@0;1&family=Castoro+Titling&family=Hanken+Grotesk:wght@400;500;600;700&family=Rouge+Script&display=swap">
-  <link rel="stylesheet" href="assets/base.css">
-  <link rel="stylesheet" href="assets/admin.css">
+  <link rel="stylesheet" href="assets/base.css?v=20261023">
+  <link rel="stylesheet" href="assets/admin.css?v=20261023">
 </head>
 <body>
   <!-- Entrada -->
@@ -39,6 +39,10 @@
       </div>
       <nav class="vistas" aria-label="Secciones del panel">
         <a href="#invitados" data-vista="invitados">Invitados</a>
+        <a href="#mesas" data-vista="mesas">Mesas</a>
+        <a href="#tareas" data-vista="tareas">Tareas</a>
+        <a href="#presupuesto" data-vista="presupuesto">Presupuesto</a>
+        <a href="#proveedores" data-vista="proveedores">Proveedores</a>
         <a href="#boda" data-vista="boda">La boda</a>
       </nav>
       <div class="barra-acciones">
@@ -89,8 +93,165 @@
         <aside class="correo" aria-labelledby="correo-titulo">
           <h2 class="correo-titulo" id="correo-titulo">Respuestas recientes</h2>
           <ol class="correo-lista" data-correo></ol>
+          <!-- Lo que contestaron a las preguntas opcionales: para el banquete y la música -->
+          <div class="pedidos" data-pedidos hidden></div>
         </aside>
       </div>
+    </main>
+
+    <!-- Mesas: el plano del salón y quién se sienta dónde -->
+    <main class="obra obra-mesas" data-vista-panel="mesas" hidden>
+      <section class="cifras" aria-label="Resumen de las mesas">
+        <dl class="contadores de-cuatro" data-contadores-mesas></dl>
+        <ul class="reparto-leyenda leyenda-sillas" aria-label="Sillas del plano">
+          <li><i class="silla-muestra confirmada"></i>Confirmado</li>
+          <li><i class="silla-muestra pendiente"></i>Sin confirmar</li>
+          <li><i class="silla-muestra"></i>Puesto libre</li>
+        </ul>
+      </section>
+
+      <div class="mesas-cuerpo">
+        <section class="salon" aria-labelledby="mesas-titulo">
+          <div class="libro-cabeza">
+            <h1 class="libro-titulo" id="mesas-titulo">Mesas</h1>
+            <div class="libro-botones">
+              <button class="boton boton-secundario" type="button" data-nueva="zona" data-icono="espacio">Espacio</button>
+              <button class="boton boton-secundario" type="button" data-nueva="larga" data-icono="mesa_larga">Mesa larga</button>
+              <button class="boton boton-principal" type="button" data-nueva="redonda" data-icono="mesa">Mesa redonda</button>
+            </div>
+          </div>
+
+          <label class="publicar">
+            <input type="checkbox" data-mostrar-mesas>
+            <span class="publicar-texto">
+              <b>Mostrar su mesa a los invitados</b>
+              <span data-nota-publicar></span>
+            </span>
+          </label>
+
+          <div class="sentando" data-sentando role="status" hidden></div>
+          <div class="plano-marco" data-plano></div>
+          <div class="plano-pie">
+            <p class="plano-ayuda">Arrastra las mesas a su lugar y toca una para editarla. Con el teclado: flechas para moverla, Supr para quitarla.</p>
+            <p class="plano-estado" data-estado-plano aria-live="polite"></p>
+          </div>
+        </section>
+
+        <aside class="mesas-lado" aria-label="Mesa elegida y familias por sentar">
+          <section class="inspector" data-inspector aria-live="polite"></section>
+          <section class="por-sentar" aria-labelledby="por-sentar-titulo">
+            <div class="por-sentar-cabeza">
+              <h2 class="correo-titulo" id="por-sentar-titulo">Por sentar</h2>
+              <p class="por-sentar-cuenta" data-por-sentar-cuenta></p>
+            </div>
+            <label class="buscador">
+              <span class="solo-lectores">Buscar familia por sentar</span>
+              <span data-icono-solo="buscar"></span>
+              <input type="search" placeholder="Buscar familia" data-buscar-familia autocomplete="off">
+            </label>
+            <ul class="familias" data-familias></ul>
+          </section>
+        </aside>
+      </div>
+      <datalist id="nombres-espacio">
+        <option value="Pista de baile"></option>
+        <option value="Entrada"></option>
+        <option value="Música"></option>
+        <option value="Bar"></option>
+        <option value="Mesa de postres"></option>
+        <option value="Buffet"></option>
+        <option value="Fotos"></option>
+        <option value="Baños"></option>
+      </datalist>
+    </main>
+
+    <!-- Tareas: la agenda de la boda, por etapas -->
+    <main class="obra obra-tareas" data-vista-panel="tareas" hidden>
+      <section class="cifras" aria-label="Resumen de las tareas">
+        <dl class="contadores de-cuatro" data-contadores-tareas></dl>
+        <div class="reparto" data-reparto-tareas></div>
+      </section>
+
+      <section class="agenda" aria-labelledby="tareas-titulo">
+        <div class="libro-cabeza">
+          <div>
+            <h1 class="libro-titulo" id="tareas-titulo">Tareas</h1>
+            <p class="agenda-cuenta" data-cuenta-boda></p>
+          </div>
+          <div class="libro-botones">
+            <button class="boton boton-principal" type="button" data-nueva-tarea data-icono="mas">Agregar tarea</button>
+          </div>
+        </div>
+        <div class="filtros filtros-solos">
+          <div class="segmentos" role="group" aria-label="Filtrar tareas" data-filtros-tareas></div>
+        </div>
+        <div class="etapas" data-etapas></div>
+        <p class="plano-estado" data-estado-planeacion="tareas" aria-live="polite"></p>
+      </section>
+    </main>
+
+    <!-- Presupuesto: cuánto se piensa gastar, cuánto se pagó y qué falta -->
+    <main class="obra obra-presupuesto" data-vista-panel="presupuesto" hidden>
+      <section class="cifras" aria-label="Resumen del presupuesto">
+        <dl class="contadores de-cinco contadores-dinero" data-contadores-presupuesto></dl>
+        <div class="reparto" data-reparto-presupuesto></div>
+      </section>
+
+      <div class="obra-cuerpo">
+        <section class="cuentas" aria-labelledby="presupuesto-titulo">
+          <div class="libro-cabeza">
+            <h1 class="libro-titulo" id="presupuesto-titulo">Presupuesto</h1>
+            <div class="libro-botones">
+              <button class="boton boton-secundario" type="button" data-exportar-presupuesto data-icono="descargar">Exportar CSV</button>
+              <button class="boton boton-principal" type="button" data-nueva-partida data-icono="mas">Agregar gasto</button>
+            </div>
+          </div>
+          <div class="hoja presupuesto-total">
+            <label class="campo">
+              <span class="campo-etiqueta">Presupuesto total</span>
+              <input type="text" inputmode="numeric" placeholder="$ 0" autocomplete="off" data-total-presupuesto data-dinero>
+              <span class="campo-ayuda">Lo máximo que quieren gastar en toda la boda. Sirve para saber cuánto queda.</span>
+            </label>
+          </div>
+          <div class="partidas" data-partidas></div>
+          <p class="plano-estado" data-estado-planeacion="presupuesto" aria-live="polite"></p>
+        </section>
+
+        <aside class="correo" aria-labelledby="pagos-titulo">
+          <h2 class="correo-titulo" id="pagos-titulo">Próximos pagos</h2>
+          <ol class="correo-lista" data-pagos></ol>
+        </aside>
+      </div>
+    </main>
+
+    <!-- Proveedores: a quién se cotizó, a quién se contrató y cómo hablarle -->
+    <main class="obra obra-proveedores" data-vista-panel="proveedores" hidden>
+      <section class="cifras" aria-label="Resumen de los proveedores">
+        <dl class="contadores de-cuatro" data-contadores-proveedores></dl>
+      </section>
+
+      <section class="proveedores" aria-labelledby="proveedores-titulo">
+        <div class="libro-cabeza">
+          <h1 class="libro-titulo" id="proveedores-titulo">Proveedores</h1>
+          <div class="libro-botones">
+            <button class="boton boton-principal" type="button" data-nuevo-proveedor data-icono="mas">Agregar proveedor</button>
+          </div>
+        </div>
+        <div class="filtros">
+          <label class="buscador">
+            <span class="solo-lectores">Buscar proveedor</span>
+            <span data-icono-solo="buscar"></span>
+            <input type="search" placeholder="Buscar por nombre, contacto o nota" data-buscar-proveedor autocomplete="off">
+          </label>
+          <div class="segmentos" role="group" aria-label="Filtrar por estado" data-filtros-proveedores></div>
+          <label class="selector">
+            <span class="solo-lectores">Categoría</span>
+            <select data-categoria-proveedor></select>
+          </label>
+        </div>
+        <div data-lista-proveedores></div>
+        <p class="plano-estado" data-estado-planeacion="proveedores" aria-live="polite"></p>
+      </section>
     </main>
 
     <!-- La boda: fecha, lugares, itinerario y vestimenta -->
@@ -109,11 +270,26 @@
               <fieldset class="campo">
                 <legend class="campo-etiqueta">Colores</legend>
                 <div class="paletas" data-paletas></div>
+                <div class="color-libre">
+                  <label class="color-libre-rueda">
+                    <input type="color" name="color" value="#c9a3b5">
+                    <span>Elegir cualquier color</span>
+                  </label>
+                  <input class="color-libre-codigo" name="color-codigo" type="text" value="#c9a3b5" maxlength="7" spellcheck="false" autocomplete="off" aria-label="Código del color, por ejemplo #c9a3b5">
+                </div>
+                <p class="campo-ayuda">Al elegir un color se usa «Color libre». Con un color claro, la invitación va en tinta oscura de ese tono, como las pastel; con uno oscuro, en letras claras, como Verde hoja.</p>
               </fieldset>
               <fieldset class="campo">
                 <legend class="campo-etiqueta">Letra</legend>
                 <div class="letras" data-letras></div>
               </fieldset>
+              <div class="campo">
+                <label class="casilla">
+                  <input type="checkbox" name="mariposa" checked>
+                  <span>Mariposa dorada</span>
+                </label>
+                <p class="campo-ayuda">Una mariposa de papel dorado que se posa en el ramo, acompaña a los invitados mientras bajan y se posa en la tarjeta donde se detienen.</p>
+              </div>
             </div>
             <div class="estilo-vista">
               <div class="muestra" data-muestra aria-hidden="true"></div>
@@ -171,6 +347,19 @@
           <div data-editor="recepcion"></div>
         </section>
 
+        <section class="hoja" aria-labelledby="hoja-alojamiento">
+          <h2 class="hoja-titulo" id="hoja-alojamiento">Alojamiento</h2>
+          <p class="hoja-ayuda">Hoteles cerca, para quienes vienen de otra ciudad. Aparecen después de «Cómo llegar»; sin hoteles, esa parte no se muestra.</p>
+          <label class="campo">
+            <span class="campo-etiqueta">Nota para los invitados <em>(opcional)</em></span>
+            <textarea name="alojamiento-nota" rows="2" maxlength="400" placeholder="Por ejemplo: digan que van a la boda de Diego y Erika para la tarifa especial."></textarea>
+          </label>
+          <ol class="filas-editor" data-filas="hoteles" aria-label="Hoteles"></ol>
+          <div class="libro-botones">
+            <button class="boton boton-secundario" type="button" data-agregar-fila="hoteles" data-icono="mas">Agregar hotel</button>
+          </div>
+        </section>
+
         <section class="hoja" aria-labelledby="hoja-itinerario">
           <h2 class="hoja-titulo" id="hoja-itinerario">Itinerario</h2>
           <p class="hoja-ayuda">Los momentos del día, en el orden en que pasan. Vacío, la invitación muestra la ceremonia y la recepción con sus horas.</p>
@@ -181,14 +370,23 @@
           </div>
         </section>
 
+        <section class="hoja" aria-labelledby="hoja-historia">
+          <h2 class="hoja-titulo" id="hoja-historia">Nuestra historia</h2>
+          <p class="hoja-ayuda">Cómo se conocieron, cómo fue la propuesta… Va después del itinerario, como una carta firmada por los dos, con una de sus fotos al lado. Deja una línea en blanco entre párrafos. Vacía, no aparece.</p>
+          <label class="campo">
+            <span class="solo-lectores">Nuestra historia</span>
+            <textarea name="historia" rows="7" maxlength="3000"></textarea>
+          </label>
+        </section>
+
         <section class="hoja" aria-labelledby="hoja-fotos">
           <h2 class="hoja-titulo" id="hoja-fotos">Fotos de la pareja</h2>
-          <p class="hoja-ayuda">Aparecen debajo del itinerario, como fotos sobre la mesa, en este orden. Hasta 6; los invitados las pueden ver en grande.</p>
+          <p class="hoja-ayuda">Se reparten por la invitación, una al lado de cada parte, en este orden: los detalles, el itinerario, la historia (si la escriben) y la respuesta; las demás van juntas antes de la vestimenta. Debajo de cada foto dice dónde queda: muévelas para cambiarla de lugar. Hasta 6; los invitados las pueden ver en grande.</p>
           <div data-galeria></div>
         </section>
 
         <section class="hoja" aria-labelledby="hoja-vestimenta">
-          <h2 class="hoja-titulo" id="hoja-vestimenta">Vestimenta y regalos</h2>
+          <h2 class="hoja-titulo" id="hoja-vestimenta">Vestimenta</h2>
           <div class="campos-rejilla">
             <label class="campo">
               <span class="campo-etiqueta">Código de vestimenta</span>
@@ -211,9 +409,85 @@
             <span class="campo-ayuda">Ejemplos de cómo pueden ir vestidos. Hasta 4; si quieres, ponle a cada una un nombre corto, como «Ellas» o «Ellos».</span>
             <div data-vestimenta-fotos></div>
           </div>
+        </section>
+
+        <section class="hoja" aria-labelledby="hoja-regalos">
+          <h2 class="hoja-titulo" id="hoja-regalos">Regalos</h2>
           <label class="campo">
-            <span class="campo-etiqueta">Regalos <em>(opcional)</em></span>
+            <span class="campo-etiqueta">Mensaje sobre los regalos <em>(opcional)</em></span>
             <textarea name="regalos" rows="2" maxlength="600" placeholder="Por ejemplo: lluvia de sobres el día de la boda."></textarea>
+          </label>
+          <fieldset class="campo">
+            <legend class="campo-etiqueta">Cuenta para transferencias <em>(opcional)</em></legend>
+            <span class="campo-ayuda">Para quienes prefieran regalar dinero. Aparece con el botón «Copiar el número». Cualquiera que abra la invitación la ve, como en una tarjeta impresa.</span>
+            <div class="campos-rejilla">
+              <label class="campo">
+                <span class="campo-etiqueta">Banco o app</span>
+                <input type="text" name="cuenta-banco" list="bancos" maxlength="60" placeholder="Bancolombia, Nequi…" autocomplete="off">
+              </label>
+              <label class="campo">
+                <span class="campo-etiqueta">Tipo de cuenta</span>
+                <input type="text" name="cuenta-tipo" list="tipos-cuenta" maxlength="40" placeholder="Ahorros" autocomplete="off">
+              </label>
+              <label class="campo">
+                <span class="campo-etiqueta">Número</span>
+                <input type="text" name="cuenta-numero" maxlength="40" inputmode="numeric" autocomplete="off">
+              </label>
+              <label class="campo">
+                <span class="campo-etiqueta">A nombre de</span>
+                <input type="text" name="cuenta-titular" maxlength="80" autocomplete="off">
+              </label>
+              <label class="campo">
+                <span class="campo-etiqueta">Documento <em>(opcional)</em></span>
+                <input type="text" name="cuenta-documento" maxlength="30" placeholder="C.C. 1.000.000.000" autocomplete="off">
+              </label>
+            </div>
+          </fieldset>
+          <datalist id="bancos">
+            <option value="Bancolombia"></option>
+            <option value="Davivienda"></option>
+            <option value="Banco de Bogotá"></option>
+            <option value="BBVA"></option>
+            <option value="Banco de Occidente"></option>
+            <option value="Nequi"></option>
+            <option value="Daviplata"></option>
+          </datalist>
+          <datalist id="tipos-cuenta">
+            <option value="Ahorros"></option>
+            <option value="Corriente"></option>
+            <option value="Celular"></option>
+            <option value="Llave Bre-B"></option>
+          </datalist>
+          <div class="campo">
+            <span class="campo-etiqueta">Listas de regalos <em>(opcional)</em></span>
+            <span class="campo-ayuda">El enlace de la mesa de regalos que abrieron en una tienda. Hasta 4.</span>
+            <ol class="filas-editor" data-filas="listas" aria-label="Listas de regalos"></ol>
+            <div class="libro-botones">
+              <button class="boton boton-secundario" type="button" data-agregar-fila="listas" data-icono="mas">Agregar lista</button>
+            </div>
+          </div>
+        </section>
+
+        <section class="hoja" aria-labelledby="hoja-preguntas">
+          <h2 class="hoja-titulo" id="hoja-preguntas">Preguntas frecuentes</h2>
+          <p class="hoja-ayuda">Lo que más les van a preguntar: si pueden ir niños, si hay parqueadero, a qué hora termina… Van justo antes de la tarjeta de respuesta.</p>
+          <ol class="filas-editor" data-filas="preguntas" aria-label="Preguntas frecuentes"></ol>
+          <div class="libro-botones">
+            <button class="boton boton-secundario" type="button" data-agregar-fila="preguntas" data-icono="mas">Agregar pregunta</button>
+            <button class="boton boton-secundario" type="button" data-sembrar-preguntas>Empezar con preguntas comunes</button>
+          </div>
+        </section>
+
+        <section class="hoja" aria-labelledby="hoja-respuesta">
+          <h2 class="hoja-titulo" id="hoja-respuesta">Tarjeta de respuesta</h2>
+          <p class="hoja-ayuda">Preguntas opcionales para quien confirma. Lo que contesten llega a la pestaña Invitados, en «Lo que pidieron», y al CSV.</p>
+          <label class="casilla">
+            <input type="checkbox" name="pedir-alergias">
+            <span>Preguntar por alergias o restricciones con la comida</span>
+          </label>
+          <label class="casilla">
+            <input type="checkbox" name="pedir-cancion">
+            <span>Pedir una canción para la fiesta</span>
           </label>
         </section>
 
@@ -261,9 +535,14 @@
             <label><input type="radio" name="lado" value="ambos" checked><span>Ambos</span></label>
           </div>
         </fieldset>
+        <label class="campo selector" data-campo-mesa hidden>
+          <span class="campo-etiqueta">Mesa <em>(opcional)</em></span>
+          <select name="mesa"></select>
+          <span class="campo-ayuda">La familia entera se sienta en esa mesa. El plano se arma en la pestaña Mesas.</span>
+        </label>
         <label class="campo">
           <span class="campo-etiqueta">Notas internas <em>(opcional)</em></span>
-          <textarea name="notas" rows="2" maxlength="500" placeholder="Mesa, parentesco, alergias…"></textarea>
+          <textarea name="notas" rows="2" maxlength="500" placeholder="Parentesco, alergias…"></textarea>
         </label>
 
         <div class="dialogo-respuesta" data-solo-edicion hidden>
@@ -288,6 +567,14 @@
             <span class="campo-etiqueta">Su mensaje</span>
             <blockquote class="mensaje-invitado" data-mensaje-texto></blockquote>
           </div>
+          <label class="campo" data-pedido-campo>
+            <span class="campo-etiqueta">Alergias o restricciones con la comida <em>(opcional)</em></span>
+            <input name="alergias" type="text" maxlength="300" placeholder="Vegetariano, sin gluten…" autocomplete="off">
+          </label>
+          <label class="campo" data-pedido-campo>
+            <span class="campo-etiqueta">Canción pedida <em>(opcional)</em></span>
+            <input name="cancion" type="text" maxlength="120" autocomplete="off">
+          </label>
           <div class="campo">
             <span class="campo-etiqueta">Enlace personal</span>
             <div class="enlace-caja">
@@ -328,13 +615,156 @@
     </form>
   </dialog>
 
+  <!-- Tarea: agregar o editar -->
+  <dialog class="dialogo" id="dialogo-tarea" aria-labelledby="dialogo-tarea-titulo">
+    <form method="dialog" class="dialogo-form" id="form-tarea" novalidate>
+      <header class="dialogo-cabeza">
+        <h2 id="dialogo-tarea-titulo">Agregar tarea</h2>
+        <button class="boton-icono" type="button" data-cerrar aria-label="Cerrar" data-icono-solo="cerrar"></button>
+      </header>
+      <div class="dialogo-cuerpo">
+        <label class="campo">
+          <span class="campo-etiqueta">Tarea</span>
+          <input name="titulo" type="text" maxlength="120" required placeholder="Reservar la iglesia" autocomplete="off">
+        </label>
+        <label class="campo selector">
+          <span class="campo-etiqueta">Cuándo</span>
+          <select name="etapa"></select>
+          <span class="campo-ayuda" data-ayuda-etapa></span>
+        </label>
+        <label class="campo">
+          <span class="campo-etiqueta">Nota <em>(opcional)</em></span>
+          <textarea name="nota" rows="2" maxlength="300" placeholder="Teléfonos, lo que falta, a quién le toca…"></textarea>
+        </label>
+        <p class="campo-error" data-error-tarea role="alert"></p>
+      </div>
+      <footer class="dialogo-pie">
+        <button class="boton boton-secundario" type="button" data-cerrar>Cancelar</button>
+        <button class="boton boton-principal" type="submit" data-guardar-tarea>Agregar</button>
+      </footer>
+    </form>
+  </dialog>
+
+  <!-- Gasto del presupuesto: agregar o editar -->
+  <dialog class="dialogo" id="dialogo-partida" aria-labelledby="dialogo-partida-titulo">
+    <form method="dialog" class="dialogo-form" id="form-partida" novalidate>
+      <header class="dialogo-cabeza">
+        <h2 id="dialogo-partida-titulo">Agregar gasto</h2>
+        <button class="boton-icono" type="button" data-cerrar aria-label="Cerrar" data-icono-solo="cerrar"></button>
+      </header>
+      <div class="dialogo-cuerpo">
+        <label class="campo">
+          <span class="campo-etiqueta">Concepto</span>
+          <input name="concepto" type="text" maxlength="80" required placeholder="Alquiler del salón" autocomplete="off">
+        </label>
+        <div class="campos-rejilla campos-dos">
+          <label class="campo selector">
+            <span class="campo-etiqueta">Categoría</span>
+            <select name="categoria"></select>
+          </label>
+          <label class="campo selector">
+            <span class="campo-etiqueta">Proveedor <em>(opcional)</em></span>
+            <select name="proveedor"></select>
+          </label>
+        </div>
+        <div class="campos-rejilla campos-tres">
+          <label class="campo">
+            <span class="campo-etiqueta">Estimado</span>
+            <input name="estimado" type="text" inputmode="numeric" placeholder="$ 0" autocomplete="off" data-dinero>
+          </label>
+          <label class="campo">
+            <span class="campo-etiqueta">Costo final</span>
+            <input name="costo" type="text" inputmode="numeric" placeholder="$ 0" autocomplete="off" data-dinero>
+          </label>
+          <label class="campo">
+            <span class="campo-etiqueta">Pagado</span>
+            <input name="pagado" type="text" inputmode="numeric" placeholder="$ 0" autocomplete="off" data-dinero>
+          </label>
+        </div>
+        <span class="campo-ayuda campo-ayuda-suelta">El costo final reemplaza al estimado en las cuentas cuando ya lo saben.</span>
+        <label class="campo">
+          <span class="campo-etiqueta">Próximo pago <em>(opcional)</em></span>
+          <input name="vence" type="date">
+          <span class="campo-ayuda">Aparece en «Próximos pagos» mientras quede saldo.</span>
+        </label>
+        <label class="campo">
+          <span class="campo-etiqueta">Nota <em>(opcional)</em></span>
+          <textarea name="nota" rows="2" maxlength="300" placeholder="Qué incluye, cuotas, número de factura…"></textarea>
+        </label>
+        <p class="campo-error" data-error-partida role="alert"></p>
+      </div>
+      <footer class="dialogo-pie">
+        <button class="boton boton-secundario" type="button" data-cerrar>Cancelar</button>
+        <button class="boton boton-principal" type="submit" data-guardar-partida>Agregar</button>
+      </footer>
+    </form>
+  </dialog>
+
+  <!-- Proveedor: agregar o editar -->
+  <dialog class="dialogo" id="dialogo-proveedor" aria-labelledby="dialogo-proveedor-titulo">
+    <form method="dialog" class="dialogo-form" id="form-proveedor" novalidate>
+      <header class="dialogo-cabeza">
+        <h2 id="dialogo-proveedor-titulo">Agregar proveedor</h2>
+        <button class="boton-icono" type="button" data-cerrar aria-label="Cerrar" data-icono-solo="cerrar"></button>
+      </header>
+      <div class="dialogo-cuerpo">
+        <label class="campo">
+          <span class="campo-etiqueta">Nombre</span>
+          <input name="nombre" type="text" maxlength="80" required placeholder="Estudio, empresa o persona" autocomplete="off">
+        </label>
+        <label class="campo selector">
+          <span class="campo-etiqueta">Categoría</span>
+          <select name="categoria"></select>
+        </label>
+        <fieldset class="campo">
+          <legend class="campo-etiqueta">Estado</legend>
+          <div class="segmentos segmentos-form" data-estados-proveedor></div>
+        </fieldset>
+        <div class="campos-rejilla campos-dos">
+          <label class="campo">
+            <span class="campo-etiqueta">Contacto <em>(opcional)</em></span>
+            <input name="contacto" type="text" maxlength="80" placeholder="Con quién hablan" autocomplete="off">
+          </label>
+          <label class="campo">
+            <span class="campo-etiqueta">WhatsApp o teléfono <em>(opcional)</em></span>
+            <input name="telefono" type="tel" maxlength="30" placeholder="300 123 4567" autocomplete="off" inputmode="tel">
+          </label>
+          <label class="campo">
+            <span class="campo-etiqueta">Correo <em>(opcional)</em></span>
+            <input name="correo" type="email" maxlength="120" autocomplete="off">
+          </label>
+          <label class="campo">
+            <span class="campo-etiqueta">Página o Instagram <em>(opcional)</em></span>
+            <input name="web" type="url" maxlength="600" placeholder="https://…" autocomplete="off" inputmode="url">
+          </label>
+        </div>
+        <label class="campo">
+          <span class="campo-etiqueta">Precio cotizado <em>(opcional)</em></span>
+          <input name="precio" type="text" inputmode="numeric" placeholder="$ 0" autocomplete="off" data-dinero>
+        </label>
+        <label class="campo">
+          <span class="campo-etiqueta">Notas <em>(opcional)</em></span>
+          <textarea name="nota" rows="3" maxlength="600" placeholder="Qué incluye, condiciones, lo que les gustó…"></textarea>
+        </label>
+        <p class="campo-error" data-error-proveedor role="alert"></p>
+      </div>
+      <footer class="dialogo-pie">
+        <button class="boton boton-secundario" type="button" data-cerrar>Cancelar</button>
+        <button class="boton boton-principal" type="submit" data-guardar-proveedor>Agregar</button>
+      </footer>
+    </form>
+  </dialog>
+
   <div class="avisos" id="avisos" aria-live="polite"></div>
 
-  <script src="assets/config.js"></script>
-  <script src="assets/estilos.js"></script>
-  <script src="assets/datos.js"></script>
-  <script src="assets/papeleria.js"></script>
-  <script src="assets/ramo.js"></script>
-  <script src="assets/admin.js"></script>
+  <script src="assets/config.js?v=20261023"></script>
+  <script src="assets/estilos.js?v=20261023"></script>
+  <script src="assets/datos.js?v=20261023"></script>
+  <script src="assets/papeleria.js?v=20261023"></script>
+  <script src="assets/salon.js?v=20261023"></script>
+  <script src="assets/ramo.js?v=20261023"></script>
+  <script src="assets/planeador.js?v=20261023"></script>
+  <script src="assets/planeacion.js?v=20261023"></script>
+  <script src="assets/admin.js?v=20261023"></script>
 </body>
 </html>

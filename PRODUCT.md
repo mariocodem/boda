@@ -39,6 +39,11 @@ Es la invitación de una boda concreta, no una plantilla: cada invitado ve su no
 - Responsive: teléfono primero.
 - Estilo elegible desde el panel (pedido de Mario, 2026-10-21): seis paletas (la verde original y cinco pastel) y cuatro familias de letra elegantes.
 - Panel de administración: crear, editar y eliminar invitados (nombre, cupos, teléfono, notas), ver estado de confirmación, totales, búsqueda y filtros, enlaces personales, exportar.
+- Organización y mariposa (pedido de Mario, 2026-10-23): después de la portada, cada parte es un pliego con su foto (las fotos de la pareja se reparten, no van todas juntas), con espacio parejo y sin piezas montadas; una mariposa dorada acompaña al bajar. Todo sigue siendo personalizable desde el panel (la mariposa se apaga en Estilo; el lugar de cada foto depende de su orden).
+- Mesas (pedido de Mario, 2026-10-22): en el panel, un plano 2D del salón para organizar las mesas y sentar a cada familia (una invitación va entera a una mesa). El invitado que confirmó ve su mesa en la invitación solo cuando los novios la publican («Mostrar su mesa a los invitados»).
+- Funciones de Bodas.net (pedido de Mario, 2026-10-23): en el panel, **Tareas** (agenda por etapas con lista sugerida, «Ahora» y atrasadas según la fecha), **Presupuesto** (gastos por categoría con estimado, costo final, pagado, próximos pagos y costo por invitado) y **Proveedores** (estado, contacto y precio; se llevan al presupuesto). Son privados (tabla `planeacion`). En la invitación: dónde quedarse, nuestra historia, preguntas frecuentes, cuenta para transferencias y listas de regalos, y dos preguntas opcionales al confirmar (alergias o restricciones de comida, una canción), que el panel junta en «Lo que pidieron».
+- Página editorial (pedido de Mario, 2026-10-23, con una invitación editorial de Canva como referencia): después del sobre y de la tarjeta a pantalla completa, que se conservan con su escena de scroll, la invitación es una página editorial: fondo crema, titulares en serif de alto contraste en terracota, láminas botánicas de Redouté (dominio público, `assets/flores/`) sobre los bordes y las fotos, dos columnas que alternan (una en el teléfono) y botones en píldora. Destellos más suaves. Tratamiento «tú», editable. Regla: ninguna animación existente se quita; se adapta a la nueva estructura y, si no encaja, se le pregunta a Mario.
+- Edición tipo WordPress (pedido de Mario, 2026-10-23): todo el contenido sale de un modelo de datos; desde el panel se editan los textos, el fondo (color, degradado o imagen), las fotos, las flores (librería), la paleta y las letras (con temas), y las secciones (mostrar, ocultar, reordenar, duplicar), con vista previa en vivo y borrador que se publica. Asistente de organización: tareas con fechas, invitados conectados con las respuestas (los acompañantes se cuentan, sin nombres), cuenta regresiva y sugerencias de textos de una librería curada, sin IA.
 - Idioma de la interfaz: español (Colombia).
 - **Por decidir:** fecha, ciudad, lugar(es), horarios, código de vestimenta, regalos. Se dejan como marcadores editables «por confirmar» en un único bloque de configuración.
 
@@ -50,7 +55,7 @@ Es la invitación de una boda concreta, no una plantilla: cada invitado ve su no
 ## Evidence on Hand
 
 - Fotos de la pareja: **pendientes**; los novios las suben desde el panel (foto principal, hasta 6 de la pareja y hasta 4 de referencia de vestimenta). Sin fotos, el arco de la portada muestra el forro y la mesa de fotos no aparece.
-- No hay fecha, lugar, historia de la pareja ni textos propios todavía: no inventar datos del evento ni anécdotas presentadas como reales.
+- No hay fecha, lugar, historia de la pareja ni textos propios todavía: no inventar datos del evento ni anécdotas presentadas como reales. La historia, el alojamiento, la cuenta de regalos y las preguntas frecuentes los escriben los novios; vacíos, no aparecen. Las listas sugeridas (tareas, gastos, preguntas comunes sin respuesta) son ayudas de planeación, nunca datos del evento.
 
 ## Product Principles
 

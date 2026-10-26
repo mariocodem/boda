@@ -2,8 +2,9 @@
  * Configuración de la boda. Todo lo que cambia entre "por confirmar" y el dato
  * real vive aquí; el diseño no necesita tocarse.
  *
- * Fecha, lugares, itinerario, vestimenta y regalos también se editan desde el
- * panel (pestaña «La boda»). Lo que se guarde allí reemplaza lo de este archivo.
+ * Fecha, lugares, alojamiento, itinerario, historia, vestimenta, regalos y
+ * preguntas también se editan desde el panel (pestaña «La boda»). Lo que se
+ * guarde allí reemplaza lo de este archivo.
  *
  * Un valor en null se muestra en la invitación como «Por confirmar».
  */
@@ -53,35 +54,43 @@ window.BODA = {
     nota: null,     // 'Evitar el blanco, que es de la novia.' (por ejemplo)
   },
   regalos: null,    // 'Lluvia de sobres el día de la boda.' (por ejemplo)
+  // Cuenta para regalos en dinero (opcional): sin número no aparece.
+  // { banco: 'Bancolombia', tipo: 'Ahorros', numero: '000-000000-00', titular: 'Erika Ramos', documento: null }
+  cuentaRegalos: null,
+  // Mesas de regalos de una tienda: [{ nombre: 'Falabella', enlace: 'https://…' }]
+  listasRegalos: [],
+
+  // Nuestra historia: texto libre; una línea en blanco separa los párrafos.
+  historia: null,
+
+  // Hoteles cerca, para quienes vienen de lejos. Sin hoteles no aparece.
+  // hoteles: [{ nombre: 'Hotel …', direccion: '…', enlace: 'https://…', nota: 'Tarifa especial' }]
+  alojamiento: { nota: null, hoteles: [] },
+
+  // Preguntas frecuentes: [{ pregunta: '¿Pueden ir niños?', respuesta: '…' }]
+  preguntas: [],
+
+  // Preguntas opcionales de la tarjeta de respuesta.
+  respuesta: { alergias: false, cancion: false },
 
   // WhatsApp para dudas de los invitados, con indicativo: '573001234567'
   contacto: { whatsapp: null, nombre: null },
 
-  // Video del camino al altar, controlado por el scroll: uno horizontal para
-  // pantallas anchas y uno vertical para teléfonos (ver video/FUENTE.md).
-  // inicio: cuadro que se ve mientras carga. final: el que queda cuando el
-  // invitado pidió reducir el movimiento.
-  video: {
-    horizontal: {
-      archivo: 'video/altar-horizontal.mp4',
-      inicio: 'video/altar-horizontal-inicio.jpg',
-      final: 'video/altar-horizontal-final.jpg',
-    },
-    vertical: {
-      archivo: 'video/altar-vertical.mp4',
-      inicio: 'video/altar-vertical-inicio.jpg',
-      final: 'video/altar-vertical-final.jpg',
-    },
-  },
-
   // Estilo de la invitación: paleta de colores y familia de letra. Se cambia
   // desde el panel (pestaña «La boda» → Estilo). Paletas: verde, rosa, lavanda,
-  // cielo, durazno, salvia. Letras: grabada, romana, romantica, fina.
+  // cielo, durazno, salvia, o libre con su color (paleta: 'libre', color:
+  // '#c9a3b5'). Letras: grabada, romana, romantica, fina.
   estilo: { paleta: 'verde', letra: 'grabada' },
 
+  // La mariposa de papel dorado que se posa en el ramo y acompaña al bajar.
+  // false la quita (también se apaga desde el panel, en Estilo).
+  mariposa: true,
+
   // Fotos: se suben desde el panel (pestaña «La boda»). Lo que se suba allí
-  // reemplaza esto. También sirve poner aquí rutas a archivos de la carpeta
-  // fotos/, por ejemplo:
+  // reemplaza esto. Las de la pareja se reparten por la invitación, en orden:
+  // junto a los detalles, al itinerario, a la historia y a la respuesta; las
+  // demás van juntas antes de la vestimenta. También sirve poner aquí rutas a
+  // archivos de la carpeta fotos/, por ejemplo:
   //   fotoPortada: { archivo: 'fotos/portada.jpg', encuadre: '50% 30%' },
   //   fotos: [{ archivo: 'fotos/pareja-1.jpg', forma: 'vertical' }],
   // encuadre: qué parte de la foto queda a la vista dentro del arco.

@@ -1,12 +1,16 @@
 /*
  * Capa de datos: invitados, datos de la boda (fecha, lugares, itinerario,
- * estilo) y sus fotos.
+ * estilo), sus fotos, el plano de mesas del salón y la planeación de los
+ * novios (tareas, presupuesto y proveedores).
  *
  * Modo local: localStorage del navegador (para probar y diseñar); las fotos
  * van en IndexedDB del mismo navegador.
  * Modo Supabase: base de datos real; los invitados solo pueden leer y responder
  * su propia invitación a través de dos funciones (ver supabase/esquema.sql).
- * Las fotos van al bucket público «fotos» de Supabase Storage.
+ * Las fotos van al bucket público «fotos» de Supabase Storage. El plano del
+ * salón (tabla salon) es público como el evento; la mesa de cada invitado vive
+ * en su fila y solo la ve él, cuando confirmó y los novios publicaron las mesas.
+ * La planeación (tabla planeacion) es privada: solo la ven los administradores.
  */
 (function () {
   const C = window.BODA;
@@ -45,6 +49,11 @@
     return String(codigo || '').toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 12);
   }
 
+  // La mesa de un invitado es el id de una pieza del plano (ver salon.js).
+  function limpiarMesa(m) {
+    return /^[a-z0-9]{4,24}$/.test(String(m || '')) ? String(m) : null;
+  }
+
   function desdeFila(f) {
     return {
       id: f.id,
@@ -58,6 +67,9 @@
       estado: f.estado || 'pendiente',
       asistentes: f.asistentes || 0,
       mensaje: f.mensaje || '',
+      alergias: f.alergias || '',
+      cancion: f.cancion || '',
+      mesa: f.mesa || null,
       abiertoEn: f.abierto_en || null,
       respondidoEn: f.respondido_en || null,
       creadoEn: f.creado_en || null,
@@ -74,6 +86,9 @@
     if ('estado' in i) fila.estado = i.estado;
     if ('asistentes' in i) fila.asistentes = Number(i.asistentes) || 0;
     if ('mensaje' in i) fila.mensaje = i.mensaje || null;
+    if ('alergias' in i) fila.alergias = texto(i.alergias, 300);
+    if ('cancion' in i) fila.cancion = texto(i.cancion, 120);
+    if ('mesa' in i) fila.mesa = limpiarMesa(i.mesa);
     if ('respondidoEn' in i) fila.respondido_en = i.respondidoEn;
     if ('abiertoEn' in i) fila.abierto_en = i.abiertoEn;
     return fila;
@@ -94,8 +109,18 @@
   function traducirError(e) {
     if (!e) return new Error('Algo salió mal.');
     const msg = String(e.message || e);
-    if (/evento/.test(msg) && /42P01|PGRST205|does not exist|schema cache/i.test(`${msg} ${e.code || ''}`)) {
+    const falta = /42P01|42703|PGRST202|PGRST204|PGRST205|does not exist|schema cache/i.test(`${msg} ${e.code || ''}`);
+    if (/planeacion/.test(msg) && falta) {
+      return new Error('Faltan las tareas, el presupuesto y los proveedores en Supabase. Vuelve a ejecutar supabase/esquema.sql.');
+    }
+    if (/alergias|cancion/.test(msg) && falta) {
+      return new Error('Faltan las preguntas de la respuesta en Supabase. Vuelve a ejecutar supabase/esquema.sql.');
+    }
+    if (/evento/.test(msg) && falta) {
       return new Error('Falta la tabla de los datos de la boda en Supabase. Vuelve a ejecutar supabase/esquema.sql.');
+    }
+    if (/salon|mesa/.test(msg) && falta) {
+      return new Error('Falta el plano de mesas en Supabase. Vuelve a ejecutar supabase/esquema.sql.');
     }
     if (/bucket not found/i.test(msg)) return new Error('Falta el espacio para las fotos en Supabase. Vuelve a ejecutar supabase/esquema.sql.');
     if (/payload too large|exceeded the maximum allowed size/i.test(msg)) return new Error('La foto es demasiado pesada para Supabase.');
@@ -173,6 +198,33 @@
     return (Array.isArray(lista) ? lista : []).map((f) => foto(f, op)).filter(Boolean).slice(0, max);
   }
 
+  // Solo enlaces https: estos valores terminan en un href de la invitación.
+  function enlaceHttps(v) {
+    const s = String(v || '').trim();
+    return /^https:\/\/\S+$/.test(s) ? s.slice(0, 600) : null;
+  }
+
+  function filas(lista, max, fn, obligatorios) {
+    return (Array.isArray(lista) ? lista : [])
+      .map((x) => fn(x || {}))
+      .filter((x) => obligatorios.every((c) => x[c]))
+      .slice(0, max);
+  }
+
+  // La cuenta para regalos en dinero. Sin número no hay cuenta.
+  function cuentaRegalos(c) {
+    const x = c || {};
+    const numero = texto(x.numero, 40);
+    if (!numero) return null;
+    return {
+      banco: texto(x.banco, 60),
+      tipo: texto(x.tipo, 40),
+      numero,
+      titular: texto(x.titular, 80),
+      documento: texto(x.documento, 30),
+    };
+  }
+
   function normalizarEvento(e) {
     const x = e || {};
     let fecha = texto(x.fecha, 40);
@@ -197,12 +249,31 @@
         .slice(0, 20),
       vestimenta: { codigo: texto(vest.codigo, 60), nota: texto(vest.nota, 400), fotos: fotos(vest.fotos, 4, { nota: true }) },
       regalos: texto(x.regalos, 600),
+      cuentaRegalos: cuentaRegalos(x.cuentaRegalos),
+      listasRegalos: filas(x.listasRegalos, 4, (l) => ({ nombre: texto(l.nombre, 60), enlace: enlaceHttps(l.enlace) }), ['nombre', 'enlace']),
+      historia: texto(x.historia, 3000),
+      alojamiento: {
+        nota: texto(x.alojamiento && x.alojamiento.nota, 400),
+        hoteles: filas(x.alojamiento && x.alojamiento.hoteles, 6, (h) => ({
+          nombre: texto(h.nombre, 80),
+          direccion: texto(h.direccion, 160),
+          enlace: enlaceHttps(h.enlace),
+          nota: texto(h.nota, 200),
+        }), ['nombre']),
+      },
+      preguntas: filas(x.preguntas, 12, (q) => ({ pregunta: texto(q.pregunta, 160), respuesta: texto(q.respuesta, 800) }), ['pregunta', 'respuesta']),
+      // Preguntas opcionales de la tarjeta de respuesta.
+      respuesta: { alergias: Boolean(x.respuesta && x.respuesta.alergias), cancion: Boolean(x.respuesta && x.respuesta.cancion) },
       fotoPortada: x.fotoPortada ? Object.assign(foto(x.fotoPortada) || {}, { encuadre: encuadre(x.fotoPortada.encuadre) }) : null,
       fotos: fotos(x.fotos, 6),
       estilo: {
         paleta: /^[a-z]{2,20}$/.test((x.estilo && x.estilo.paleta) || '') ? x.estilo.paleta : 'verde',
         letra: /^[a-z]{2,20}$/.test((x.estilo && x.estilo.letra) || '') ? x.estilo.letra : 'grabada',
+        // El color de la paleta «libre» (ver Estilos.LIBRE).
+        color: /^#[0-9a-f]{6}$/i.test((x.estilo && x.estilo.color) || '') ? x.estilo.color.toLowerCase() : undefined,
       },
+      // La mariposa de papel dorado; se apaga desde el panel (Estilo).
+      mariposa: x.mariposa !== false,
     };
     if (limpio.fotoPortada && !limpio.fotoPortada.url) limpio.fotoPortada = null;
     return limpio;
@@ -270,6 +341,17 @@
 
   // ---------- Modo local ----------
 
+  const CLAVE_SALON = 'boda-diego-erika:salon';
+  const CLAVE_PLANEACION = 'boda-diego-erika:planeacion:';
+
+  function salonLocal() {
+    try {
+      return window.Salon.normalizar(JSON.parse(localStorage.getItem(CLAVE_SALON)));
+    } catch {
+      return window.Salon.normalizar(null);
+    }
+  }
+
   function leerLocal() {
     try {
       const v = JSON.parse(localStorage.getItem(CLAVE_LOCAL));
@@ -287,6 +369,8 @@
     }
   }
 
+  // Como ver_invitacion: la mesa solo se ve con la asistencia confirmada y las
+  // mesas publicadas.
   function publico(i) {
     return {
       numero: i.numero,
@@ -295,7 +379,10 @@
       estado: i.estado,
       asistentes: i.asistentes,
       mensaje: i.mensaje,
+      alergias: i.alergias || '',
+      cancion: i.cancion || '',
       respondidoEn: i.respondidoEn,
+      mesa: i.estado === 'confirmado' && salonLocal().mostrar ? i.mesa || null : null,
     };
   }
 
@@ -318,6 +405,9 @@
       i.estado = r.asiste ? 'confirmado' : 'declinado';
       i.asistentes = r.asiste ? r.asistentes : 0;
       i.mensaje = (r.mensaje || '').trim().slice(0, 1000);
+      // Sin la pregunta en la tarjeta, lo que ya había se queda.
+      if (r.alergias != null) i.alergias = texto(r.alergias, 300) || '';
+      if (r.cancion != null) i.cancion = texto(r.cancion, 120) || '';
       i.respondidoEn = new Date().toISOString();
       guardarLocal(lista);
       return publico(i);
@@ -362,6 +452,9 @@
           estado: n.estado || 'pendiente',
           asistentes: n.estado === 'confirmado' ? Number(n.asistentes) : 0,
           mensaje: n.mensaje || '',
+          alergias: texto(n.alergias, 300) || '',
+          cancion: texto(n.cancion, 120) || '',
+          mesa: limpiarMesa(n.mesa),
           abiertoEn: n.abiertoEn || null,
           respondidoEn: n.respondidoEn || (n.estado && n.estado !== 'pendiente' ? new Date().toISOString() : null),
           creadoEn: new Date().toISOString(),
@@ -380,12 +473,20 @@
       if (cambios.estado && cambios.estado !== i.estado) {
         nuevo.respondidoEn = cambios.estado === 'pendiente' ? null : new Date().toISOString();
       }
+      if ('mesa' in cambios) nuevo.mesa = limpiarMesa(cambios.mesa);
+      if ('alergias' in cambios) nuevo.alergias = texto(cambios.alergias, 300) || '';
+      if ('cancion' in cambios) nuevo.cancion = texto(cambios.cancion, 120) || '';
       Object.assign(i, nuevo);
       guardarLocal(lista);
       return i;
     },
     async eliminar(id) {
       guardarLocal(leerLocal().filter((x) => x.id !== id));
+    },
+    async asignarMesa(ids, mesa) {
+      const lista = leerLocal();
+      lista.forEach((x) => { if (ids.includes(x.id)) x.mesa = limpiarMesa(mesa); });
+      guardarLocal(lista);
     },
     async restaurar(inv) {
       const lista = leerLocal().filter((x) => x.id !== inv.id);
@@ -414,6 +515,35 @@
       await fotosLocales('readwrite', (st) => st.put(blob, id));
       return `local:${id}`;
     },
+    async salon() {
+      return salonLocal();
+    },
+    async guardarSalon(plan) {
+      const limpio = window.Salon.normalizar(plan);
+      try {
+        localStorage.setItem(CLAVE_SALON, JSON.stringify(limpio));
+      } catch {
+        throw new Error('Este navegador no permite guardar datos (¿modo privado?).');
+      }
+      return limpio;
+    },
+    async planeacion(clave) {
+      try {
+        return window.Planeador.normalizar(clave, JSON.parse(localStorage.getItem(CLAVE_PLANEACION + clave)));
+      } catch (e) {
+        if (/herramienta/.test(e.message)) throw e;
+        return window.Planeador.normalizar(clave, null);
+      }
+    },
+    async guardarPlaneacion(clave, datos) {
+      const limpio = window.Planeador.normalizar(clave, datos);
+      try {
+        localStorage.setItem(CLAVE_PLANEACION + clave, JSON.stringify(limpio));
+      } catch {
+        throw new Error('Este navegador no permite guardar datos (¿modo privado?).');
+      }
+      return limpio;
+    },
     async borrarFoto(ref) {
       if (!String(ref).startsWith('local:')) return;
       await fotosLocales('readwrite', (st) => st.delete(ref.slice(6)));
@@ -432,7 +562,10 @@
       estado: f.estado,
       asistentes: f.asistentes,
       mensaje: f.mensaje || '',
+      alergias: f.alergias || '',
+      cancion: f.cancion || '',
       respondidoEn: f.respondido_en,
+      mesa: f.mesa || null,
     } : null;
   }
 
@@ -445,12 +578,22 @@
     },
     async responder(codigo, r) {
       const s = await sb();
-      const { data, error } = await s.rpc('responder_invitacion', {
+      const base = {
         p_codigo: codigo,
         p_asiste: r.asiste,
         p_asistentes: r.asiste ? r.asistentes : 0,
         p_mensaje: (r.mensaje || '').trim().slice(0, 1000),
-      });
+      };
+      // Las preguntas extra solo viajan si la tarjeta las hizo: sin ellas, lo
+      // que ya había se queda.
+      const extra = {};
+      if (r.alergias != null) extra.p_alergias = String(r.alergias).trim().slice(0, 300);
+      if (r.cancion != null) extra.p_cancion = String(r.cancion).trim().slice(0, 120);
+      let { data, error } = await s.rpc('responder_invitacion', Object.assign({}, base, extra));
+      // Con el esquema viejo (sin esas preguntas) la respuesta llega igual.
+      if (error && Object.keys(extra).length && /PGRST202|Could not find the function/i.test(`${error.code} ${error.message}`)) {
+        ({ data, error } = await s.rpc('responder_invitacion', base));
+      }
       if (error) throw traducirError(error);
       return publicoDesdeFila(Array.isArray(data) ? data[0] : data);
     },
@@ -521,6 +664,12 @@
       const { error } = await s.from('invitados').delete().eq('id', id);
       if (error) throw traducirError(error);
     },
+    async asignarMesa(ids, mesa) {
+      if (!ids.length) return;
+      const s = await sb();
+      const { error } = await s.from('invitados').update({ mesa: limpiarMesa(mesa) }).in('id', ids);
+      if (error) throw traducirError(error);
+    },
     async restaurar(inv) {
       const s = await sb();
       const fila = Object.assign(aFila(inv), {
@@ -529,6 +678,8 @@
         codigo: inv.codigo,
         creado_en: inv.creadoEn,
       });
+      // Vacías no se mandan estas columnas: así deshacer funciona aunque falten en el esquema.
+      ['mesa', 'alergias', 'cancion'].forEach((c) => { if (!fila[c]) delete fila[c]; });
       const { data, error } = await s.from('invitados').insert(fila).select().single();
       if (error) throw traducirError(error);
       return desdeFila(data);
@@ -543,6 +694,32 @@
       const s = await sb();
       const limpio = normalizarEvento(ev);
       const { error } = await s.from('evento').upsert({ id: 1, datos: limpio, actualizado_en: new Date().toISOString() });
+      if (error) throw traducirError(error);
+      return limpio;
+    },
+    async salon() {
+      const s = await sb();
+      const { data, error } = await s.from('salon').select('datos').eq('id', 1).maybeSingle();
+      if (error) throw traducirError(error);
+      return window.Salon.normalizar(data && data.datos);
+    },
+    async guardarSalon(plan) {
+      const s = await sb();
+      const limpio = window.Salon.normalizar(plan);
+      const { error } = await s.from('salon').upsert({ id: 1, datos: limpio, actualizado_en: new Date().toISOString() });
+      if (error) throw traducirError(error);
+      return limpio;
+    },
+    async planeacion(clave) {
+      const s = await sb();
+      const { data, error } = await s.from('planeacion').select('datos').eq('clave', clave).maybeSingle();
+      if (error) throw traducirError(error);
+      return window.Planeador.normalizar(clave, data && data.datos);
+    },
+    async guardarPlaneacion(clave, datos) {
+      const s = await sb();
+      const limpio = window.Planeador.normalizar(clave, datos);
+      const { error } = await s.from('planeacion').upsert({ clave, datos: limpio, actualizado_en: new Date().toISOString() });
       if (error) throw traducirError(error);
       return limpio;
     },
@@ -587,6 +764,11 @@
     actualizar: envolver((id, cambios) => motor.actualizar(id, cambios)),
     eliminar: envolver((id) => motor.eliminar(id)),
     restaurar: envolver((inv) => motor.restaurar(inv)),
+    asignarMesa: envolver((ids, mesa) => motor.asignarMesa(ids, mesa)),
+    salon: envolver(() => motor.salon()),
+    guardarSalon: envolver((plan) => motor.guardarSalon(plan)),
+    planeacion: envolver((clave) => motor.planeacion(clave)),
+    guardarPlaneacion: envolver((clave, datos) => motor.guardarPlaneacion(clave, datos)),
     evento: envolver(() => motor.evento()),
     guardarEvento: envolver((ev) => motor.guardarEvento(ev)),
     eventoBase: () => mezclarEvento(null),

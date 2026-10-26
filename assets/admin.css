@@ -407,7 +407,7 @@ html {
   background: #8fd1a4;
 }
 
-/* Pestañas: invitados y la boda */
+/* Pestañas: invitados, mesas, la planeación y la boda */
 .vistas {
   display: flex;
   align-self: stretch;
@@ -1437,6 +1437,83 @@ html {
   line-height: 1.25;
 }
 
+/* «Color libre»: la rueda junto al nombre dice que ahí cabe cualquier color */
+.paleta-libre .paleta-nombre::before {
+  content: '';
+  display: inline-block;
+  width: 0.8em;
+  height: 0.8em;
+  margin-right: 5px;
+  border-radius: 50%;
+  vertical-align: -0.08em;
+  background: conic-gradient(#d9615a, #dfb04a, #7fae69, #4c9fb5, #6a70c7, #b26bbd, #d9615a);
+}
+
+.color-libre {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  margin-top: 6px;
+}
+
+.color-libre-rueda {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 44px;
+  padding: 4px 16px 4px 4px;
+  border: 1px solid var(--linea);
+  border-radius: 999px;
+  background: #fff;
+  font-weight: 600;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: border-color 0.15s;
+}
+
+.color-libre-rueda:hover {
+  border-color: var(--tinta-tenue);
+}
+
+.color-libre-rueda:has(input:focus-visible) {
+  outline: 3px solid var(--polen);
+  outline-offset: 2px;
+}
+
+.campo .color-libre-rueda input {
+  flex: none;
+  width: 34px;
+  height: 34px;
+  min-height: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: none;
+  box-shadow: none;
+  cursor: pointer;
+}
+
+.color-libre-rueda input::-webkit-color-swatch-wrapper {
+  padding: 0;
+}
+
+.color-libre-rueda input::-webkit-color-swatch {
+  border: 1px solid rgba(0, 0, 0, 0.15);
+  border-radius: 50%;
+}
+
+.color-libre-rueda input::-moz-color-swatch {
+  border: 1px solid rgba(0, 0, 0, 0.15);
+  border-radius: 50%;
+}
+
+.campo .color-libre-codigo {
+  width: 7.5em;
+  font-variant-numeric: tabular-nums;
+  text-transform: uppercase;
+}
+
 .letra-nombre small {
   display: block;
   font-weight: 400;
@@ -1892,6 +1969,14 @@ html {
   color: var(--polen-hondo);
 }
 
+/* Dónde queda la foto en la invitación */
+.foto-item-lugar {
+  margin: 2px 2px 0;
+  font-size: 0.8rem;
+  line-height: 1.3;
+  color: var(--tinta-suave);
+}
+
 .foto-item-acciones {
   display: flex;
   justify-content: flex-end;
@@ -1988,6 +2073,1240 @@ html {
   }
 }
 
+/* ---------- Mesas ---------- */
+
+.contadores.de-cuatro {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+/* Las sillas del plano: polen para quien confirmó, salvia para quien no ha respondido */
+.leyenda-sillas .silla-muestra {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: inset 0 0 0 1.25px var(--linea);
+}
+
+.leyenda-sillas .silla-muestra.confirmada {
+  background: var(--polen);
+  box-shadow: inset 0 0 0 1.25px var(--polen-hondo);
+}
+
+.leyenda-sillas .silla-muestra.pendiente {
+  background: var(--salvia);
+  box-shadow: none;
+}
+
+.mesas-cuerpo {
+  display: grid;
+  gap: 28px;
+  margin-top: 28px;
+}
+
+.salon {
+  min-width: 0;
+}
+
+.publicar {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  margin-top: 18px;
+  padding: 12px 16px;
+  background: #fff;
+  border: 1px solid var(--linea);
+  border-radius: 8px;
+  cursor: pointer;
+  transition: border-color 0.15s, background-color 0.15s;
+}
+
+.publicar:hover {
+  border-color: var(--tinta-tenue);
+}
+
+.publicar[data-publicado='true'] {
+  border-color: var(--verde-forro);
+  box-shadow: inset 0 0 0 1px var(--verde-forro);
+}
+
+.publicar input {
+  width: 20px;
+  height: 20px;
+  margin: 1px 0 0;
+  flex: none;
+}
+
+.publicar-texto {
+  display: grid;
+  gap: 2px;
+  font-size: 0.88rem;
+  color: var(--tinta-suave);
+}
+
+.publicar-texto b {
+  font-size: 0.95rem;
+  color: var(--tinta);
+}
+
+/* Aviso de que se está sentando a una familia */
+.sentando {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 14px;
+  padding: 8px 8px 8px 16px;
+  border-radius: 8px;
+  background: var(--fibra), var(--verde);
+  color: var(--salvia-clara);
+  font-size: 0.92rem;
+  scroll-margin-top: 120px;
+}
+
+.sentando b {
+  color: var(--algodon);
+}
+
+/* El plano: una hoja con el piso punteado */
+.plano-marco {
+  position: relative;
+  margin-top: 14px;
+  overflow: hidden;
+  background: #fff;
+  border: 1px solid var(--linea);
+  border-radius: 8px;
+}
+
+.plano-editor {
+  display: block;
+  width: 100%;
+  height: auto;
+  touch-action: pan-x pan-y;
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.plano-editor :is(rect, circle, path) {
+  vector-effect: non-scaling-stroke;
+}
+
+.plano-piso {
+  fill: url(#plano-puntos);
+}
+
+#plano-puntos circle {
+  fill: var(--linea);
+}
+
+.plano-muros {
+  fill: none;
+  stroke: var(--tinta-tenue);
+  stroke-width: 1.5;
+}
+
+.pieza {
+  cursor: grab;
+  touch-action: none;
+  outline: none;
+}
+
+.arrastrando .pieza,
+.arrastrando .pieza:active {
+  cursor: grabbing;
+}
+
+.pieza-toque {
+  fill: transparent;
+}
+
+.pieza-foco {
+  fill: none;
+  stroke: none;
+}
+
+.pieza:focus-visible .pieza-foco {
+  stroke: var(--polen);
+  stroke-width: 3;
+}
+
+.tablero {
+  fill: #fff;
+  stroke: var(--tinta-tenue);
+  stroke-width: 1.5;
+  transition: fill 0.15s, stroke 0.15s;
+}
+
+.pieza:hover .tablero {
+  stroke: var(--tinta);
+}
+
+.silla {
+  fill: #fff;
+  stroke: var(--linea);
+  stroke-width: 1.25;
+}
+
+.silla.confirmada {
+  fill: var(--polen);
+  stroke: var(--polen-hondo);
+}
+
+.silla.pendiente {
+  fill: var(--salvia);
+  stroke: var(--salvia);
+}
+
+.mesa-numero {
+  font-family: var(--f-cifras);
+  font-size: 30px;
+  font-variant-numeric: lining-nums;
+  text-anchor: middle;
+  fill: var(--tinta);
+}
+
+.mesa-cuenta {
+  font-family: var(--f-ui);
+  font-weight: 600;
+  font-size: 15px;
+  font-variant-numeric: tabular-nums;
+  text-anchor: middle;
+  fill: var(--tinta-tenue);
+}
+
+.es-mesa.elegida .tablero {
+  fill: var(--verde);
+  stroke: var(--verde);
+}
+
+.es-mesa.elegida :is(.mesa-numero, .mesa-cuenta) {
+  fill: var(--algodon);
+}
+
+.es-mesa.de-mas .tablero {
+  stroke: var(--declinado);
+  stroke-width: 2.5;
+}
+
+.es-mesa.de-mas .mesa-cuenta {
+  fill: var(--declinado);
+}
+
+.es-mesa.elegida.de-mas .mesa-cuenta {
+  fill: var(--algodon);
+}
+
+.zona-fondo {
+  fill: var(--mesa-panel);
+  stroke: var(--tinta-tenue);
+  stroke-width: 1.25;
+  stroke-dasharray: 6 5;
+  transition: stroke 0.15s;
+}
+
+.zona-nombre {
+  font-family: var(--f-grabada);
+  letter-spacing: 0.12em;
+  text-anchor: middle;
+  fill: var(--tinta-suave);
+}
+
+.es-zona.elegida .zona-fondo {
+  stroke: var(--verde);
+  stroke-width: 2;
+  stroke-dasharray: none;
+}
+
+.tirador {
+  cursor: nwse-resize;
+}
+
+.tirador circle {
+  fill: var(--verde);
+  stroke: #fff;
+  stroke-width: 2;
+}
+
+.tirador path {
+  fill: none;
+  stroke: var(--algodon);
+  stroke-width: 1.5;
+  stroke-linecap: round;
+}
+
+/* Eligiendo la mesa de una familia: las mesas invitan, los espacios se apagan */
+.plano-editor.eligiendo .es-zona {
+  opacity: 0.4;
+}
+
+.plano-editor.eligiendo .es-mesa {
+  cursor: pointer;
+}
+
+.plano-editor.eligiendo .es-mesa:hover .tablero,
+.es-mesa.destino .tablero {
+  fill: var(--algodon-hondo);
+  stroke: var(--verde-forro);
+  stroke-width: 3;
+}
+
+.plano-vacio {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-content: center;
+  justify-items: center;
+  gap: 10px;
+  padding: 24px;
+  text-align: center;
+  background: rgba(255, 255, 255, 0.82);
+}
+
+.plano-vacio h2 {
+  margin: 0;
+  font-family: var(--f-grabada);
+  font-weight: 400;
+  font-size: 1.3rem;
+  letter-spacing: 0.06em;
+}
+
+.plano-vacio p {
+  max-width: 46ch;
+  margin: 0;
+  color: var(--tinta-suave);
+}
+
+.plano-vacio .libro-botones {
+  justify-content: center;
+  margin-top: 8px;
+}
+
+.plano-pie {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 6px 16px;
+  margin-top: 10px;
+}
+
+.plano-ayuda {
+  margin: 0;
+  max-width: 68ch;
+  font-size: 0.86rem;
+  color: var(--tinta-tenue);
+}
+
+.plano-estado {
+  margin: 0 0 0 auto;
+  font-size: 0.86rem;
+  color: var(--tinta-suave);
+}
+
+.plano-estado[data-tono='sucio'] {
+  color: var(--polen-hondo);
+  font-weight: 600;
+}
+
+.plano-estado[data-tono='error'] {
+  color: var(--declinado);
+  font-weight: 600;
+}
+
+/* Al lado: la mesa elegida y las familias por sentar */
+.mesas-lado {
+  display: grid;
+  gap: 24px;
+  align-content: start;
+}
+
+.inspector {
+  display: grid;
+  gap: 16px;
+  padding: 16px 16px 18px;
+  background: #fff;
+  border: 1px solid var(--linea);
+  border-radius: 8px;
+}
+
+.inspector-vacio {
+  margin: 0;
+  font-size: 0.92rem;
+  color: var(--tinta-suave);
+}
+
+.inspector-cabeza {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin: -4px -6px -4px 0;
+}
+
+.inspector-titulo {
+  margin: 0;
+  min-width: 0;
+  font-family: var(--f-grabada);
+  font-weight: 400;
+  font-size: 1.2rem;
+  letter-spacing: 0.06em;
+  overflow-wrap: anywhere;
+}
+
+.inspector-titulo .cifra {
+  font-size: 1.1em;
+}
+
+.campo-pasos {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.campo-pasos .paso {
+  width: 100%;
+}
+
+.campo-pasos .paso input {
+  flex: 1;
+  min-width: 0;
+}
+
+.ocupacion {
+  margin: 0;
+  font-size: 0.9rem;
+  color: var(--tinta-suave);
+}
+
+.ocupacion b {
+  font-family: var(--f-cifras);
+  font-weight: 400;
+  font-size: 1.2rem;
+  font-variant-numeric: lining-nums tabular-nums;
+  color: var(--tinta);
+}
+
+.ocupacion.de-mas,
+.ocupacion.de-mas b {
+  color: var(--declinado);
+  font-weight: 600;
+}
+
+[data-resumen-mesa] {
+  display: grid;
+  gap: 4px;
+  margin-top: -6px;
+}
+
+.sentados,
+.familias {
+  display: grid;
+  gap: 1px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  overflow: hidden;
+  background: var(--linea);
+  border: 1px solid var(--linea);
+  border-radius: 8px;
+}
+
+.sentado {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto auto;
+  align-items: center;
+  gap: 4px;
+  padding: 6px 4px 6px 12px;
+  background: #fff;
+}
+
+.sentado-texto {
+  display: grid;
+  min-width: 0;
+}
+
+.familia-nombre {
+  font-weight: 600;
+  line-height: 1.3;
+  overflow-wrap: anywhere;
+}
+
+.familia-meta {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.82rem;
+  color: var(--tinta-tenue);
+}
+
+.punto {
+  width: 9px;
+  height: 9px;
+  flex: none;
+  border-radius: 50%;
+}
+
+.punto.confirmado { background: var(--polen); }
+.punto.pendiente { background: var(--salvia); }
+.punto.declinado { background: var(--declinado); }
+
+.por-sentar {
+  display: grid;
+  gap: 12px;
+}
+
+.por-sentar-cabeza {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 4px 12px;
+}
+
+.por-sentar-cuenta {
+  margin: 0;
+  font-size: 0.86rem;
+  color: var(--tinta-suave);
+}
+
+.familia {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 2px 12px;
+  width: 100%;
+  min-height: 56px;
+  padding: 10px 14px;
+  border: 0;
+  background: #fff;
+  text-align: left;
+  color: var(--tinta);
+  transition: background-color 0.15s, color 0.15s;
+}
+
+.familia:hover {
+  background: #fbfbf8;
+}
+
+.familia .familia-accion {
+  grid-column: 2;
+  grid-row: 1 / span 2;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--verde-forro);
+  white-space: nowrap;
+}
+
+.familia[aria-pressed='true'] {
+  background: var(--verde);
+  color: var(--algodon);
+}
+
+.familia[aria-pressed='true'] :is(.familia-meta, .familia-accion) {
+  color: var(--salvia-clara);
+}
+
+.familias-vacio {
+  padding: 16px;
+  background: #fff;
+  font-size: 0.92rem;
+  color: var(--tinta-tenue);
+}
+
+.familias-vacio a {
+  color: var(--verde-forro);
+  font-weight: 600;
+}
+
+.familia-fantasma {
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 200;
+  max-width: 260px;
+  padding: 8px 12px;
+  border-radius: 6px;
+  background: var(--verde);
+  color: var(--algodon);
+  font-weight: 600;
+  font-size: 0.9rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  box-shadow: 0 12px 24px -10px rgba(4, 14, 9, 0.6);
+  pointer-events: none;
+}
+
+body.llevando-familia,
+body.llevando-familia * {
+  cursor: grabbing !important;
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+/* En el teléfono el salón entra completo: el número crece y la cuenta la dicen las sillas */
+@media (max-width: 759px) {
+  .plano-editor .mesa-cuenta {
+    display: none;
+  }
+
+  .plano-editor .mesa-numero {
+    font-size: 40px;
+    transform: translateY(7px);
+  }
+}
+
+@media (min-width: 760px) {
+  .contadores.de-cuatro {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+
+@media (min-width: 1100px) {
+  .mesas-cuerpo {
+    grid-template-columns: minmax(0, 1fr) 320px;
+    align-items: start;
+  }
+
+  .mesas-lado {
+    position: sticky;
+    top: 88px;
+    max-height: calc(100svh - 104px);
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    scrollbar-width: thin;
+  }
+}
+
+/* ---------- La boda: filas de hoteles, listas de regalos y preguntas ---------- */
+
+.filas-editor {
+  display: grid;
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.fila-editor {
+  display: grid;
+  gap: 10px 12px;
+  padding: 12px;
+  background: #fbfbf8;
+  border: 1px solid var(--algodon-hondo);
+  border-radius: 6px;
+}
+
+.fila-editor .momento-acciones {
+  grid-column: 1 / -1;
+}
+
+.campo-ayuda-suelta {
+  margin-top: -8px;
+}
+
+.campos-dos {
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 200px), 1fr));
+}
+
+.campos-tres {
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 140px), 1fr));
+}
+
+@media (min-width: 760px) {
+  .fila-editor[data-campos='4'] {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .fila-editor[data-campos='2'] {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1.6fr);
+  }
+
+  .fila-editor[data-campos]:has(textarea) {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+/* ---------- Lo que pidieron los invitados ---------- */
+
+.pedidos {
+  margin-top: 28px;
+}
+
+.pedidos-titulo {
+  margin: 16px 0 0;
+  font-size: 0.86rem;
+  font-weight: 600;
+  color: var(--tinta-suave);
+}
+
+.pedidos-titulo b {
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  color: var(--tinta-tenue);
+}
+
+.pedidos .correo-lista {
+  margin-top: 8px;
+}
+
+.pedido {
+  padding: 12px 14px;
+  background: #fff;
+}
+
+.pedido .correo-mensaje {
+  margin-top: 2px;
+  -webkit-line-clamp: 2;
+}
+
+.pedido .correo-mensaje:first-child {
+  margin-top: 0;
+}
+
+.pedido-cuantos {
+  font-weight: 400;
+  color: var(--tinta-tenue);
+}
+
+.invitado-meta .meta-pedido {
+  max-width: 22ch;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* ---------- Planeación: lo común a tareas, presupuesto y proveedores ---------- */
+
+.contadores.de-cinco {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.contador.alerta dd {
+  color: var(--declinado);
+}
+
+/* Cinco contadores: el último ocupa la fila que le queda, sin dejar hueco */
+.contadores.de-cinco .contador:last-child {
+  grid-column: 1 / -1;
+}
+
+/* El dinero es largo: la cifra baja de tamaño y su nota va debajo */
+.contadores-dinero dd {
+  font-size: 1.45rem;
+  line-height: 1.25;
+  letter-spacing: 0.02em;
+  overflow-wrap: anywhere;
+}
+
+.contadores-dinero dd small {
+  display: block;
+  margin: 2px 0 0;
+}
+
+.contadores-dinero .contador {
+  align-content: start;
+}
+
+.reparto-barra .r-hecha { background: var(--verde-forro); }
+
+.reparto-leyenda .muestra-vacia {
+  background: var(--algodon-hondo);
+  box-shadow: inset 0 0 0 1px var(--linea);
+}
+
+.reparto-leyenda .reparto-alerta {
+  font-weight: 600;
+  color: var(--declinado);
+}
+
+.filtros-solos {
+  grid-template-columns: none;
+}
+
+.filtros-solos .segmentos {
+  grid-row: auto;
+}
+
+.marco-vacio {
+  background: #fff;
+  border: 1px solid var(--linea);
+  border-radius: 8px;
+}
+
+.cargando-planeacion {
+  margin: 0;
+  padding: 40px 0;
+  text-align: center;
+  color: var(--tinta-tenue);
+}
+
+.recien {
+  animation: resaltar 2.4s ease-out;
+}
+
+@media (min-width: 760px) {
+  .contadores.de-cinco {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .contadores.de-cinco .contador:last-child {
+    grid-column: span 2;
+  }
+}
+
+@media (min-width: 1100px) {
+  .contadores.de-cinco {
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+  }
+
+  .contadores.de-cinco .contador:last-child {
+    grid-column: auto;
+  }
+}
+
+/* ---------- Tareas ---------- */
+
+.obra-tareas {
+  max-width: 1080px;
+}
+
+.agenda {
+  margin-top: 28px;
+}
+
+.agenda-cuenta {
+  margin: 4px 0 0;
+  font-family: var(--f-texto);
+  font-style: italic;
+  font-size: 1.02rem;
+  color: var(--tinta-suave);
+}
+
+.agenda-cuenta a {
+  color: var(--verde-forro);
+}
+
+.etapas {
+  display: grid;
+  gap: 14px;
+}
+
+.etapa {
+  gap: 6px;
+  padding-bottom: 10px;
+}
+
+/* La etapa que toca ahora se enmarca en verde, como el plano publicado */
+.etapa[data-momento='ahora'] {
+  border-color: var(--verde-forro);
+  box-shadow: inset 0 0 0 1px var(--verde-forro);
+}
+
+.etapa-cabeza {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 4px 10px;
+}
+
+.etapa-cabeza .hoja-titulo {
+  min-width: 0;
+}
+
+.etapa-ahora {
+  padding: 2px 9px;
+  border-radius: 999px;
+  background: var(--verde);
+  font-size: 0.74rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  color: var(--algodon);
+}
+
+.etapa-cuenta {
+  margin: 0 0 0 auto;
+  font-size: 0.86rem;
+  color: var(--tinta-tenue);
+  white-space: nowrap;
+}
+
+.etapa-cuenta b {
+  font-family: var(--f-cifras);
+  font-weight: 400;
+  font-size: 1.15rem;
+  font-variant-numeric: lining-nums tabular-nums;
+  color: var(--tinta);
+}
+
+.etapa-fecha {
+  flex-basis: 100%;
+  margin: 0;
+  font-size: 0.86rem;
+  color: var(--tinta-suave);
+}
+
+.tareas-lista {
+  display: grid;
+  margin: 4px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.tarea {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: start;
+  gap: 0 8px;
+  padding: 6px 0;
+  border-top: 1px solid var(--algodon-hondo);
+}
+
+.tarea-casilla {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  min-height: 44px;
+  padding: 10px 0 6px;
+  cursor: pointer;
+  font-weight: 600;
+  line-height: 1.35;
+}
+
+/* La casilla se marca con una palomita trazada, en verde forro */
+.tarea-casilla input {
+  appearance: none;
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+  margin: -2px 0 0;
+  border: 1.5px solid var(--tinta-tenue);
+  border-radius: 6px;
+  background: #fff;
+  cursor: pointer;
+  transition: background-color 0.15s, border-color 0.15s;
+}
+
+.tarea-casilla input::after {
+  content: '';
+  width: 11px;
+  height: 6px;
+  border: solid var(--algodon);
+  border-width: 0 0 2px 2px;
+  transform: translateY(-1px) rotate(-45deg) scale(0);
+  transition: transform 0.18s var(--sal-papel);
+}
+
+.tarea-casilla input:checked {
+  background: var(--verde-forro);
+  border-color: var(--verde-forro);
+}
+
+.tarea-casilla input:checked::after {
+  transform: translateY(-1px) rotate(-45deg) scale(1);
+}
+
+.tarea-casilla input:focus-visible {
+  outline: 3px solid var(--polen);
+  outline-offset: 2px;
+}
+
+.tarea-casilla:hover input:not(:checked) {
+  border-color: var(--tinta);
+}
+
+.tarea[data-hecha] .tarea-titulo {
+  font-weight: 500;
+  color: var(--tinta-tenue);
+  text-decoration: line-through;
+  text-decoration-color: color-mix(in srgb, var(--tinta-tenue) 55%, transparent);
+}
+
+.tarea-acciones {
+  display: flex;
+  padding-top: 3px;
+}
+
+.tarea-detalle {
+  grid-column: 1 / -1;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2px 14px;
+  margin: -4px 0 6px;
+  padding-left: 36px;
+  font-size: 0.86rem;
+  color: var(--tinta-suave);
+}
+
+.tarea-atrasada {
+  font-weight: 600;
+  color: var(--declinado);
+}
+
+.tarea[data-hecha] .tarea-atrasada {
+  display: none;
+}
+
+.tarea-ir {
+  font-weight: 600;
+  color: var(--verde-forro);
+}
+
+/* ---------- Presupuesto ---------- */
+
+.cuentas {
+  min-width: 0;
+}
+
+.presupuesto-total {
+  margin-top: 16px;
+}
+
+.presupuesto-total input {
+  max-width: 320px;
+  font-family: var(--f-cifras);
+  font-size: 1.3rem;
+  font-variant-numeric: lining-nums tabular-nums;
+}
+
+.categoria {
+  margin-top: 22px;
+}
+
+.categoria-cabeza {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 2px 12px;
+  margin-bottom: 8px;
+}
+
+.categoria-titulo {
+  margin: 0;
+  font-family: var(--f-grabada);
+  font-weight: 400;
+  font-size: 1.1rem;
+  letter-spacing: 0.06em;
+}
+
+.categoria-suma {
+  margin: 0;
+  font-size: 0.88rem;
+  font-variant-numeric: tabular-nums;
+  color: var(--tinta-suave);
+}
+
+.tabla-partidas .col-dinero {
+  width: 1%;
+  text-align: right;
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+
+.dinero-vacio {
+  color: var(--tinta-tenue);
+}
+
+.saldado {
+  font-weight: 600;
+  color: var(--verde-forro);
+}
+
+/* Próximos pagos: una hoja de calendario con el día y el mes */
+.pago {
+  display: grid;
+  grid-template-columns: 46px 1fr;
+  gap: 12px;
+  align-items: center;
+  padding: 12px 14px;
+  background: #fff;
+}
+
+.pago-hoja {
+  display: grid;
+  justify-items: center;
+  padding: 3px 0 4px;
+  border: 1px solid var(--linea);
+  border-top: 4px solid var(--verde-forro);
+  border-radius: 4px;
+  font-family: var(--f-grabada);
+  font-size: 0.62rem;
+  letter-spacing: 0.12em;
+  color: var(--tinta-suave);
+}
+
+.pago-hoja .cifra {
+  font-size: 1.25rem;
+  line-height: 1.1;
+  letter-spacing: 0;
+  color: var(--tinta);
+}
+
+.pago.vencido .pago-hoja {
+  border-top-color: var(--declinado);
+}
+
+.pago.vencido .correo-que {
+  font-weight: 600;
+  color: var(--declinado);
+}
+
+@media (max-width: 759px) {
+  .tabla.tabla-partidas tr {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-areas: none;
+    gap: 8px 12px;
+  }
+
+  .tabla-partidas td.col-concepto {
+    grid-column: 1 / -1;
+  }
+
+  .tabla-partidas td.col-dinero {
+    display: grid;
+    width: auto;
+    text-align: left;
+  }
+
+  .tabla-partidas td.col-dinero::before {
+    content: attr(data-etiqueta);
+    font-size: 0.76rem;
+    font-weight: 600;
+    color: var(--tinta-tenue);
+  }
+
+  .tabla.tabla-partidas td.col-acciones {
+    grid-area: auto;
+    grid-column: 1 / -1;
+  }
+
+  .tabla-partidas .acciones {
+    justify-content: flex-end;
+  }
+}
+
+/* ---------- Proveedores ---------- */
+
+.proveedores {
+  margin-top: 28px;
+}
+
+.proveedores .filtros {
+  margin-top: 18px;
+}
+
+.fichas {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 290px), 1fr));
+  gap: 14px;
+}
+
+.ficha {
+  display: grid;
+  gap: 6px;
+  align-content: start;
+  padding: 16px 16px 6px;
+  background: #fff;
+  border: 1px solid var(--linea);
+  border-radius: 8px;
+}
+
+.ficha[data-estado='descartado'] {
+  background: #fbfbf8;
+}
+
+.ficha[data-estado='descartado'] .ficha-nombre {
+  color: var(--tinta-suave);
+}
+
+.ficha-cabeza {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.ficha-categoria {
+  margin: 0;
+  min-width: 0;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--tinta-tenue);
+}
+
+.ficha-nombre {
+  margin: 2px 0 0;
+  font-family: var(--f-texto);
+  font-weight: 400;
+  font-size: 1.3rem;
+  line-height: 1.25;
+  overflow-wrap: anywhere;
+}
+
+.ficha-meta,
+.ficha-precio,
+.ficha-presupuesto {
+  margin: 0;
+  font-size: 0.88rem;
+  color: var(--tinta-suave);
+  overflow-wrap: anywhere;
+}
+
+.ficha-precio b {
+  font-family: var(--f-cifras);
+  font-weight: 400;
+  font-size: 1.1rem;
+  font-variant-numeric: lining-nums tabular-nums;
+  color: var(--tinta);
+}
+
+.ficha-presupuesto {
+  color: var(--verde-forro);
+  font-weight: 600;
+}
+
+.ficha-nota {
+  margin: 2px 0 0;
+  font-family: var(--f-texto);
+  font-style: italic;
+  font-size: 0.98rem;
+  line-height: 1.45;
+  white-space: pre-line;
+  display: -webkit-box;
+  -webkit-line-clamp: 4;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.ficha-acciones {
+  flex-wrap: wrap;
+  justify-content: flex-start;
+  margin: 6px -8px 0;
+  padding-top: 4px;
+  border-top: 1px solid var(--algodon-hondo);
+}
+
+.ficha-hueco {
+  flex: 1;
+}
+
+/* Los sellos de un proveedor: contratado en verde (el polen es de los invitados) */
+.sello-contratado {
+  color: var(--verde-forro);
+}
+
+.sello-evaluando {
+  color: var(--tinta-tenue);
+  border-style: dashed;
+  box-shadow: none;
+}
+
+.sello-descartado {
+  color: var(--declinado);
+}
+
 /* ---------- Avisos ---------- */
 
 .avisos {
@@ -2049,7 +3368,8 @@ html {
 
 /* ---------- Responsive ---------- */
 
-@media (max-width: 759px) {
+/* Seis pestañas: hasta 1280px los botones de la barra quedan en su ícono */
+@media (max-width: 1279px) {
   .barra-acciones .boton-barra span {
     position: absolute;
     width: 1px;
@@ -2067,6 +3387,13 @@ html {
     display: none;
   }
 
+  .vistas a {
+    padding: 0 10px;
+  }
+}
+
+/* Bajo 1100px las pestañas van en su propia fila y se deslizan si no caben */
+@media (max-width: 1099px) {
   .barra {
     flex-wrap: wrap;
     row-gap: 4px;
@@ -2077,12 +3404,23 @@ html {
     order: 3;
     flex: 1 1 100%;
     margin: 0 -4px;
+    overflow-x: auto;
+    scrollbar-width: none;
+    overscroll-behavior-x: contain;
+  }
+
+  .vistas::-webkit-scrollbar {
+    display: none;
   }
 
   .vistas a {
-    flex: 1;
+    flex: 1 0 auto;
     justify-content: center;
+    white-space: nowrap;
   }
+}
+
+@media (max-width: 759px) {
 
   .libro-botones {
     width: 100%;
@@ -2191,9 +3529,14 @@ html {
     align-items: start;
   }
 
+  /* Con «Lo que pidieron» puede ser más alta que la pantalla: se desliza por dentro */
   .correo {
     position: sticky;
     top: 88px;
+    max-height: calc(100svh - 104px);
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    scrollbar-width: thin;
   }
 }
 

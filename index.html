@@ -12,18 +12,21 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Castoro:ital@0;1&family=Castoro+Titling&family=Hanken+Grotesk:wght@400;500;600;700&family=Rouge+Script&display=swap">
-  <link rel="stylesheet" href="assets/base.css">
-  <link rel="stylesheet" href="assets/invitacion.css">
+  <link rel="stylesheet" href="assets/base.css?v=20261023">
+  <link rel="stylesheet" href="assets/invitacion.css?v=20261023">
+  <link rel="stylesheet" href="assets/mariposa.css?v=20261023">
   <!-- El estilo (colores y letra) se aplica antes de pintar -->
-  <script src="assets/config.js"></script>
-  <script src="assets/estilos.js"></script>
+  <script src="assets/config.js?v=20261023"></script>
+  <script src="assets/estilos.js?v=20261023"></script>
   <script>Estilos.arrancar();</script>
 </head>
 <body>
+  <!-- El fondo de toda la invitación: destellos dorados que titilan y polvo de oro que sube -->
+  <div class="destellos" aria-hidden="true"><canvas></canvas></div>
+
   <!-- Escena del sobre a pantalla completa: el forro y la tarjeta atrás, el bolsillo y la solapa delante -->
   <div class="escena" id="escena">
     <div class="escena-capa escena-atras" aria-hidden="true">
-      <div class="escena-fondo"></div>
       <div class="sobre sobre-atras" data-cara="frente">
         <div class="sobre-interior"></div>
         <div class="sobre-carta"></div>
@@ -84,8 +87,9 @@
               <span class="para-de">Para</span>
               <span class="para-nombre" data-nombre>ti</span>
               <span class="para-cupos" data-cupos></span>
+              <a class="para-mesa" href="#mesa" data-para-mesa hidden></a>
             </p>
-            <a class="portada-pista" href="#altar">
+            <a class="portada-pista" href="#cuando">
               <span>Desliza para ver los detalles</span>
               <svg viewBox="0 0 24 40" aria-hidden="true"><path d="M12 3v32M5 28l7 8 7-8" /></svg>
             </a>
@@ -95,24 +99,27 @@
       </div>
     </section>
 
-    <!-- El camino al altar: el video avanza con el scroll -->
-    <section class="altar" id="altar" aria-labelledby="altar-titulo">
-      <div class="altar-escenario">
-        <video class="altar-video" muted playsinline disablepictureinpicture aria-hidden="true" tabindex="-1"></video>
-        <div class="altar-velo" aria-hidden="true"></div>
-        <h2 class="solo-lectores" id="altar-titulo">Cuándo y dónde</h2>
+    <!--
+      Cada parte es un pliego: su título impreso en la cartulina, sus piezas de
+      papel y, si le toca, una foto de la pareja al lado (en el teléfono, debajo).
+    -->
+
+    <!-- Los detalles: tres tarjetitas con el día, la hora y el lugar -->
+    <section class="pliego pliego-detalles" id="cuando" aria-labelledby="cuando-titulo">
+      <div class="pliego-texto">
+        <h2 class="pliego-titulo" id="cuando-titulo">Los detalles</h2>
         <div class="capitulos">
-          <article class="tarjeta capitulo" data-capitulo>
+          <article class="tarjeta capitulo">
             <h3 class="capitulo-titulo">El día</h3>
             <p class="capitulo-dato" data-fecha-larga>Fecha por confirmar</p>
             <p class="capitulo-nota" data-cuenta hidden></p>
           </article>
-          <article class="tarjeta capitulo" data-capitulo>
+          <article class="tarjeta capitulo">
             <h3 class="capitulo-titulo">La ceremonia</h3>
             <p class="capitulo-dato capitulo-hora" data-hora-ceremonia>Hora por confirmar</p>
             <p class="capitulo-nota" data-recepcion-nota hidden></p>
           </article>
-          <article class="tarjeta capitulo" data-capitulo>
+          <article class="tarjeta capitulo">
             <h3 class="capitulo-titulo">El lugar</h3>
             <p class="capitulo-dato capitulo-lugar" data-lugar-ceremonia>Lugar por confirmar</p>
             <p class="capitulo-nota" data-direccion-ceremonia hidden></p>
@@ -120,29 +127,61 @@
           </article>
         </div>
       </div>
+      <div class="pliego-foto" data-foto-pliego="detalles" hidden></div>
     </section>
 
-    <section class="llegar" id="llegar" aria-labelledby="llegar-titulo">
-      <article class="tarjeta tarjeta-llegar">
-        <h2 class="titulo-grabado" id="llegar-titulo">Cómo llegar</h2>
-        <div class="sitios" data-sitios></div>
-        <p class="llegar-calendario" data-calendario hidden></p>
-        <p class="tarjeta-marca">Cómo llegar · N.º <span class="cifra" data-numero>···</span></p>
-      </article>
+    <section class="pliego pliego-llegar" id="llegar" aria-labelledby="llegar-titulo">
+      <div class="pliego-texto">
+        <h2 class="pliego-titulo" id="llegar-titulo">Cómo llegar</h2>
+        <article class="tarjeta tarjeta-llegar">
+          <div class="sitios" data-sitios></div>
+          <p class="llegar-calendario" data-calendario hidden></p>
+          <p class="tarjeta-marca">Cómo llegar · N.º <span class="cifra" data-numero>···</span></p>
+        </article>
+      </div>
     </section>
 
-    <section class="programa" id="itinerario" aria-labelledby="itinerario-titulo">
-      <article class="tarjeta tarjeta-programa">
-        <h2 class="titulo-grabado" id="itinerario-titulo">Itinerario</h2>
-        <div class="dia">
-          <span class="dia-hilo" aria-hidden="true"></span>
-          <ol class="dia-lista" data-itinerario></ol>
-        </div>
-        <p class="tarjeta-marca">Itinerario · N.º <span class="cifra" data-numero>···</span></p>
-      </article>
+    <!-- Dónde quedarse: hoteles cerca, para quienes vienen de lejos -->
+    <section class="pliego pliego-alojamiento" id="alojamiento" aria-labelledby="alojamiento-titulo" hidden>
+      <div class="pliego-texto">
+        <h2 class="pliego-titulo" id="alojamiento-titulo">Dónde quedarse</h2>
+        <article class="tarjeta tarjeta-alojamiento">
+          <p class="alojamiento-nota" data-alojamiento-nota hidden></p>
+          <ul class="hoteles" data-hoteles></ul>
+          <p class="tarjeta-marca">Alojamiento · N.º <span class="cifra" data-numero>···</span></p>
+        </article>
+      </div>
     </section>
 
-    <section class="fotos" id="fotos" aria-labelledby="fotos-titulo" hidden>
+    <section class="pliego pliego-programa" id="itinerario" aria-labelledby="itinerario-titulo">
+      <div class="pliego-texto">
+        <h2 class="pliego-titulo" id="itinerario-titulo">Itinerario</h2>
+        <article class="tarjeta tarjeta-programa">
+          <div class="dia">
+            <span class="dia-hilo" aria-hidden="true"></span>
+            <ol class="dia-lista" data-itinerario></ol>
+          </div>
+          <p class="tarjeta-marca">Itinerario · N.º <span class="cifra" data-numero>···</span></p>
+        </article>
+      </div>
+      <div class="pliego-foto" data-foto-pliego="itinerario" hidden></div>
+    </section>
+
+    <!-- Nuestra historia: una carta de los novios, firmada -->
+    <section class="pliego pliego-historia" id="historia" aria-labelledby="historia-titulo" hidden>
+      <div class="pliego-texto">
+        <h2 class="pliego-titulo" id="historia-titulo">Nuestra historia</h2>
+        <article class="tarjeta tarjeta-historia">
+          <div class="historia-texto" data-historia></div>
+          <p class="historia-firma">Diego <i>&amp;</i> Erika</p>
+          <p class="tarjeta-marca">Nuestra historia · N.º <span class="cifra" data-numero>···</span></p>
+        </article>
+      </div>
+      <div class="pliego-foto" data-foto-pliego="historia" hidden></div>
+    </section>
+
+    <!-- Las fotos que no van junto a una parte: sueltas sobre la mesa -->
+    <section class="pliego pliego-momentos" id="fotos" aria-labelledby="fotos-titulo" hidden>
       <h2 class="solo-lectores" id="fotos-titulo">Fotos de Diego y Erika</h2>
       <div class="fotos-mesa" data-fotos></div>
     </section>
@@ -158,6 +197,8 @@
         <div class="vegetal-bloque">
           <h2 class="titulo-grabado">Regalos</h2>
           <p data-regalos></p>
+          <div class="regalo-cuenta" data-regalos-cuenta hidden></div>
+          <ul class="regalo-listas" data-regalos-listas aria-label="Listas de regalos" hidden></ul>
         </div>
         <div class="vegetal-bloque" data-contacto hidden>
           <h2 class="titulo-grabado">Dudas</h2>
@@ -166,11 +207,31 @@
       </div>
     </section>
 
-    <section class="responder" id="responder" aria-label="Tu respuesta">
-      <article class="tarjeta tarjeta-respuesta" id="respuesta" aria-live="polite">
-        <p class="tarjeta-marca">Respuesta · N.º <span class="cifra" data-numero>···</span></p>
-        <div class="respuesta-cuerpo" data-respuesta></div>
-      </article>
+    <section class="pliego pliego-preguntas" id="preguntas" aria-labelledby="preguntas-titulo" hidden>
+      <div class="pliego-texto">
+        <h2 class="pliego-titulo" id="preguntas-titulo">Preguntas frecuentes</h2>
+        <article class="tarjeta tarjeta-preguntas">
+          <div class="preguntas-lista" data-preguntas></div>
+          <p class="tarjeta-marca">Preguntas · N.º <span class="cifra" data-numero>···</span></p>
+        </article>
+      </div>
+    </section>
+
+    <section class="pliego pliego-responder" id="responder" aria-labelledby="responder-titulo">
+      <div class="pliego-texto">
+        <h2 class="pliego-titulo" id="responder-titulo" data-titulo-responder>Esperamos compartir este día contigo</h2>
+        <article class="tarjeta tarjeta-respuesta" id="respuesta" aria-live="polite">
+          <p class="tarjeta-marca">Respuesta · N.º <span class="cifra" data-numero>···</span></p>
+          <div class="respuesta-cuerpo" data-respuesta></div>
+        </article>
+
+        <!-- La tarjeta de mesa: aparece cuando el invitado confirmó y los novios publicaron las mesas -->
+        <article class="tarjeta tarjeta-mesa" id="mesa" aria-labelledby="mesa-titulo" hidden>
+          <div class="mesa-cuerpo" data-mesa></div>
+          <p class="tarjeta-marca">Mesa · N.º <span class="cifra" data-numero>···</span></p>
+        </article>
+      </div>
+      <div class="pliego-foto" data-foto-pliego="responder" hidden></div>
     </section>
 
     <footer class="remite">
@@ -191,9 +252,12 @@
     </div>
   </dialog>
 
-  <script src="assets/datos.js"></script>
-  <script src="assets/papeleria.js"></script>
-  <script src="assets/ramo.js"></script>
-  <script src="assets/invitacion.js"></script>
+  <script src="assets/destellos.js?v=20261023"></script>
+  <script src="assets/datos.js?v=20261023"></script>
+  <script src="assets/papeleria.js?v=20261023"></script>
+  <script src="assets/salon.js?v=20261023"></script>
+  <script src="assets/ramo.js?v=20261023"></script>
+  <script src="assets/mariposa.js?v=20261023"></script>
+  <script src="assets/invitacion.js?v=20261023"></script>
 </body>
 </html>

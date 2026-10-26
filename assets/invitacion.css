@@ -7,7 +7,11 @@
   --cartulina-media: #27503e;
   --cartulina-honda: #1f4434;
   --brillo-suelo: rgba(62, 106, 82, 0.45);
-  --velo-altar: #b9cbbd;
+  /* Destellos del fondo: el oro, su centro de luz, el halo y la sombra de las orillas */
+  --destello: #f3d27e;
+  --destello-luz: #fff7df;
+  --destello-halo: rgba(232, 180, 76, 0.22);
+  --destello-sombra: color-mix(in srgb, var(--sombra) 55%, transparent);
   --matasellos-sobre: var(--polen-claro);
   --barra-riel: var(--verde-hondo);
   --grano-suelo: var(--grano);
@@ -43,6 +47,36 @@ body {
   background-attachment: scroll;
 }
 
+/*
+ * Destellos: una capa fija detrás de todas las piezas, también detrás del
+ * sobre. Un halo dorado arriba y en las esquinas, las orillas en sombra y,
+ * encima, el lienzo donde assets/destellos.js pinta el oro que titila.
+ */
+.destellos {
+  position: fixed;
+  inset: 0 0 auto;
+  z-index: 0;
+  height: 100vh;
+  height: 100lvh;
+  pointer-events: none;
+  background:
+    radial-gradient(75% 45% at 50% -6%, var(--destello-halo), transparent 72%),
+    radial-gradient(55% 38% at 104% 96%, var(--destello-halo), transparent 70%),
+    radial-gradient(50% 34% at -4% 70%, color-mix(in srgb, var(--destello-halo) 70%, transparent), transparent 70%),
+    radial-gradient(140% 95% at 50% 42%, transparent 48%, var(--destello-sombra) 100%);
+}
+
+.destellos canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+main {
+  position: relative;
+  z-index: 1;
+}
+
 /* ---------- Escena del sobre ---------- */
 
 /*
@@ -58,14 +92,6 @@ body {
 .escena-capa {
   position: fixed;
   inset: 0;
-}
-
-.escena-fondo {
-  position: absolute;
-  inset: 0;
-  background:
-    var(--grano-suelo),
-    radial-gradient(70% 55% at 50% 42%, var(--verde-medio) 0%, var(--verde) 60%, color-mix(in srgb, var(--verde) 70%, var(--verde-hondo)) 100%);
 }
 
 .escena-delante {
@@ -809,12 +835,6 @@ body {
 
 /* ---------- Tarjeta de respuesta ---------- */
 
-.responder {
-  padding: 120px 16px 0;
-  display: grid;
-  justify-items: center;
-}
-
 .tarjeta-respuesta {
   width: min(100%, 520px);
   padding: 30px 24px 50px;
@@ -1032,6 +1052,39 @@ body {
   color: var(--tinta-tenue);
 }
 
+/* Preguntas opcionales (alergias, canción): un solo renglón, como el mensaje */
+.renglon-campo {
+  display: grid;
+  gap: 0.3rem;
+}
+
+.renglon-campo[hidden] {
+  display: none;
+}
+
+.renglon-campo input {
+  width: 100%;
+  min-height: 44px;
+  padding: 6px 2px 4px;
+  border: 0;
+  border-bottom: 1px solid var(--linea);
+  border-radius: 0;
+  background: transparent;
+  font-family: var(--f-texto);
+  font-style: italic;
+  font-size: 1.08rem;
+  color: var(--tinta);
+}
+
+.renglon-campo input:focus {
+  outline: none;
+  border-bottom-color: var(--tinta-tenue);
+}
+
+.renglon-campo input::placeholder {
+  color: var(--tinta-tenue);
+}
+
 .boton-responder {
   min-height: 58px;
   padding: 0 22px;
@@ -1150,6 +1203,27 @@ body {
   letter-spacing: 0.04em;
 }
 
+/* Lo que contestó a las preguntas opcionales */
+.respuesta-datos {
+  display: grid;
+  gap: 0.5rem;
+  margin: 1rem 0 0;
+}
+
+.respuesta-datos dt {
+  font-family: var(--f-grabada);
+  text-transform: uppercase;
+  font-size: 0.7rem;
+  letter-spacing: 0.22em;
+  color: var(--tinta-tenue);
+}
+
+.respuesta-datos dd {
+  margin: 0.1rem 0 0;
+  font-style: italic;
+  line-height: 1.45;
+}
+
 .respuesta-cita {
   margin: 1rem 0 0;
   padding: 0.2rem 0 0.2rem 0.9rem;
@@ -1186,94 +1260,312 @@ body {
   display: none;
 }
 
-.respuesta-hecha .enlace-accion {
+.respuesta-acciones {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0 22px;
   margin-top: 0.8rem;
 }
 
-/* ---------- El camino al altar: video que avanza con el scroll ---------- */
+/* ---------- Tarjeta de mesa: el invitado confirmado encuentra la suya ---------- */
 
-.altar {
-  position: relative;
-  background: var(--verde-hondo);
+.tarjeta-mesa {
+  width: min(100%, 420px);
+  margin-top: 12px;
+  padding: 34px 22px 54px;
+  text-align: center;
+  transform: rotate(-1.3deg);
+  transition: opacity 0.6s ease-out, transform 1s var(--sal-papel);
+  scroll-margin-top: 24px;
 }
 
-.scroll-vivo .altar {
-  height: 460svh;
+.tarjeta-mesa.por-repartir {
+  opacity: 0;
+  transform: translateY(64px) rotate(-7deg);
 }
 
-.altar-escenario {
-  position: relative;
-  min-height: 100svh;
+.mesa-para {
+  margin: 0;
+  font-style: italic;
+  font-size: 0.98rem;
+  color: var(--tinta-suave);
+}
+
+.mesa-invitado {
+  margin: 0;
+  font-family: var(--f-mano);
+  font-size: calc(2.15rem * var(--escala-mano));
+  line-height: 1.1;
+  text-wrap: balance;
+}
+
+.mesa-titulo {
   display: grid;
-  align-content: end;
-  overflow: hidden;
+  justify-items: center;
+  margin: 1.1rem 0 0;
+  font-weight: 400;
 }
 
-.scroll-vivo .altar-escenario {
-  position: sticky;
-  top: 0;
-  height: 100svh;
+.mesa-palabra {
+  padding-left: 0.32em;
+  font-family: var(--f-grabada);
+  text-transform: uppercase;
+  font-size: 0.95rem;
+  letter-spacing: 0.32em;
+  color: var(--tinta-suave);
 }
 
-.altar-video {
-  position: absolute;
-  inset: 0;
+.mesa-cifra {
+  font-size: 4.4rem;
+  line-height: 1;
+  letter-spacing: 0.02em;
+}
+
+.mesa-pendiente {
+  margin-top: 0.3rem;
+  font-size: 1.5rem;
+}
+
+.mesa-apodo {
+  margin: 0.15rem 0 0;
+  font-style: italic;
+  font-size: 1.14rem;
+  color: var(--tinta-suave);
+}
+
+.mesa-nota {
+  max-width: 30ch;
+  margin: 0.8rem auto 0;
+  font-size: 1.1rem;
+  line-height: 1.5;
+  color: var(--tinta-suave);
+}
+
+.mesa-plano {
+  margin: 1.3rem -4px 0;
+}
+
+.mesa-plano figcaption {
+  max-width: 32ch;
+  margin: 0.7rem auto 0;
+  font-style: italic;
+  font-size: 1rem;
+  line-height: 1.45;
+  color: var(--tinta-suave);
+}
+
+/* El plano impreso en la tarjeta: tinta clara, y la mesa del invitado en tinta llena */
+.plano-invitado {
+  display: block;
   width: 100%;
-  height: 100%;
-  object-fit: cover;
-  background: var(--verde-hondo);
+  height: auto;
 }
 
-/* La iglesia blanca se tiñe de salvia y se oscurece arriba y abajo, como
-   impresa sobre la misma cartulina del sobre. */
-.altar-velo {
-  position: absolute;
-  inset: 0;
-  background:
-    var(--grano-suelo),
-    linear-gradient(to bottom, color-mix(in srgb, var(--verde-hondo) 78%, transparent) 0%, color-mix(in srgb, var(--verde-hondo) 20%, transparent) 34%, transparent 50%, transparent 74%, color-mix(in srgb, var(--verde-hondo) 70%, transparent) 100%);
+.plano-invitado .plano-muros {
+  fill: color-mix(in srgb, var(--tinta) 3%, transparent);
+  stroke: color-mix(in srgb, var(--tinta) 30%, transparent);
+  stroke-width: 1.25;
+  vector-effect: non-scaling-stroke;
 }
 
-.altar-velo::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background: var(--velo-altar);
-  mix-blend-mode: multiply;
-  opacity: 0.6;
+.plano-invitado .zona-fondo {
+  fill: color-mix(in srgb, var(--tinta) 6%, transparent);
+  stroke: color-mix(in srgb, var(--tinta) 38%, transparent);
+  stroke-width: 1;
+  stroke-dasharray: 4 3;
+  vector-effect: non-scaling-stroke;
 }
 
-.sin-video .altar-video {
+.plano-invitado .zona-nombre {
+  font-family: var(--f-grabada);
+  letter-spacing: 0.12em;
+  text-anchor: middle;
+  fill: var(--tinta-suave);
+}
+
+.plano-invitado .tablero {
+  fill: var(--algodon);
+  stroke: color-mix(in srgb, var(--tinta) 45%, transparent);
+  stroke-width: 1.25;
+  vector-effect: non-scaling-stroke;
+}
+
+.plano-invitado .mesa-numero {
+  font-family: var(--f-cifras);
+  font-size: 38px;
+  font-variant-numeric: lining-nums;
+  text-anchor: middle;
+  fill: var(--tinta-tenue);
+}
+
+.plano-invitado .destacada .tablero {
+  fill: var(--tinta);
+  stroke: var(--tinta);
+}
+
+.plano-invitado .destacada .mesa-numero {
+  font-size: 46px;
+  fill: var(--algodon);
+}
+
+/* El círculo a mano alrededor de su mesa: se traza cuando la tarjeta llega */
+.plano-anillo {
+  fill: none;
+  stroke: var(--tinta);
+  stroke-width: 7;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  opacity: 0.85;
+}
+
+.scroll-vivo .tarjeta-mesa .plano-anillo {
+  stroke-dasharray: 1;
+  stroke-dashoffset: 1;
+}
+
+.scroll-vivo .tarjeta-mesa.vista .plano-anillo {
+  animation: trazar-anillo 1.3s var(--sal-suave) 0.45s forwards;
+}
+
+@keyframes trazar-anillo {
+  to { stroke-dashoffset: 0; }
+}
+
+/* En la tarjeta de la portada: el número de su mesa, que lleva a la tarjeta de mesa */
+/* El área de toque llega a 44px sin empujar la pista de abajo */
+.para-mesa {
+  display: inline-block;
+  margin: -0.55rem 0 -0.7rem;
+  padding: 0.85rem 0.6rem;
+  line-height: 1;
+  font-family: var(--f-grabada);
+  text-transform: uppercase;
+  font-size: 0.78rem;
+  letter-spacing: 0.24em;
+  color: var(--tinta);
+  text-decoration: underline;
+  text-decoration-color: color-mix(in srgb, currentColor 35%, transparent);
+  text-decoration-thickness: 1px;
+  text-underline-offset: 0.45em;
+}
+
+.para-mesa:hover {
+  text-decoration-color: currentColor;
+}
+
+.para-mesa[hidden] {
   display: none;
 }
 
-.capitulos {
+/* ---------- Pliegos: cada parte de la invitación ---------- */
+
+/*
+ * Cada parte es un pliego, como las hojas de una invitación de varias piezas:
+ * su título impreso en la cartulina, sus piezas de papel y, si le toca, una
+ * foto de la pareja (al lado en pantalla ancha, alternando; debajo en el
+ * teléfono). Entre pliegos hay mucho verde; dentro, el título va cerca de su
+ * pieza.
+ */
+:root {
+  --entre-pliegos: clamp(112px, 15vh, 176px);
+}
+
+.pliego {
   position: relative;
-  z-index: 1;
   display: grid;
-  gap: 18px;
-  justify-items: center;
-  padding: 0 16px calc(32px + env(safe-area-inset-bottom));
+  gap: clamp(40px, 6vh, 56px);
+  width: min(100% - 32px, 620px);
+  margin: var(--entre-pliegos) auto 0;
 }
 
-/* En teléfono las tarjetitas van arriba, sobre el techo: el altar y el
-   pasillo quedan a la vista mientras se avanza. */
-.scroll-vivo .altar-escenario {
+.pliego[hidden],
+.pliego-foto[hidden] {
+  display: none;
+}
+
+.pliego-texto {
+  display: grid;
   align-content: start;
+  gap: clamp(26px, 4vh, 36px);
+  min-width: 0;
 }
 
-.scroll-vivo .capitulos {
-  padding: calc(20px + env(safe-area-inset-top)) 16px 0;
+.pliego-titulo {
+  margin: 0;
+  font-family: var(--f-grabada);
+  text-transform: uppercase;
+  font-weight: 400;
+  font-size: calc(clamp(2.15rem, 1.1rem + 4.4vw, 4.4rem) * var(--escala-nombres));
+  line-height: 0.98;
+  letter-spacing: 0.05em;
+  color: var(--tinta-sobre);
+  text-wrap: balance;
 }
 
-/* Con scroll-vivo las tres tarjetitas comparten lugar y se relevan */
-.scroll-vivo .capitulos {
-  gap: 0;
+/* Un filete corto debajo, como bajo un título grabado */
+.pliego-titulo::after {
+  content: '';
+  display: block;
+  width: 56px;
+  height: 1px;
+  margin-top: 0.4em;
+  background: currentColor;
+  opacity: 0.45;
 }
 
-.scroll-vivo .capitulo {
-  grid-area: 1 / 1;
-  will-change: transform, opacity;
+/* El cierre es una frase, no un rótulo: un poco más pequeño */
+.pliego-responder .pliego-titulo {
+  font-size: calc(clamp(2rem, 1rem + 3.8vw, 3.6rem) * var(--escala-nombres));
+  line-height: 1.04;
+}
+
+.pliego-llegar {
+  width: min(100% - 32px, 920px);
+}
+
+.pliego-momentos {
+  width: min(100% - 32px, 1040px);
+}
+
+.pliego-responder .tarjeta-mesa {
+  justify-self: end;
+}
+
+/* La foto del pliego: una copia grande con sus esquineros, que se corre a un lado */
+.pliego-foto {
+  width: min(86%, 420px);
+  justify-self: end;
+}
+
+.pliego[data-lado='izquierda'] .pliego-foto {
+  justify-self: start;
+}
+
+.pliego-foto:has(.foto[data-forma='horizontal']) {
+  width: min(100%, 560px);
+}
+
+.pliego-foto .foto {
+  transform: rotate(1.8deg);
+}
+
+.pliego[data-lado='izquierda'] .pliego-foto .foto {
+  transform: rotate(-1.6deg);
+}
+
+.pliego-foto .esquina {
+  width: 30px;
+  height: 30px;
+}
+
+/* ---------- Cuándo y dónde: tres tarjetitas sobre la mesa ---------- */
+
+.capitulos {
+  max-width: 1040px;
+  margin: 0 auto;
+  display: grid;
+  gap: 22px;
+  justify-items: center;
 }
 
 .capitulo {
@@ -1282,14 +1574,9 @@ body {
   text-align: center;
 }
 
-.capitulo.apagado {
-  pointer-events: none;
-}
-
-.capitulo:focus-within {
-  opacity: 1 !important;
-  transform: none !important;
-}
+.capitulo:nth-child(1) { transform: rotate(-1.4deg); }
+.capitulo:nth-child(2) { transform: rotate(1.2deg); }
+.capitulo:nth-child(3) { transform: rotate(-0.8deg); }
 
 .capitulo-titulo {
   margin: 0;
@@ -1351,15 +1638,9 @@ body {
 
 /* ---------- Cómo llegar ---------- */
 
-.llegar {
-  padding: 96px 16px 0;
-  display: grid;
-  justify-items: center;
-}
-
 .tarjeta-llegar {
-  width: min(100%, 920px);
-  padding: 48px 22px 46px;
+  width: 100%;
+  padding: 40px 22px 50px;
   text-align: center;
   transform: rotate(-0.4deg);
 }
@@ -1367,7 +1648,6 @@ body {
 .sitios {
   display: grid;
   gap: 40px;
-  margin-top: 34px;
   text-align: left;
 }
 
@@ -1526,17 +1806,107 @@ body {
   margin: 2rem 0 0;
 }
 
-/* ---------- Itinerario ---------- */
-
-.programa {
-  padding: 96px 16px 0;
+/* Vista previa (modo local o desde el panel): lo vacío dice dónde se llena */
+.tarjeta .seccion-pendiente {
   display: grid;
-  justify-items: center;
+  gap: 4px;
+  max-width: 36ch;
+  margin: 1.4rem auto 0;
+  padding: 12px 14px;
+  border: 1px dashed color-mix(in srgb, var(--tinta) 30%, transparent);
+  font-family: var(--f-ui);
+  font-size: 0.9rem;
+  line-height: 1.45;
+  text-align: center;
+  color: var(--tinta-suave);
 }
 
+.tarjeta .seccion-pendiente b {
+  font-weight: 600;
+  color: var(--tinta);
+}
+
+.preguntas-lista:has(.seccion-pendiente) {
+  border-top: 0;
+}
+
+/* ---------- Dónde quedarse ---------- */
+
+.tarjeta-alojamiento {
+  width: 100%;
+  padding: 40px 24px 58px;
+  text-align: center;
+  transform: rotate(-0.6deg);
+}
+
+.alojamiento-nota {
+  margin: 0 auto 1.4rem;
+  max-width: 34ch;
+  font-style: italic;
+  font-size: 1.1rem;
+  line-height: 1.5;
+  color: var(--tinta-suave);
+}
+
+.alojamiento-nota[hidden] {
+  display: none;
+}
+
+.hoteles {
+  display: grid;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.hotel {
+  padding: 22px 0 18px;
+  border-top: 1px solid var(--linea);
+}
+
+.hotel:first-child {
+  border-top: 0;
+  padding-top: 4px;
+}
+
+.hotel p {
+  max-width: 34ch;
+  margin: 0.3rem auto 0;
+}
+
+.hotel-nombre {
+  margin: 0;
+  font-family: var(--f-texto);
+  font-weight: 400;
+  font-size: 1.35rem;
+  line-height: 1.25;
+}
+
+.hotel-direccion {
+  font-size: 1.02rem;
+  line-height: 1.45;
+  color: var(--tinta-suave);
+}
+
+.hotel-nota {
+  font-style: italic;
+  font-size: 1.06rem;
+  line-height: 1.45;
+}
+
+.hotel-acciones {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0 22px;
+  margin-top: 0.3rem;
+}
+
+/* ---------- Itinerario ---------- */
+
 .tarjeta-programa {
-  width: min(100%, 620px);
-  padding: 48px 24px 52px;
+  width: 100%;
+  padding: 40px 24px 56px;
   text-align: center;
   transform: rotate(0.5deg);
 }
@@ -1545,7 +1915,6 @@ body {
   --hilo: 1;
   --x-hilo: 10px;
   position: relative;
-  margin-top: 34px;
   text-align: left;
 }
 
@@ -1645,23 +2014,69 @@ body {
   color: var(--tinta-suave);
 }
 
+/* ---------- Nuestra historia ---------- */
+
+.tarjeta-historia {
+  width: 100%;
+  padding: 44px 26px 60px;
+  transform: rotate(-0.4deg);
+}
+
+/* Una carta: párrafos en texto, alineados a la izquierda, y la firma a mano */
+.historia-texto {
+  display: grid;
+  gap: 1rem;
+  max-width: 36ch;
+  margin: 0 auto;
+}
+
+.historia-texto p {
+  margin: 0;
+  font-size: 1.12rem;
+  line-height: 1.6;
+  text-wrap: pretty;
+}
+
+.historia-firma {
+  max-width: 36ch;
+  margin: 1.1rem auto 0;
+  padding-right: 0.2em;
+  text-align: right;
+  font-family: var(--f-mano);
+  font-size: calc(2.3rem * var(--escala-mano));
+  line-height: 1.1;
+  color: var(--tinta);
+}
+
+.historia-firma i {
+  font-style: normal;
+  color: var(--tinta-suave);
+}
+
 /* ---------- Fotos ---------- */
 
-.fotos {
-  padding: 96px 16px 0;
-}
-
-.fotos[hidden] {
-  display: none;
-}
-
+/*
+ * Las fotos que sobran después de repartir una por pliego (hasta tres):
+ * copias sueltas sobre la mesa, desfasadas. Con una, centrada.
+ */
 .fotos-mesa {
   max-width: 1040px;
   margin: 0 auto;
   display: grid;
-  grid-template-columns: repeat(6, 1fr);
-  gap: 22px 18px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 28px 18px;
   align-items: start;
+}
+
+.fotos-mesa .foto:nth-child(odd) { transform: rotate(-1.6deg); }
+.fotos-mesa .foto:nth-child(even) { margin-top: 48px; transform: rotate(1.3deg); }
+.fotos-mesa .foto:nth-child(3) { grid-column: 1 / -1; justify-self: center; width: min(78%, 420px); margin-top: -8px; transform: rotate(0.8deg); }
+.fotos-mesa[data-cuantas='1'] .foto { grid-column: 1 / -1; justify-self: center; width: min(88%, 480px); }
+.fotos-mesa[data-cuantas='1'] .foto[data-forma='horizontal'] { width: min(100%, 640px); }
+
+.fotos-mesa .esquina {
+  width: 24px;
+  height: 24px;
 }
 
 .foto {
@@ -1692,13 +2107,6 @@ body {
   overflow: hidden;
   background: var(--algodon-hondo);
 }
-
-/* Las fotos se reparten en tandas de tres; de la cuarta en adelante giran al revés */
-.fotos-mesa .foto:nth-child(3n + 1) { grid-column: 1 / span 6; transform: rotate(-1.6deg); }
-.fotos-mesa .foto:nth-child(3n + 2) { grid-column: 1 / span 6; transform: rotate(1.2deg); }
-.fotos-mesa .foto:nth-child(3n) { grid-column: 2 / span 4; transform: rotate(-0.6deg); }
-.fotos-mesa .foto:nth-child(n + 4) { transform: rotate(0.9deg); }
-.fotos-mesa .foto:nth-child(n + 4):nth-child(3n + 2) { transform: rotate(-1.1deg); }
 
 .foto-boton {
   display: block;
@@ -1740,10 +2148,15 @@ body {
 
 /* ---------- Forro y papel vegetal: vestimenta y regalos ---------- */
 
+/* Las hojas van una debajo de otra, con aire entre ellas; nunca montadas */
 .forro {
   position: relative;
-  margin-top: 104px;
-  padding: 72px 16px 80px;
+  display: grid;
+  justify-items: center;
+  align-items: start;
+  gap: 32px;
+  margin-top: var(--entre-pliegos);
+  padding: clamp(64px, 9vh, 96px) 16px clamp(72px, 10vh, 104px);
   color: var(--tinta);
   background: var(--forro-img) 0 0 / 200px;
   box-shadow:
@@ -1753,8 +2166,8 @@ body {
 
 .vegetal {
   position: relative;
-  max-width: 920px;
-  margin: 0 auto;
+  width: min(100%, 920px);
+  margin: 0;
   padding: 44px 28px;
   display: grid;
   gap: 34px;
@@ -1792,10 +2205,9 @@ body {
   margin-top: 0.4rem;
 }
 
-/* La vestimenta va en su propia hoja, encima de la de regalos */
+/* La vestimenta va en su propia hoja, junto a la de regalos */
 .vegetal-vestimenta {
-  z-index: 1;
-  max-width: 640px;
+  width: min(100%, 640px);
   gap: 0;
   padding: 52px 28px 50px;
   transform: rotate(-0.9deg);
@@ -1931,15 +2343,154 @@ body {
 }
 
 .vegetal-otros {
-  margin-top: -14px;
-  padding-top: 58px;
+  width: min(100%, 640px);
   transform: rotate(0.6deg);
+}
+
+.vegetal p[hidden] {
+  display: none;
+}
+
+/* La cuenta para regalos en dinero: una ficha punteada dentro del vegetal */
+.regalo-cuenta {
+  max-width: 340px;
+  margin: 1.1rem auto 0;
+  padding: 16px 18px 4px;
+  border: 1px dashed color-mix(in srgb, var(--tinta) 32%, transparent);
+  border-radius: 3px;
+}
+
+.regalo-cuenta[hidden],
+.regalo-listas[hidden] {
+  display: none;
+}
+
+.cuenta {
+  display: grid;
+  gap: 0.6rem;
+  margin: 0;
+}
+
+.cuenta dt {
+  font-family: var(--f-grabada);
+  text-transform: uppercase;
+  font-size: 0.68rem;
+  letter-spacing: 0.22em;
+  padding-left: 0.22em;
+  color: var(--tinta-suave);
+}
+
+.cuenta dd {
+  margin: 0.1rem 0 0;
+  font-size: 1.08rem;
+  line-height: 1.35;
+  overflow-wrap: anywhere;
+}
+
+.cuenta dd.cuenta-numero {
+  font-family: var(--f-cifras);
+  font-size: 1.45rem;
+  letter-spacing: 0.06em;
+  font-variant-numeric: lining-nums tabular-nums;
+}
+
+.regalo-listas {
+  display: grid;
+  justify-items: center;
+  margin: 0.8rem 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+/* ---------- Preguntas frecuentes ---------- */
+
+.tarjeta-preguntas {
+  width: 100%;
+  padding: 34px 24px 60px;
+  text-align: center;
+  transform: rotate(0.5deg);
+}
+
+.preguntas-lista {
+  text-align: left;
+  border-top: 1px solid var(--linea);
+}
+
+.pregunta {
+  border-bottom: 1px solid var(--linea);
+}
+
+.pregunta summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  min-height: 58px;
+  padding: 12px 2px;
+  list-style: none;
+  cursor: pointer;
+  font-size: 1.12rem;
+  line-height: 1.35;
+}
+
+.pregunta summary::-webkit-details-marker {
+  display: none;
+}
+
+.pregunta summary:focus-visible {
+  outline: 3px solid var(--foco);
+  outline-offset: 2px;
+}
+
+/* Un más trazado a pluma que se vuelve menos al abrir */
+.pregunta-signo {
+  position: relative;
+  flex: none;
+  width: 18px;
+  height: 18px;
+}
+
+.pregunta-signo::before,
+.pregunta-signo::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 50%;
+  height: 1.5px;
+  margin-top: -0.75px;
+  background: var(--tinta-suave);
+  transition: transform 0.3s var(--sal-suave);
+}
+
+.pregunta-signo::after {
+  transform: rotate(90deg);
+}
+
+.pregunta[open] .pregunta-signo::after {
+  transform: rotate(0deg);
+}
+
+.pregunta-respuesta {
+  display: grid;
+  gap: 0.6rem;
+  padding: 0 32px 20px 2px;
+}
+
+.pregunta-respuesta p {
+  margin: 0;
+  font-style: italic;
+  font-size: 1.06rem;
+  line-height: 1.5;
+  color: var(--tinta-suave);
 }
 
 /* ---------- Remite ---------- */
 
+/* La solapa del remite nunca toca la última pieza: lleva el mismo aire que un pliego */
 .remite {
   position: relative;
+  margin-top: var(--entre-pliegos);
   padding: 150px 16px 64px;
   text-align: center;
   overflow: hidden;
@@ -2129,16 +2680,30 @@ body {
     padding: 38px 38px 52px;
   }
 
-  .capitulo {
-    width: 400px;
+  /* Las tres tarjetitas se reparten en la columna como piezas sueltas */
+  .capitulos {
+    justify-items: stretch;
   }
 
+  .capitulo {
+    width: min(100%, 420px);
+  }
+
+  .capitulo:nth-child(2) { justify-self: end; }
+  .capitulo:nth-child(3) { margin-left: 6%; }
+
   .tarjeta-llegar {
-    padding: 60px 48px 56px;
+    padding: 52px 48px 58px;
   }
 
   .tarjeta-programa {
-    padding: 60px 48px 58px;
+    padding: 52px 48px 60px;
+  }
+
+  .tarjeta-alojamiento,
+  .tarjeta-historia,
+  .tarjeta-preguntas {
+    padding: 52px 48px 62px;
   }
 
   .apps {
@@ -2178,14 +2743,29 @@ body {
     margin-top: 0;
   }
 
+  /* Tres fotos sueltas van en fila, la del medio más abajo */
   .fotos-mesa {
-    grid-template-columns: repeat(12, 1fr);
+    gap: 32px 26px;
   }
 
-  .fotos-mesa .foto:nth-child(3n + 1) { grid-column: 1 / span 6; }
-  .fotos-mesa .foto:nth-child(3n + 2) { grid-column: 7 / span 6; margin-top: 48px; }
-  .fotos-mesa .foto:nth-child(3n) { grid-column: 4 / span 6; }
-  .fotos-mesa[data-cuantas='1'] .foto { grid-column: 3 / span 8; }
+  .fotos-mesa[data-cuantas='3'] {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .fotos-mesa[data-cuantas='3'] .foto:nth-child(3) {
+    grid-column: auto;
+    width: auto;
+    margin-top: 16px;
+  }
+
+  .fotos-mesa[data-cuantas='2'] {
+    max-width: 860px;
+  }
+
+  .fotos-mesa .esquina {
+    width: 30px;
+    height: 30px;
+  }
 
   .vegetal {
     padding: 56px 44px;
@@ -2193,7 +2773,6 @@ body {
 
   .vegetal-otros {
     grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-    padding-top: 70px;
   }
 
   .vegetal-bloque + .vegetal-bloque {
@@ -2229,13 +2808,85 @@ body {
     padding: 0 16px;
   }
 
-  .fotos-mesa .foto:nth-child(3n + 1) { grid-column: 1 / span 4; }
-  .fotos-mesa .foto:nth-child(3n + 2) { grid-column: 5 / span 5; margin-top: 90px; }
-  .fotos-mesa .foto:nth-child(3n) { grid-column: 10 / span 3; margin-top: 24px; }
-  .fotos-mesa[data-cuantas='1'] .foto { grid-column: 4 / span 6; }
-  .fotos-mesa[data-cuantas='1'] .foto[data-forma='horizontal'] { grid-column: 3 / span 8; }
-  .fotos-mesa[data-cuantas='2'] .foto:nth-child(1) { grid-column: 2 / span 5; }
-  .fotos-mesa[data-cuantas='2'] .foto:nth-child(2) { grid-column: 7 / span 5; margin-top: 70px; }
+  .fotos-mesa {
+    gap: 32px 40px;
+  }
+
+  .fotos-mesa .foto:nth-child(even) {
+    margin-top: 72px;
+  }
+
+  /* La vestimenta y los regalos, lado a lado, sin montarse */
+  .forro:has(.vegetal-otros .vegetal-bloque:not([hidden])) {
+    grid-template-columns: minmax(0, 640px) minmax(0, 440px);
+    justify-content: center;
+    gap: 40px;
+  }
+
+  .forro .vegetal-otros {
+    width: 100%;
+    margin-top: 56px;
+    grid-template-columns: none;
+  }
+
+  .forro .vegetal-otros .vegetal-bloque + .vegetal-bloque {
+    border-left: 0;
+    padding-left: 0;
+    padding-top: 28px;
+    border-top: 1px solid color-mix(in srgb, var(--tinta) 14%, transparent);
+  }
+
+  /* Sin foto al lado, las tres tarjetitas del día, la hora y el lugar van en fila */
+  .pliego-detalles:not(.con-foto) .capitulos {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 28px;
+    align-items: start;
+  }
+
+  .pliego-detalles:not(.con-foto) .capitulo {
+    width: 100%;
+    margin-left: 0;
+    padding: 30px 28px 32px;
+  }
+
+  .pliego-detalles:not(.con-foto) .capitulo:nth-child(2) { margin-top: 56px; }
+  .pliego-detalles:not(.con-foto) .capitulo:nth-child(3) { margin-top: 18px; }
+
+  /* Pliegos: la foto a un lado, alternando; el texto en su columna */
+  .pliego.con-foto {
+    width: min(100% - 64px, 1120px);
+    grid-template-columns: minmax(0, 620px) minmax(0, 440px);
+    justify-content: space-between;
+    align-items: center;
+    column-gap: clamp(48px, 6vw, 112px);
+  }
+
+  .pliego.con-foto[data-lado='izquierda'] {
+    grid-template-columns: minmax(0, 440px) minmax(0, 620px);
+  }
+
+  .pliego.con-foto[data-lado='izquierda'] .pliego-foto {
+    order: -1;
+  }
+
+  .pliego.con-foto .pliego-foto,
+  .pliego.con-foto[data-lado] .pliego-foto {
+    justify-self: stretch;
+    width: 100%;
+    margin: 0;
+  }
+
+  .pliego.con-foto .pliego-foto .foto {
+    transform: rotate(1.8deg);
+  }
+
+  .pliego.con-foto[data-lado='izquierda'] .pliego-foto .foto {
+    transform: rotate(-1.6deg);
+  }
+
+  .pliego-detalles:not(.con-foto) {
+    width: min(100% - 64px, 1040px);
+  }
 }
 
 /* ---------- Pantalla ancha: tarjeta apaisada con la foto y el ramo a un lado ---------- */
@@ -2322,21 +2973,6 @@ body {
 
   .para-cupos {
     font-size: 0.86rem;
-  }
-
-  .scroll-vivo .altar-escenario {
-    align-content: end;
-  }
-
-  .capitulos,
-  .scroll-vivo .capitulos {
-    justify-items: start;
-    padding: 0 0 12svh 7vw;
-  }
-
-  .capitulo {
-    width: 420px;
-    padding: 30px 32px 32px;
   }
 
   .capitulo-titulo {
