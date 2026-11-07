@@ -172,16 +172,34 @@
       .join('')}</text>`;
   }
 
+  // El punto que se arrastra para cambiarle el tamaño a la pieza elegida. En
+  // el teléfono el plano se ve pequeño y el tirador crece (op.tirador).
+  function tirador(x, y, op, { clase = '', flechas = false, giro = 0 } = {}) {
+    const r = op.tirador || 17;
+    const trazo = flechas ? 'M-6 0H6M-3-3L-6 0L-3 3M3-3L6 0L3 3' : 'M-6 3L3-6M-1 6L6-1';
+    return `<g class="tirador${clase ? ` ${clase}` : ''}" data-tirador transform="translate(${fmt(x)} ${fmt(y)})"><circle r="${r}"/><path transform="scale(${fmt(r / 17)}) rotate(${giro})" d="${trazo}"/></g>`;
+  }
+
+  // El tirador de una mesa: en el borde de la redonda, en la punta de la larga.
+  function tiradorMesa(p, op) {
+    if (p.forma === 'redonda') {
+      const d = (radioMesa(p.puestos) + SEPARA + SILLA + 2) * Math.SQRT1_2;
+      return tirador(d, d, op, { flechas: true, giro: 45 });
+    }
+    const punta = largoMesa(p.puestos) / 2 + 6;
+    return p.giro === 90
+      ? tirador(0, punta, op, { clase: 'a-lo-alto', flechas: true, giro: 90 })
+      : tirador(punta, 0, op, { clase: 'a-lo-ancho', flechas: true });
+  }
+
   function zona(p, op, editor) {
     const fondo = `<rect class="zona-fondo" x="${fmt(-p.ancho / 2)}" y="${fmt(-p.alto / 2)}" width="${p.ancho}" height="${p.alto}" rx="8"/>`;
     const centro = `transform="translate(${p.x} ${p.y})"`;
     if (!editor) return `<g class="pieza es-zona" ${centro}>${fondo}${nombreZona(p, 34)}</g>`;
     const elegida = op.seleccion === p.id;
-    const tirador = elegida
-      ? `<g class="tirador" data-tirador transform="translate(${fmt(p.ancho / 2)} ${fmt(p.alto / 2)})"><circle r="17"/><path d="M-6 3L3-6M-1 6L6-1"/></g>`
-      : '';
+    const asa = elegida ? tirador(p.ancho / 2, p.alto / 2, op) : '';
     return `<g class="pieza es-zona${elegida ? ' elegida' : ''}" data-pieza="${p.id}" ${centro} tabindex="0" role="button" aria-pressed="${elegida}" aria-label="${esc(`${nombrePieza(p)} (espacio del salón)`)}">
-        ${contorno(p, 'pieza-foco', 8)}${fondo}${nombreZona(p, op.tamZona || 22)}${tirador}
+        ${contorno(p, 'pieza-foco', 8)}${fondo}${nombreZona(p, op.tamZona || 22)}${asa}
       </g>`;
   }
 
@@ -208,6 +226,7 @@
         ${contorno(p, 'pieza-toque', 4)}${contorno(p, 'pieza-foco', 8)}<g class="sillas">${asientos}</g>${tablero(p)}
         <text class="mesa-numero" y="-7" dy=".36em">${p.numero}</text>
         <text class="mesa-cuenta" y="16" dy=".36em">${sentados}/${p.puestos}</text>
+        ${elegida && !op.eligiendo ? tiradorMesa(p, op) : ''}
       </g>`;
   }
 
@@ -267,7 +286,8 @@
    * op.modo: 'editor' (panel) o 'invitado' (invitación).
    * Editor: op.seleccion (id), op.ocupacion ({ id: { confirmados, pendientes } }),
    *         op.eligiendo (se está sentando a una familia), op.tamZona (letra
-   *         de los espacios; más grande cuando el plano se ve pequeño).
+   *         de los espacios; más grande cuando el plano se ve pequeño),
+   *         op.tirador (radio del tirador de la pieza elegida; ídem).
    * Invitado: op.destacada (id de su mesa).
    */
   function dibujar(plan, op = {}) {

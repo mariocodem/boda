@@ -60,6 +60,55 @@
     };
   }
 
+  // Vino tinto: lo que comparten las paletas del tema Vino & Marfil.
+  function vinoTinto(p) {
+    return {
+      nombre: p.nombre,
+      clara: p.clara,
+      tema: p.suelo,
+      vars: {
+        '--verde': p.suelo,
+        '--verde-medio': p.medio,
+        '--verde-hondo': '#2a0509',
+        '--verde-forro': '#6b0f1e',
+        '--verde-luz': '#b86a76',
+        '--salvia': p.salvia,
+        '--salvia-clara': p.salviaClara,
+        '--tinta-sobre': p.tintaSobre,
+        '--cartulina-luz': '#8e2436',
+        '--cartulina-media': '#6b0f1e',
+        '--cartulina-honda': '#4a0a12',
+        '--algodon': p.algodon[0],
+        '--algodon-hondo': p.algodon[1],
+        '--algodon-sombra': p.algodon[2],
+        '--tinta': '#1c1416',
+        '--tinta-suave': '#4a3236',
+        '--tinta-tenue': '#6a5054',
+        '--linea': p.linea,
+        '--brillo-suelo': p.clara ? 'rgba(255, 255, 255, 0.5)' : 'rgba(142, 36, 54, 0.4)',
+        '--destello': '#c9a15b',
+        '--destello-luz': '#fff6e0',
+        '--destello-halo': p.clara ? 'rgba(255, 244, 220, 0.6)' : 'rgba(201, 161, 91, 0.18)',
+        '--destello-sombra': 'color-mix(in srgb, var(--sombra) 20%, transparent)',
+        '--sombra': '#2a0509',
+        '--matasellos-sobre': '#c9a15b',
+        '--foco': p.clara ? '#8e2436' : '#e0b85e',
+        '--barra-riel': '#4a0a12',
+        '--grano-suelo': GRANO_SUAVE,
+        // Responder va en vino; el oro queda para el sello de lacre.
+        '--polen': '#6b0f1e',
+        '--polen-claro': '#8e2436',
+        '--polen-hondo': '#4a0a12',
+        '--oro': '#c9a15b',
+        '--oro-claro': '#ecd49c',
+        '--oro-hondo': '#8b6522',
+        '--bosque': '#1e2a1f',
+      },
+      sello: { fondo: '#6b0f1e', marco: '#ecd49c', hoja: '#7d8a5c', flor: '#fffdf9', florSombra: '#eadfd2' },
+      forro: { fondo: '#6b0f1e', linea: '#c9a15b' },
+    };
+  }
+
   const PALETAS = {
     verde: {
       nombre: 'Verde hoja',
@@ -187,6 +236,109 @@
       sombra: '#1a3024',
       sello: { fondo: '#6f9a80', marco: '#e6efe7', hoja: '#3e6a52', flor: '#fbfdfb', florSombra: '#e1ebe2' },
       forro: { fondo: '#9dbaa6', linea: '#4d775f' },
+    }),
+    // La del tema Editorial: suelo crema y titulares en terracota, con los
+    // destellos más suaves.
+    terracota: (() => {
+      const p = pastel({
+        nombre: 'Terracota',
+        suelo: '#f6f2e7',
+        medio: '#ece4d3',
+        hondo: '#4a2a22',
+        enlace: '#8f4c3f',
+        luz: '#b9796a',
+        salvia: '#8a5244',
+        salviaClara: '#74402f',
+        tintaSobre: '#9d594d',
+        cartulina: ['#faf6ee', '#f3ecdf', '#ebe2d1'],
+        algodon: ['#fdfaf4', '#f4ede1', '#e8dfcf'],
+        tinta: ['#5c3027', '#7a4c42', '#8a5c52'],
+        linea: '#e4d7c4',
+        sombra: '#4a2a22',
+        sello: { fondo: '#9d594d', marco: '#f3e4dc', hoja: '#7f8f6a', flor: '#fffaf4', florSombra: '#f1e2da' },
+        forro: { fondo: '#d9b5a6', linea: '#9d594d' },
+      });
+      Object.assign(p.vars, {
+        '--brillo-suelo': 'rgba(255, 255, 255, 0.5)',
+        '--destello-halo': 'rgba(255, 246, 222, 0.34)',
+        '--destello-sombra': 'color-mix(in srgb, var(--sombra) 7%, transparent)',
+        '--matasellos-sobre': '#8f4c3f',
+        '--foco': '#8f4c3f',
+        // El texto corrido sobre el suelo, más hondo que los titulares (6.4:1).
+        '--tinta-texto': '#84463a',
+        // Responder deja el azafrán: aquí la acción es terracota.
+        '--polen': '#9d594d',
+        '--polen-claro': '#e9c9bd',
+        '--polen-hondo': '#74402f',
+      });
+      return p;
+    })(),
+    // La del tema Victoriano: terciopelo vino, papel marfil y oro viejo. Es
+    // oscura, como Verde hoja: lo que va sobre el terciopelo se escribe en oro.
+    vino: {
+      nombre: 'Vino',
+      clara: false,
+      tema: '#4f1621',
+      vars: {
+        '--verde': '#4f1621',
+        '--verde-medio': '#5e1d2a',
+        '--verde-hondo': '#2a0a10',
+        '--verde-forro': '#7a2433',
+        '--verde-luz': '#a77d3a',
+        '--salvia': '#d8be8a',
+        '--salvia-clara': '#ead7ad',
+        '--tinta-sobre': '#ecd49c',
+        '--cartulina-luz': '#6d2331',
+        '--cartulina-media': '#5c1c29',
+        '--cartulina-honda': '#4a1520',
+        '--algodon': '#f8f1e2',
+        '--algodon-hondo': '#efe4cd',
+        '--algodon-sombra': '#e2d3b6',
+        '--tinta': '#2f1517',
+        '--tinta-suave': '#5a3832',
+        '--tinta-tenue': '#6b4a42',
+        '--linea': '#ddcba9',
+        '--brillo-suelo': 'rgba(150, 50, 68, 0.42)',
+        '--destello': '#e8c57a',
+        '--destello-luz': '#fff2d2',
+        '--destello-halo': 'rgba(232, 197, 122, 0.16)',
+        '--destello-sombra': 'color-mix(in srgb, var(--sombra) 60%, transparent)',
+        '--sombra': '#170407',
+        '--matasellos-sobre': '#e8c57a',
+        '--foco': '#e0b85e',
+        '--barra-riel': '#2a0a10',
+        '--grano-suelo': 'var(--grano)',
+        // Responder va en oro, como un sello de lacre dorado.
+        '--polen': '#c9a04e',
+        '--polen-claro': '#dfbb6c',
+        '--polen-hondo': '#8b6522',
+        // El oro de los filetes y las florituras (assets/victoriano.css).
+        '--oro': '#c9a04e',
+        '--oro-claro': '#f1d999',
+        '--oro-hondo': '#8b6522',
+      },
+      sello: { fondo: '#5e1d2a', marco: '#e8d3a2', hoja: '#8f9a6b', flor: '#f8f1e2', florSombra: '#e9dcc0' },
+      forro: { fondo: '#5e1d2a', linea: '#caa45a' },
+    },
+
+    // Las del tema Vino & Marfil (2026-11-06): vino tinto sobre marfil, con
+    // secciones oscuras de noche vino. En assets/vino.css: --cartulina-media es
+    // el vino principal, --cartulina-honda el hondo, --sombra la noche y
+    // --salvia-clara el rosa polvo.
+    marfil: vinoTinto({
+      nombre: 'Vino & Marfil', clara: true, suelo: '#f6efe6', medio: '#ece2d6',
+      tintaSobre: '#4a0a12', salvia: '#8e2436', salviaClara: '#e5d6d6',
+      algodon: ['#fffdf9', '#f8f3ec', '#eadfd2'], linea: '#e6d3d0',
+    }),
+    bosque: vinoTinto({
+      nombre: 'Vino gótico bosque', clara: false, suelo: '#2a0509', medio: '#3a0a10',
+      tintaSobre: '#f3e6d8', salvia: '#d9b9b9', salviaClara: '#e5d6d6',
+      algodon: ['#fbf6ee', '#f1e7da', '#e2d3c2'], linea: '#e0cdc6',
+    }),
+    rosapolvo: vinoTinto({
+      nombre: 'Vino & Rosa polvo', clara: true, suelo: '#f1e4e2', medio: '#e8d6d3',
+      tintaSobre: '#4a0a12', salvia: '#8e2436', salviaClara: '#f6eceb',
+      algodon: ['#fffdfb', '#faf3f1', '#ecdcd8'], linea: '#e6cfcd',
     }),
   };
 
@@ -435,7 +587,64 @@
         '--escala-mano': '0.96',
       },
     },
+    // La del tema Vino & Marfil: versales romanas (Cinzel), una Garamond para
+    // leer (Cormorant) y la caligrafía inglesa de los nombres (Pinyon Script).
+    cinzel: {
+      nombre: 'Cinzel y Cormorant',
+      descripcion: 'Versales romanas, Garamond y caligrafía',
+      css: 'https://fonts.googleapis.com/css2?family=Cinzel:wght@400;500;600&family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400;1,500&family=Pinyon+Script&display=swap',
+      cargar: ['400 1em "Cinzel"', '500 1em "Cormorant Garamond"', 'italic 400 1em "Cormorant Garamond"', '400 1em "Pinyon Script"'],
+      vars: {
+        '--f-grabada': "'Cinzel', 'Cormorant Garamond', Georgia, serif",
+        '--f-texto': "'Cormorant Garamond', Georgia, 'Times New Roman', serif",
+        '--f-mano': "'Pinyon Script', 'Cormorant Garamond', cursive",
+        '--f-cifras': "'Cormorant Garamond', Georgia, serif",
+        '--escala-nombres': '0.86',
+        '--escala-mano': '1.12',
+      },
+    },
+    // La del tema Victoriano: una romana de los libros del siglo XIX (Old
+    // Standard TT) y la caligrafía inglesa de las tarjetas de visita.
+    victoriana: {
+      nombre: 'Victoriana',
+      descripcion: 'Romana del siglo XIX y caligrafía inglesa',
+      css: 'https://fonts.googleapis.com/css2?family=Old+Standard+TT:ital,wght@0,400;0,700;1,400&family=Pinyon+Script&display=swap',
+      cargar: ['400 1em "Old Standard TT"', 'italic 400 1em "Old Standard TT"', '400 1em "Pinyon Script"'],
+      vars: {
+        '--f-grabada': "'Old Standard TT', Georgia, serif",
+        '--f-texto': "'Old Standard TT', Georgia, 'Times New Roman', serif",
+        '--f-mano': "'Pinyon Script', 'Old Standard TT', cursive",
+        '--f-cifras': "'Old Standard TT', Georgia, serif",
+        '--escala-nombres': '0.9',
+        '--escala-mano': '1.08',
+      },
+    },
+    // La del tema Editorial: titulares de alto contraste en caja mixta y texto
+    // en una sans clara.
+    editorial: {
+      nombre: 'Editorial',
+      descripcion: 'Titulares de alto contraste y texto en sans',
+      css: 'https://fonts.googleapis.com/css2?family=Gloock&display=swap',
+      cargar: ['400 1em "Gloock"', '400 1em "Hanken Grotesk"', '400 1em "Rouge Script"'],
+      vars: {
+        '--f-grabada': "'Gloock', Georgia, serif",
+        '--f-texto': "'Hanken Grotesk', system-ui, -apple-system, 'Segoe UI', sans-serif",
+        '--f-mano': "'Rouge Script', 'Gloock', cursive",
+        '--f-cifras': "'Hanken Grotesk', system-ui, sans-serif",
+        '--escala-nombres': '1',
+        '--escala-mano': '1',
+      },
+    },
   };
+
+  // De la letra del texto se toman el texto y las cifras; lo demás (títulos,
+  // caligrafía y escalas) es de la letra de los títulos.
+  const VOZ_TEXTO = ['--f-texto', '--f-cifras'];
+
+  // Todas las variables que escribe aplicar(): al cambiar de paleta se borran
+  // las que la nueva no trae.
+  // (--tinta-texto también la pone la invitación sobre un fondo propio.)
+  const TODAS = new Set(['--tinta-texto']);
 
   // El color libre se conserva aunque se elija otra paleta: así el panel lo
   // recuerda si se vuelve a él.
@@ -447,6 +656,8 @@
       letra: LETRAS[x.letra] ? x.letra : DEFECTO.letra,
     };
     if (color) n.color = color;
+    // La letra del texto, si es otra que la de los títulos.
+    if (LETRAS[x.letraTexto] && x.letraTexto !== n.letra) n.letraTexto = x.letraTexto;
     return n;
   }
 
@@ -478,10 +689,10 @@
   // Resuelve cuando las fuentes del estilo están descargadas (o a los 2.5 s).
   function listo(estilo) {
     const e = normalizar(estilo);
-    const l = LETRAS[e.letra];
-    const fuentes = cargarLetra(e.letra).then(() => (document.fonts && document.fonts.load
-      ? Promise.all(l.cargar.map((f) => document.fonts.load(f).catch(() => null)))
+    const una = (letra) => cargarLetra(letra).then(() => (document.fonts && document.fonts.load
+      ? Promise.all(LETRAS[letra].cargar.map((f) => document.fonts.load(f).catch(() => null)))
       : null));
+    const fuentes = Promise.all([una(e.letra), e.letraTexto ? una(e.letraTexto) : null]);
     return Promise.race([fuentes, espera(2500)]);
   }
 
@@ -519,12 +730,23 @@
     const raiz = el || document.documentElement;
     const p = paleta(e);
     const vars = Object.assign({}, p.vars, LETRAS[e.letra].vars);
-    Object.keys(vars).forEach((k) => raiz.style.setProperty(k, vars[k]));
+    if (e.letraTexto) VOZ_TEXTO.forEach((k) => { vars[k] = LETRAS[e.letraTexto].vars[k]; });
+    TODAS.forEach((k) => { if (!(k in vars)) raiz.style.removeProperty(k); });
+    Object.keys(vars).forEach((k) => {
+      raiz.style.setProperty(k, vars[k]);
+      TODAS.add(k);
+    });
     raiz.dataset.paleta = e.paleta;
     if (e.paleta === LIBRE) raiz.dataset.color = e.color;
     else delete raiz.dataset.color;
     raiz.dataset.letra = e.letra;
+    // Suelo claro (las pastel, Terracota) u oscuro (Verde hoja): las láminas de
+    // flores se imprimen distinto sobre cada uno.
+    raiz.dataset.suelo = p.clara ? 'claro' : 'oscuro';
+    if (e.letraTexto) raiz.dataset.letraTexto = e.letraTexto;
+    else delete raiz.dataset.letraTexto;
     cargarLetra(e.letra);
+    if (e.letraTexto) cargarLetra(e.letraTexto);
     if (raiz === document.documentElement) {
       const meta = document.querySelector('meta[name="theme-color"]');
       if (meta) meta.content = p.tema;
@@ -552,7 +774,7 @@
   // (con color libre: &paleta=libre&color=%23c9a3b5)
   function desdeUrl(params) {
     if (params.get('vista') !== 'panel' || !(params.get('paleta') || params.get('letra'))) return null;
-    return normalizar({ paleta: params.get('paleta'), letra: params.get('letra'), color: params.get('color') });
+    return normalizar({ paleta: params.get('paleta'), letra: params.get('letra'), color: params.get('color'), letraTexto: params.get('texto') });
   }
 
   // Primer estilo de la página, antes de pintar: la vista previa del panel, lo

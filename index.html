@@ -8,17 +8,47 @@
   <meta name="theme-color" content="#1c3a2d">  <meta property="og:type" content="website">
   <meta property="og:title" content="Diego &amp; Erika · Nos casamos">
   <meta property="og:description" content="Abre tu invitación y confírmanos si nos acompañas.">
+  <!-- La vista previa al compartir por WhatsApp: necesita la dirección completa
+       (la de GitHub Pages del repositorio; cámbiala si usas otro dominio). -->
+  <meta property="og:url" content="https://mariocodem.github.io/boda/">
+  <meta property="og:image" content="https://mariocodem.github.io/boda/fotos/og-boda.jpg">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta property="og:image:alt" content="Diego y Erika en el bosque: ¡Nos casamos!">
+  <meta property="og:locale" content="es_CO">
+  <meta name="twitter:card" content="summary_large_image">
   <link rel="icon" href="assets/icono.svg" type="image/svg+xml">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Castoro:ital@0;1&family=Castoro+Titling&family=Hanken+Grotesk:wght@400;500;600;700&family=Rouge+Script&display=swap">
-  <link rel="stylesheet" href="assets/base.css?v=20261023">
-  <link rel="stylesheet" href="assets/invitacion.css?v=20261023">
-  <link rel="stylesheet" href="assets/mariposa.css?v=20261023">
+  <!-- Las letras de base no frenan el primer cuadro: se cargan aparte (display=swap). -->
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Castoro:ital@0;1&family=Castoro+Titling&family=Hanken+Grotesk:wght@400;500;600;700&family=Rouge+Script&display=swap" media="print" onload="this.media='all'">
+  <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Castoro:ital@0;1&family=Castoro+Titling&family=Hanken+Grotesk:wght@400;500;600;700&family=Rouge+Script&display=swap"></noscript>
+  <link rel="stylesheet" href="assets/base.css?v=20261107">
+  <link rel="stylesheet" href="assets/invitacion.css?v=20261107">
+  <link rel="stylesheet" href="assets/victoriano.css?v=20261107">
+  <link rel="stylesheet" href="assets/mariposa.css?v=20261107">
+  <link rel="stylesheet" href="assets/vino.css?v=20261107">
   <!-- El estilo (colores y letra) se aplica antes de pintar -->
-  <script src="assets/config.js?v=20261023"></script>
-  <script src="assets/estilos.js?v=20261023"></script>
-  <script>Estilos.arrancar();</script>
+  <script src="assets/config.js?v=20261107"></script>
+  <script src="assets/estilos.js?v=20261107"></script>
+  <script>Estilos.arrancar();
+    // El tema de la última visita (Vino & Marfil la primera): así el sobre
+    // tiene su tamaño desde el primer cuadro.
+    try { document.documentElement.dataset.tema = localStorage.getItem('boda-diego-erika:tema') || 'vino'; } catch (e) { document.documentElement.dataset.tema = 'vino'; }
+    // La foto del bosque (intro y fondo) se pide desde ya: es lo más grande de
+    // la primera pantalla. La de la última visita o, la primera vez, la de config.js.
+    try {
+      var f = window.BODA && BODA.fotoPortada;
+      var u = localStorage.getItem('boda-diego-erika:intro-foto') || (f && (f.archivo || f.url));
+      if (u && document.documentElement.dataset.tema === 'vino') {
+        u = new URL(u, location.href).href;
+        document.documentElement.style.setProperty('--intro-foto', 'url("' + u.replace(/"/g, '%22') + '")');
+        var l = document.createElement('link');
+        l.rel = 'preload'; l.as = 'image'; l.href = u; l.setAttribute('fetchpriority', 'high');
+        document.head.appendChild(l);
+      }
+    } catch (e) { /* sin almacenamiento: la pone invitacion.js */ }
+  </script>
 </head>
 <body>
   <!-- El fondo de toda la invitación: destellos dorados que titilan y polvo de oro que sube -->
@@ -26,6 +56,8 @@
 
   <!-- Escena del sobre a pantalla completa: el forro y la tarjeta atrás, el bolsillo y la solapa delante -->
   <div class="escena" id="escena">
+    <!-- Vino & Marfil: el bosque con niebla detrás del sobre -->
+    <div class="niebla" aria-hidden="true"><span></span><span></span><span></span></div>
     <div class="escena-capa escena-atras" aria-hidden="true">
       <div class="sobre sobre-atras" data-cara="frente">
         <div class="sobre-interior"></div>
@@ -33,11 +65,16 @@
       </div>
     </div>
     <div class="escena-capa escena-delante">
+      <div class="intro-textos">
+        <p class="intro-arriba" data-intro-arriba>El día más importante de nuestra vida ha llegado</p>
+        <p class="intro-frase" data-intro-frase>¡Nos casamos!</p>
+      </div>
       <button class="sobre sobre-delante" id="sobre" type="button" data-cara="frente" aria-describedby="escena-pista">
         <span class="solo-lectores" data-sobre-etiqueta>Abrir la invitación de Diego y Erika</span>
         <span class="sobre-frente" aria-hidden="true">
           <span class="sobre-numero">N.º <span class="cifra" data-numero>···</span></span>
           <span class="sobre-sello sello-postal"></span>
+          <span class="sobre-abrir" data-abrir-texto>Abrir aquí</span>
           <span class="sobre-matasellos" data-matasellos-sobre></span>
           <span class="sobre-direccion">
             <span class="sobre-para">Para</span>
@@ -48,6 +85,8 @@
         </span>
         <span class="sobre-dorso" aria-hidden="true">
           <span class="sobre-bolsillo-sombra"><span class="sobre-bolsillo"></span></span>
+          <span class="sobre-abrir sobre-abrir-dorso" data-abrir-texto>Abrir aquí</span>
+          <span class="sobre-para-dorso" data-para-dorso></span>
           <span class="solapa solapa-cerrada">
             <span class="solapa-forma"></span>
             <span class="solapa-remite">Diego <i>&amp;</i> Erika</span>
@@ -55,13 +94,14 @@
           </span>
         </span>
       </button>
+      <p class="intro-nombres" aria-hidden="true">Diego <i>&amp;</i> Erika</p>
       <p class="escena-pista" id="escena-pista">Toca el sobre para abrirlo</p>
     </div>
   </div>
 
   <main id="contenido">
     <!-- La tarjeta ocupa toda la pantalla, con la foto de los novios y el ramo; al bajar se asienta sobre la mesa -->
-    <section class="portada" id="portada" aria-labelledby="nombres">
+    <section class="portada" id="portada" aria-labelledby="nombres" data-bloque="portada" data-tipo="portada">
       <div class="portada-escenario">
         <article class="tarjeta tarjeta-invitacion" id="tarjeta">
           <div class="retrato">
@@ -89,8 +129,8 @@
               <span class="para-cupos" data-cupos></span>
               <a class="para-mesa" href="#mesa" data-para-mesa hidden></a>
             </p>
-            <a class="portada-pista" href="#cuando">
-              <span>Desliza para ver los detalles</span>
+            <a class="portada-pista" href="#cuando" data-pista>
+              <span data-pista-texto>Desliza para ver los detalles</span>
               <svg viewBox="0 0 24 40" aria-hidden="true"><path d="M12 3v32M5 28l7 8 7-8" /></svg>
             </a>
           </div>
@@ -100,164 +140,53 @@
     </section>
 
     <!--
-      Cada parte es un pliego: su título impreso en la cartulina, sus piezas de
-      papel y, si le toca, una foto de la pareja al lado (en el teléfono, debajo).
+      Después de la portada van los bloques de la página, en el orden que se
+      arma en el panel (Diseño): cada parte es un pliego, con su título impreso
+      en la cartulina, sus piezas de papel y, si le toca, una foto de la pareja
+      al lado (en el teléfono, debajo). Los pinta assets/bloques.js.
     -->
+    <div class="bloques" data-bloques></div>
 
-    <!-- Los detalles: tres tarjetitas con el día, la hora y el lugar -->
-    <section class="pliego pliego-detalles" id="cuando" aria-labelledby="cuando-titulo">
-      <div class="pliego-texto">
-        <h2 class="pliego-titulo" id="cuando-titulo">Los detalles</h2>
-        <div class="capitulos">
-          <article class="tarjeta capitulo">
-            <h3 class="capitulo-titulo">El día</h3>
-            <p class="capitulo-dato" data-fecha-larga>Fecha por confirmar</p>
-            <p class="capitulo-nota" data-cuenta hidden></p>
-          </article>
-          <article class="tarjeta capitulo">
-            <h3 class="capitulo-titulo">La ceremonia</h3>
-            <p class="capitulo-dato capitulo-hora" data-hora-ceremonia>Hora por confirmar</p>
-            <p class="capitulo-nota" data-recepcion-nota hidden></p>
-          </article>
-          <article class="tarjeta capitulo">
-            <h3 class="capitulo-titulo">El lugar</h3>
-            <p class="capitulo-dato capitulo-lugar" data-lugar-ceremonia>Lugar por confirmar</p>
-            <p class="capitulo-nota" data-direccion-ceremonia hidden></p>
-            <a class="enlace-accion" href="#llegar">Ver cómo llegar</a>
-          </article>
-        </div>
-      </div>
-      <div class="pliego-foto" data-foto-pliego="detalles" hidden></div>
-    </section>
-
-    <section class="pliego pliego-llegar" id="llegar" aria-labelledby="llegar-titulo">
-      <div class="pliego-texto">
-        <h2 class="pliego-titulo" id="llegar-titulo">Cómo llegar</h2>
-        <article class="tarjeta tarjeta-llegar">
-          <div class="sitios" data-sitios></div>
-          <p class="llegar-calendario" data-calendario hidden></p>
-          <p class="tarjeta-marca">Cómo llegar · N.º <span class="cifra" data-numero>···</span></p>
-        </article>
-      </div>
-    </section>
-
-    <!-- Dónde quedarse: hoteles cerca, para quienes vienen de lejos -->
-    <section class="pliego pliego-alojamiento" id="alojamiento" aria-labelledby="alojamiento-titulo" hidden>
-      <div class="pliego-texto">
-        <h2 class="pliego-titulo" id="alojamiento-titulo">Dónde quedarse</h2>
-        <article class="tarjeta tarjeta-alojamiento">
-          <p class="alojamiento-nota" data-alojamiento-nota hidden></p>
-          <ul class="hoteles" data-hoteles></ul>
-          <p class="tarjeta-marca">Alojamiento · N.º <span class="cifra" data-numero>···</span></p>
-        </article>
-      </div>
-    </section>
-
-    <section class="pliego pliego-programa" id="itinerario" aria-labelledby="itinerario-titulo">
-      <div class="pliego-texto">
-        <h2 class="pliego-titulo" id="itinerario-titulo">Itinerario</h2>
-        <article class="tarjeta tarjeta-programa">
-          <div class="dia">
-            <span class="dia-hilo" aria-hidden="true"></span>
-            <ol class="dia-lista" data-itinerario></ol>
-          </div>
-          <p class="tarjeta-marca">Itinerario · N.º <span class="cifra" data-numero>···</span></p>
-        </article>
-      </div>
-      <div class="pliego-foto" data-foto-pliego="itinerario" hidden></div>
-    </section>
-
-    <!-- Nuestra historia: una carta de los novios, firmada -->
-    <section class="pliego pliego-historia" id="historia" aria-labelledby="historia-titulo" hidden>
-      <div class="pliego-texto">
-        <h2 class="pliego-titulo" id="historia-titulo">Nuestra historia</h2>
-        <article class="tarjeta tarjeta-historia">
-          <div class="historia-texto" data-historia></div>
-          <p class="historia-firma">Diego <i>&amp;</i> Erika</p>
-          <p class="tarjeta-marca">Nuestra historia · N.º <span class="cifra" data-numero>···</span></p>
-        </article>
-      </div>
-      <div class="pliego-foto" data-foto-pliego="historia" hidden></div>
-    </section>
-
-    <!-- Las fotos que no van junto a una parte: sueltas sobre la mesa -->
-    <section class="pliego pliego-momentos" id="fotos" aria-labelledby="fotos-titulo" hidden>
-      <h2 class="solo-lectores" id="fotos-titulo">Fotos de Diego y Erika</h2>
-      <div class="fotos-mesa" data-fotos></div>
-    </section>
-
-    <section class="forro" aria-labelledby="vestimenta-titulo">
-      <div class="vegetal vegetal-vestimenta">
-        <h2 class="titulo-grabado" id="vestimenta-titulo">Código de vestimenta</h2>
-        <p class="vestimenta-codigo" data-vestimenta-codigo></p>
-        <p class="vestimenta-nota" data-vestimenta-nota hidden></p>
-        <ul class="vestimenta-fotos" data-vestimenta-fotos aria-label="Fotos de referencia" hidden></ul>
-      </div>
-      <div class="vegetal vegetal-otros">
-        <div class="vegetal-bloque">
-          <h2 class="titulo-grabado">Regalos</h2>
-          <p data-regalos></p>
-          <div class="regalo-cuenta" data-regalos-cuenta hidden></div>
-          <ul class="regalo-listas" data-regalos-listas aria-label="Listas de regalos" hidden></ul>
-        </div>
-        <div class="vegetal-bloque" data-contacto hidden>
-          <h2 class="titulo-grabado">Dudas</h2>
-          <p data-contacto-texto></p>
-        </div>
-      </div>
-    </section>
-
-    <section class="pliego pliego-preguntas" id="preguntas" aria-labelledby="preguntas-titulo" hidden>
-      <div class="pliego-texto">
-        <h2 class="pliego-titulo" id="preguntas-titulo">Preguntas frecuentes</h2>
-        <article class="tarjeta tarjeta-preguntas">
-          <div class="preguntas-lista" data-preguntas></div>
-          <p class="tarjeta-marca">Preguntas · N.º <span class="cifra" data-numero>···</span></p>
-        </article>
-      </div>
-    </section>
-
-    <section class="pliego pliego-responder" id="responder" aria-labelledby="responder-titulo">
-      <div class="pliego-texto">
-        <h2 class="pliego-titulo" id="responder-titulo" data-titulo-responder>Esperamos compartir este día contigo</h2>
-        <article class="tarjeta tarjeta-respuesta" id="respuesta" aria-live="polite">
-          <p class="tarjeta-marca">Respuesta · N.º <span class="cifra" data-numero>···</span></p>
-          <div class="respuesta-cuerpo" data-respuesta></div>
-        </article>
-
-        <!-- La tarjeta de mesa: aparece cuando el invitado confirmó y los novios publicaron las mesas -->
-        <article class="tarjeta tarjeta-mesa" id="mesa" aria-labelledby="mesa-titulo" hidden>
-          <div class="mesa-cuerpo" data-mesa></div>
-          <p class="tarjeta-marca">Mesa · N.º <span class="cifra" data-numero>···</span></p>
-        </article>
-      </div>
-      <div class="pliego-foto" data-foto-pliego="responder" hidden></div>
-    </section>
-
-    <footer class="remite">
+    <footer class="remite" data-bloque="cierre" data-tipo="cierre">
       <div class="remite-solapa" aria-hidden="true"></div>
+      <!-- Vino & Marfil: la foto en un camafeo, la frase final y «¡Gracias!» -->
+      <div class="remite-camafeo" data-camafeo hidden><div class="camafeo-marco"><div class="camafeo-foto" data-camafeo-foto></div></div></div>
+      <div class="remite-frase" data-cierre-frase hidden></div>
+      <p class="remite-gracias" data-cierre-gracias hidden></p>
       <div class="remite-sello" aria-hidden="true"><span>D</span><span>E</span></div>
-      <p class="remite-con">Con cariño,</p>
-      <p class="remite-firma">Diego <i>&amp;</i> Erika</p>
+      <p class="remite-con" data-cierre-con>Con cariño,</p>
+      <p class="remite-firma" data-cierre-firma>Diego <i>&amp;</i> Erika</p>
       <button class="enlace-accion remite-volver" type="button" data-volver>Volver a cerrar el sobre</button>
+      <p class="remite-pie"><span class="monograma" aria-hidden="true">D<i>&amp;</i>E</span><span class="cifra" data-pie-fecha></span></p>
     </footer>
   </main>
+
+  <!-- La música (Diseño → Tema): suena al abrir el sobre y siempre se puede pausar -->
+  <button class="musica" type="button" data-musica hidden aria-pressed="false">
+    <span class="musica-ondas" aria-hidden="true"><i></i><i></i><i></i><i></i></span>
+    <span class="solo-lectores" data-musica-texto>Poner la música</span>
+  </button>
 
   <!-- Una foto en grande -->
   <dialog class="visor" id="visor" aria-label="Foto">
     <div class="visor-foto" data-visor-foto></div>
+    <button class="visor-paso visor-antes" type="button" data-visor-paso="-1" aria-label="Foto anterior"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg></button>
+    <button class="visor-paso visor-despues" type="button" data-visor-paso="1" aria-label="Foto siguiente"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 5l7 7-7 7"/></svg></button>
     <div class="visor-pie">
       <p data-visor-pie></p>
       <button class="enlace-accion visor-cerrar" type="button" data-visor-cerrar>Cerrar</button>
     </div>
   </dialog>
 
-  <script src="assets/destellos.js?v=20261023"></script>
-  <script src="assets/datos.js?v=20261023"></script>
-  <script src="assets/papeleria.js?v=20261023"></script>
-  <script src="assets/salon.js?v=20261023"></script>
-  <script src="assets/ramo.js?v=20261023"></script>
-  <script src="assets/mariposa.js?v=20261023"></script>
-  <script src="assets/invitacion.js?v=20261023"></script>
+  <script src="assets/destellos.js?v=20261107"></script>
+  <script src="assets/pagina.js?v=20261107"></script>
+  <script src="assets/datos.js?v=20261107"></script>
+  <script src="assets/papeleria.js?v=20261107"></script>
+  <script src="assets/bloques.js?v=20261107"></script>
+  <script src="assets/salon.js?v=20261107"></script>
+  <script src="assets/ramo.js?v=20261107"></script>
+  <script src="assets/mariposa.js?v=20261107"></script>
+  <script src="assets/musica.js?v=20261107"></script>
+  <script src="assets/invitacion.js?v=20261107"></script>
 </body>
 </html>

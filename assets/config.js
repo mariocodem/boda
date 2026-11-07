@@ -3,8 +3,9 @@
  * real vive aquí; el diseño no necesita tocarse.
  *
  * Fecha, lugares, alojamiento, itinerario, historia, vestimenta, regalos y
- * preguntas también se editan desde el panel (pestaña «La boda»). Lo que se
- * guarde allí reemplaza lo de este archivo.
+ * preguntas también se editan desde el panel (pestaña «La boda»), y el estilo
+ * y la página desde «Diseño». Lo que se guarde allí reemplaza lo de este
+ * archivo.
  *
  * Un valor en null se muestra en la invitación como «Por confirmar».
  */
@@ -77,25 +78,42 @@ window.BODA = {
   contacto: { whatsapp: null, nombre: null },
 
   // Estilo de la invitación: paleta de colores y familia de letra. Se cambia
-  // desde el panel (pestaña «La boda» → Estilo). Paletas: verde, rosa, lavanda,
-  // cielo, durazno, salvia, o libre con su color (paleta: 'libre', color:
-  // '#c9a3b5'). Letras: grabada, romana, romantica, fina.
-  estilo: { paleta: 'verde', letra: 'grabada' },
+  // desde el panel (pestaña «Diseño» → Tema). Paletas: verde, rosa, lavanda,
+  // cielo, durazno, salvia, terracota, vino, marfil, bosque, rosapolvo, o libre con su color (paleta:
+  // 'libre', color: '#c9a3b5'). Letras: grabada, romana, romantica, fina,
+  // editorial, victoriana, cinzel; la del texto puede ser otra (letraTexto: 'editorial').
+  // El tema, el fondo, el trato, los textos y el orden de los bloques también
+  // se arman en «Diseño» (ver assets/pagina.js).
+  // Desde 2026-11-06 el de arranque es el del tema Vino & Marfil.
+  estilo: { paleta: 'marfil', letra: 'cinzel' },
 
   // La mariposa de papel dorado que se posa en el ramo y acompaña al bajar.
-  // false la quita (también se apaga desde el panel, en Estilo).
+  // false la quita (también se apaga desde el panel, en Diseño → Tema).
   mariposa: true,
 
   // Fotos: se suben desde el panel (pestaña «La boda»). Lo que se suba allí
   // reemplaza esto. Las de la pareja se reparten por la invitación, en orden:
-  // junto a los detalles, al itinerario, a la historia y a la respuesta; las
-  // demás van juntas antes de la vestimenta. También sirve poner aquí rutas a
-  // archivos de la carpeta fotos/, por ejemplo:
+  // las tres primeras en el álbum, justo después de la tarjeta (la primera
+  // grande); después, junto a los detalles, al itinerario, a la historia y a la
+  // respuesta (en el orden de sus bloques); las demás van juntas. También sirve
+  // poner aquí rutas a archivos de la carpeta fotos/, por ejemplo:
   //   fotoPortada: { archivo: 'fotos/portada.jpg', encuadre: '50% 30%' },
   //   fotos: [{ archivo: 'fotos/pareja-1.jpg', forma: 'vertical' }],
   // encuadre: qué parte de la foto queda a la vista dentro del arco.
-  fotoPortada: null,
-  fotos: [],
+  // Las de Diego y Erika que vinieron en fotos/ (2026-11-05). El álbum se lleva
+  // las tres primeras: en ellas la pareja está al centro, que es lo que queda
+  // a la vista en una ventana ovalada. La del lago va junto a los detalles,
+  // donde se ve entera; la del bosque a color, en el arco de la tarjeta.
+  // fotosArranque: al cambiar estas fotos, cambia también esta fecha: así
+  // reemplazan una vez a las que estuvieran guardadas desde el panel.
+  fotosArranque: '2026-11-05',
+  fotoPortada: { archivo: 'fotos/pareja-bosque.jpg', encuadre: '58% 50%' },
+  fotos: [
+    { archivo: 'fotos/pareja-retrato.jpg', forma: 'horizontal' },
+    { archivo: 'fotos/pareja-bosque-bn.jpg', forma: 'horizontal' },
+    { archivo: 'fotos/pareja-flores.jpg', forma: 'horizontal' },
+    { archivo: 'fotos/pareja-lago.jpg', forma: 'horizontal' },
+  ],
 
   // Google Maps para el panel: búsqueda de lugares con autocompletado y pin que
   // se puede mover. Clave de navegador con «Maps JavaScript API» y «Places API
@@ -106,6 +124,18 @@ window.BODA = {
     mapId: '',  // opcional; vacío usa el mapa de demostración de Google
   },
 
+  // Entrar al panel con Google, y con esa misma cuenta pasar las tareas a
+  // Google Calendar: el ID de cliente de OAuth (tipo «Aplicación web»), que
+  // termina en .apps.googleusercontent.com. Es público por diseño, como la
+  // clave de Maps: lo protege la lista de «Orígenes de JavaScript autorizados»
+  // en Google Cloud. Nunca pongas aquí el «secreto del cliente»: en modo local
+  // no hace falta, y con Supabase va solo en Supabase. Con Supabase, Google
+  // también se activa allá (ver README, «Entrar con Google y Google Calendar»).
+  // Vacío = el panel entra solo con la clave (o correo y contraseña).
+  google: {
+    clientId: '501068896688-n2usoucqsuriptb6j1jtr7sf8i7r0kho.apps.googleusercontent.com',
+  },
+
   // Supabase. Vacío = modo local (los datos viven solo en este navegador).
   // Copia aquí la URL del proyecto y la clave pública "anon" (Settings → API).
   supabase: {
@@ -114,7 +144,7 @@ window.BODA = {
   },
 
   // Clave del panel en modo local. No protege nada de verdad: es solo para
-  // probar. Con Supabase el panel usa correo y contraseña.
+  // probar. Con Supabase el panel usa correo y contraseña, o Google.
   claveLocal: 'diegoyerika',
 
   // Dirección pública de la invitación, para generar los enlaces personales.

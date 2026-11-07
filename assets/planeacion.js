@@ -1,8 +1,7 @@
 /*
  * Panel: la planeación de la boda, como en un organizador de bodas.
- *  - Tareas: la agenda por etapas, de un año antes a después de la boda. Con
- *    la fecha de la boda cada etapa dice hasta cuándo va, cuál toca ahora y qué
- *    tareas van atrasadas.
+ *  - Tareas: una lista con fechas, de la más cercana a la más lejana, con las
+ *    atrasadas arriba; las que tienen fecha pasan a Google Calendar.
  *  - Presupuesto: los gastos por categoría (estimado, costo final y pagado),
  *    cuánto queda y los próximos pagos.
  *  - Proveedores: a quién se cotizó, a quién se contrató y cómo hablarle; cada
@@ -68,6 +67,9 @@
         doc.error = r.reason.message;
       }
     });
+    // Las tareas de antes (por etapas) reciben su fecha cuando se sabe la de la boda.
+    const t = docs.tareas;
+    if (t.cargado && !t.pendiente && !t.guardando && PL.fecharViejas(t.datos.lista, fechaBoda)) cambio(t);
   }
 
   function recargar() {
@@ -102,6 +104,7 @@
     try {
       await D.guardarPlaneacion(doc.clave, doc.datos);
       ok = true;
+      if (doc.clave === 'tareas') alGuardarTareas();
       if (!doc.pendiente) estadoGuardado(doc, D.modo === 'local' ? 'Guardado en este navegador' : 'Guardado', 'listo');
     } catch (err) {
       doc.pendiente = true;
@@ -158,10 +161,16 @@
 
   // ---------- Tareas ----------
 
+  // Una lista con fechas (pedido de Mario, 2026-11-05): por hacer, de la más
+  // cercana a la más lejana, y las hechas al final. Las que tienen fecha pasan a
+  // Google Calendar (assets/calendario-google.js) cuando se conecta.
+
   const vistaTareas = $('[data-vista-panel="tareas"]');
-  const cajaEtapas = $('[data-etapas]', vistaTareas);
+  const cajaTareas = $('[data-tareas]', vistaTareas);
+  const cajaGcal = $('[data-gcal]', vistaTareas);
   const dlgTarea = $('#dialogo-tarea');
   const formTarea = $('#form-tarea');
+  const G = window.CalendarioGoogle;
   let tareaEditando = null;
 
   const FILTROS_TAREAS = [
@@ -170,23 +179,39 @@
     { id: 'todas', texto: 'Todas', prueba: () => true },
   ];
 
-  const tarea = (id) => docs.tareas.datos.lista.find((t) => t.id === id) || null;
+  const GRUPOS = { atrasadas: 'Atrasadas', semana: 'Esta semana', proximas: 'Más adelante', sinfecha: 'Sin fecha', hechas: 'Hechas' };
 
-  // Dónde está hoy cada etapa: pasada, ahora o por venir. Sin fecha, null.
-  function momentoEtapa(lim, hoy) {
-    if (!lim) return null;
-    if (hoy > lim.hasta) return 'pasada';
-    if (!lim.desde || hoy > lim.desde) return 'ahora';
-    return 'futura';
+  const tarea = (id) => docs.tareas.datos.lista.find((t) => t.id === id) || null;
+  const atrasada = (t, hoy) => !t.hecha && Boolean(t.fecha) && t.fecha < hoy;
+  const enUnaSemana = (hoy) => {
+    const d = deDia(hoy);
+    d.setUTCDate(d.getUTCDate() + 7);
+    return d.toISOString().slice(0, 10);
+  };
+
+  function grupoDe(t, hoy, semana) {
+    if (t.hecha) return 'hechas';
+    if (!t.fecha) return 'sinfecha';
+    if (t.fecha < hoy) return 'atrasadas';
+    if (t.fecha <= semana) return 'semana';
+    return 'proximas';
+  }
+
+  // Por hacer primero; dentro, por fecha y hora; las sin fecha al final.
+  function ordenadas(lista) {
+    const clave = (t) => `${t.hecha ? 1 : 0}${t.fecha ? 0 : 1}${t.fecha || ''}${t.hora || '99:99'}`;
+    return lista.slice().sort((a, b) => (clave(a) < clave(b) ? -1 : clave(a) > clave(b) ? 1 : 0));
   }
 
   function cuentaTareas() {
     const lista = docs.tareas.datos.lista;
-    const lims = PL.limites(fechaBoda);
     const hoy = PL.hoy();
-    const hechas = lista.filter((t) => t.hecha).length;
-    const atrasadas = lims ? lista.filter((t) => !t.hecha && hoy > lims[t.etapa].hasta).length : 0;
-    return { total: lista.length, hechas, atrasadas, lims, hoy };
+    return {
+      total: lista.length,
+      hechas: lista.filter((t) => t.hecha).length,
+      atrasadas: lista.filter((t) => atrasada(t, hoy)).length,
+      hoy,
+    };
   }
 
   function pintarCifrasTareas() {
@@ -196,7 +221,7 @@
       ['Tareas', panel.cifra(c.total, ancho), ''],
       ['Hechas', panel.cifra(c.hechas, ancho), ''],
       ['Por hacer', panel.cifra(c.total - c.hechas, ancho), ''],
-      ['Atrasadas', c.lims ? panel.cifra(c.atrasadas, ancho) : `${panel.cifra(0, ancho)}<small>falta la fecha</small>`, c.atrasadas ? 'alerta' : ''],
+      ['Atrasadas', panel.cifra(c.atrasadas, ancho), c.atrasadas ? 'alerta' : ''],
     ].map(([e, v, k]) => `<div class="contador ${k}"><dt>${e}</dt><dd>${v}</dd></div>`).join('');
 
     const pct = (n) => `${((n / (c.total || 1)) * 100).toFixed(2)}%`;
@@ -210,12 +235,12 @@
         <li><i style="background:var(--verde-forro)"></i>${cuantas(c.hechas, 'hecha', 'hechas')}</li>
         ${c.atrasadas ? `<li><i style="background:var(--declinado)"></i>${cuantas(c.atrasadas, 'atrasada', 'atrasadas')}</li>` : ''}
         <li><i class="muestra-vacia"></i>${porHacer} por hacer</li>
-        <li>${Math.round((c.hechas / c.total) * 100)} % de la agenda</li>
+        <li>${Math.round((c.hechas / c.total) * 100)} % de la lista</li>
       </ul>` : '';
 
     const cuenta = $('[data-cuenta-boda]', vistaTareas);
     if (!fechaBoda) {
-      cuenta.innerHTML = 'Pon la fecha en <a href="#boda">La boda</a> para ver hasta cuándo va cada etapa.';
+      cuenta.innerHTML = 'Pon la fecha en <a href="#boda">La boda</a> para que la lista sugerida traiga sus fechas.';
     } else {
       const dias = diasHasta(fechaBoda);
       if (dias > 1) cuenta.innerHTML = `Faltan <span class="cifra">${dias}</span> días para la boda.`;
@@ -230,15 +255,39 @@
     }).join('');
   }
 
-  function filaTarea(t, vencida) {
+  const MES = new Intl.DateTimeFormat('es-CO', { month: 'short', timeZone: 'UTC' });
+  const DIA_SEMANA = new Intl.DateTimeFormat('es-CO', { weekday: 'long', timeZone: 'UTC' });
+
+  // La hoja de calendario de la tarea: el día y el mes (o «sin fecha»).
+  function hojaTarea(t) {
+    if (!t.fecha) return '<span class="tarea-hoja tarea-hoja-vacia" aria-hidden="true">sin<br>fecha</span>';
+    const d = deDia(t.fecha);
+    return `<span class="tarea-hoja" aria-hidden="true"><span class="cifra">${d.getUTCDate()}</span>${esc(MES.format(d).replace('.', ''))}</span>`;
+  }
+
+  // Si la tarea ya está en Google Calendar o falta pasarla. Solo con calendario.
+  function estadoGcal(t) {
+    if (!docs.tareas.datos.calendario || !t.fecha) return '';
+    return G.pendienteTarea(t)
+      ? '<span class="tarea-gcal" data-gcal-estado="pendiente">Por pasar a Google Calendar</span>'
+      : '<span class="tarea-gcal" data-gcal-estado="listo">En Google Calendar</span>';
+  }
+
+  function filaTarea(t, hoy) {
     const titulo = esc(t.titulo);
+    const etapa = t.etapa && PL.ETAPAS.find((e) => e.id === t.etapa);
+    const cuando = t.fecha ? `${DIA_SEMANA.format(deDia(t.fecha))} ${fechaLarga.format(deDia(t.fecha))}${t.hora ? ` · ${P.horaBonita(t.hora)}` : ''}` : '';
     const detalle = [
-      vencida && !t.hecha ? '<span class="tarea-atrasada">Atrasada</span>' : '',
+      cuando ? `<span class="tarea-cuando">${conCifras(cuando.charAt(0).toUpperCase() + cuando.slice(1))}</span>` : '',
+      atrasada(t, hoy) ? '<span class="tarea-atrasada">Atrasada</span>' : '',
       t.hecha && t.hechaEn ? `<span class="tarea-hecha-en">Hecha ${esc(panel.hace(t.hechaEn))}</span>` : '',
+      etapa ? `<span class="tarea-nota">Tendrá fecha cuando pongan la de la boda (${esc(etapa.nombre.toLowerCase())}).</span>` : '',
       t.nota ? `<span class="tarea-nota">${esc(t.nota)}</span>` : '',
       t.ir ? `<a class="tarea-ir" href="#${t.ir}">Ir a ${NOMBRE_VISTA[t.ir]}</a>` : '',
+      estadoGcal(t),
     ].join('');
-    return `<li class="tarea" data-tarea="${esc(t.id)}"${t.hecha ? ' data-hecha' : ''}>
+    return `<li class="tarea" data-tarea="${esc(t.id)}"${t.hecha ? ' data-hecha' : ''}${atrasada(t, hoy) ? ' data-atrasada' : ''}>
+        ${hojaTarea(t)}
         <label class="tarea-casilla">
           <input type="checkbox" data-hacer${t.hecha ? ' checked' : ''}>
           <span class="tarea-titulo">${titulo}</span>
@@ -247,61 +296,54 @@
           <button class="boton-icono" type="button" data-editar-tarea title="Editar" aria-label="Editar «${titulo}»">${P.icono('editar')}</button>
           <button class="boton-icono peligro" type="button" data-quitar-tarea title="Quitar" aria-label="Quitar «${titulo}»">${P.icono('eliminar')}</button>
         </div>
-        ${detalle ? `<div class="tarea-detalle">${detalle}</div>` : ''}
+        <div class="tarea-detalle">${detalle}</div>
       </li>`;
-  }
-
-  function cabezaEtapa(e, todas, lim, momento) {
-    const hechas = todas.filter((t) => t.hecha).length;
-    const fecha = lim ? `${momento === 'pasada' ? 'Terminó el' : 'Hasta el'} ${fechaLarga.format(deDia(lim.hasta))}` : '';
-    return `<header class="etapa-cabeza">
-        <h2 class="hoja-titulo" id="etapa-${e.id}">${conCifras(e.nombre)}</h2>
-        ${momento === 'ahora' ? '<span class="etapa-ahora">Ahora</span>' : ''}
-        <p class="etapa-cuenta" data-cuenta-etapa><b>${hechas}</b> de ${todas.length}</p>
-        ${fecha ? `<p class="etapa-fecha">${conCifras(fecha)}</p>` : ''}
-      </header>`;
   }
 
   function pintarTareas() {
     const doc = docs.tareas;
     pintarCifrasTareas();
+    pintarGcal();
     if (!listo(doc)) {
-      cajaEtapas.innerHTML = sinCargar(doc, 'las tareas');
-      panel.iconos(cajaEtapas);
+      cajaTareas.innerHTML = sinCargar(doc, 'las tareas');
+      panel.iconos(cajaTareas);
       return;
     }
     const lista = doc.datos.lista;
     if (!lista.length) {
-      cajaEtapas.innerHTML = `<div class="marco-vacio"><div class="vacio">
+      cajaTareas.innerHTML = `<div class="marco-vacio"><div class="vacio">
           <div class="vacio-sobre" aria-hidden="true"></div>
-          <h2>La agenda está vacía</h2>
-          <p>Empiecen con la lista sugerida: ${PL.TAREAS_SUGERIDAS.length} tareas repartidas desde un año antes hasta después de la boda. Después quiten, cambien o agreguen lo que quieran.</p>
+          <h2>La lista está vacía</h2>
+          <p>Empiecen con la lista sugerida: ${PL.TAREAS_SUGERIDAS.length} tareas, desde un año antes hasta después de la boda, ${fechaBoda ? 'cada una con su fecha' : 'que reciben su fecha cuando pongan la de la boda'}. Después quiten, cambien o agreguen lo que quieran.</p>
           <div class="libro-botones">
             <button class="boton boton-principal" type="button" data-sembrar-tareas data-icono="tarea">Empezar con la lista sugerida</button>
             <button class="boton boton-secundario" type="button" data-nueva-tarea data-icono="mas">Agregar una tarea</button>
           </div>
         </div></div>`;
-      panel.iconos(cajaEtapas);
+      panel.iconos(cajaTareas);
       return;
     }
-    const { lims, hoy } = cuentaTareas();
+    const { hoy } = cuentaTareas();
+    const semana = enUnaSemana(hoy);
     const f = FILTROS_TAREAS.find((x) => x.id === filtros.tareas) || FILTROS_TAREAS[0];
-    const html = PL.ETAPAS.map((e) => {
-      const todas = lista.filter((t) => t.etapa === e.id);
-      const visibles = todas.filter(f.prueba);
-      if (!visibles.length) return '';
-      const lim = lims && lims[e.id];
-      const momento = momentoEtapa(lim, hoy);
-      return `<section class="hoja etapa" data-etapa="${e.id}" data-momento="${momento || ''}" aria-labelledby="etapa-${e.id}">
-          ${cabezaEtapa(e, todas, lim, momento)}
-          <ul class="tareas-lista">${visibles.map((t) => filaTarea(t, Boolean(lim) && hoy > lim.hasta)).join('')}</ul>
-        </section>`;
+    const visibles = ordenadas(lista.filter(f.prueba));
+    if (!visibles.length) {
+      cajaTareas.innerHTML = `<div class="marco-vacio"><div class="vacio">
+          <h2>${filtros.tareas === 'hechas' ? 'Aún no han marcado tareas' : '¡No queda nada por hacer!'}</h2>
+          <p>${filtros.tareas === 'hechas' ? 'Cuando marquen una tarea como hecha, aparecerá aquí.' : 'Todas las tareas de la lista están hechas.'}</p>
+          <div class="libro-botones"><button class="boton boton-secundario" type="button" data-filtro-tarea="todas">Ver todas</button></div>
+        </div></div>`;
+      return;
+    }
+    // Una sola lista; un rótulo corto donde empieza cada tramo.
+    let grupo = null;
+    const filas = visibles.map((t) => {
+      const g = grupoDe(t, hoy, semana);
+      const rotulo = g !== grupo ? `<li class="tareas-grupo" data-grupo="${g}" aria-hidden="true">${GRUPOS[g]}</li>` : '';
+      grupo = g;
+      return rotulo + filaTarea(t, hoy);
     }).join('');
-    cajaEtapas.innerHTML = html || `<div class="marco-vacio"><div class="vacio">
-        <h2>${filtros.tareas === 'hechas' ? 'Aún no han marcado tareas' : '¡No queda nada por hacer!'}</h2>
-        <p>${filtros.tareas === 'hechas' ? 'Cuando marquen una tarea como hecha, aparecerá aquí.' : 'Todas las tareas de la agenda están hechas.'}</p>
-        <div class="libro-botones"><button class="boton boton-secundario" type="button" data-filtro-tarea="todas">Ver todas</button></div>
-      </div></div>`;
+    cajaTareas.innerHTML = `<section class="hoja agenda-hoja" aria-labelledby="tareas-titulo"><ul class="tareas-lista">${filas}</ul></section>`;
     if (recien.tarea) {
       resaltar(`[data-tarea="${CSS.escape(recien.tarea)}"]`);
       recien.tarea = null;
@@ -316,40 +358,54 @@
     cambio(docs.tareas);
     if (li) {
       li.toggleAttribute('data-hecha', hecha);
-      const seccion = li.closest('[data-etapa]');
-      const todas = docs.tareas.datos.lista.filter((x) => x.etapa === t.etapa);
-      const cuenta = seccion && $('[data-cuenta-etapa]', seccion);
-      if (cuenta) cuenta.innerHTML = `<b>${todas.filter((x) => x.hecha).length}</b> de ${todas.length}`;
+      li.toggleAttribute('data-atrasada', atrasada(t, PL.hoy()));
     }
     pintarCifrasTareas();
   }
 
+  // La lista sugerida, con la fecha de cada tarea repartida en su etapa.
   function sembrarTareas() {
     const doc = docs.tareas;
     const ya = new Set(doc.datos.lista.map((t) => sinTildes(t.titulo)));
-    const nuevas = PL.TAREAS_SUGERIDAS
-      .filter(([, titulo]) => !ya.has(sinTildes(titulo)))
-      .map(([etapa, titulo, ir]) => ({ id: PL.nuevoId(), titulo, etapa, nota: null, hecha: false, hechaEn: null, ir: ir || null }));
+    const porEtapa = {};
+    PL.TAREAS_SUGERIDAS.forEach(([etapa]) => { porEtapa[etapa] = (porEtapa[etapa] || 0) + 1; });
+    const puesto = {};
+    const nuevas = [];
+    PL.TAREAS_SUGERIDAS.forEach(([etapa, titulo, ir]) => {
+      const n = puesto[etapa] || 0;
+      puesto[etapa] = n + 1;
+      if (ya.has(sinTildes(titulo))) return;
+      const fecha = PL.fechaSugerida(etapa, n, porEtapa[etapa], fechaBoda);
+      const t = { id: PL.nuevoId(), titulo, fecha, hora: null, nota: null, hecha: false, hechaEn: null, ir: ir || null, gcal: null };
+      if (!fecha) t.etapa = etapa;
+      nuevas.push(t);
+    });
     doc.datos.lista.push(...nuevas);
     filtros.tareas = 'pendientes';
     cambio(doc);
     pintar();
-    panel.aviso(`Listo: ${nuevas.length} tareas, de un año antes a después de la boda.`);
+    panel.aviso(fechaBoda
+      ? `Listo: ${nuevas.length} tareas, cada una con su fecha hasta después de la boda.`
+      : `Listo: ${nuevas.length} tareas. Reciben su fecha cuando pongan la de la boda.`);
   }
 
   function quitarTarea(t) {
-    const lista = docs.tareas.datos.lista;
+    const doc = docs.tareas;
+    const lista = doc.datos.lista;
     const pos = lista.indexOf(t);
     if (pos < 0) return;
     lista.splice(pos, 1);
-    cambio(docs.tareas);
+    // Su evento se borra de Google Calendar en la próxima sincronización.
+    if (t.gcal) doc.datos.borrados.push(t.gcal.id);
+    cambio(doc);
     pintar();
     panel.aviso(`Tarea «${t.titulo}» quitada.`, {
       accion: 'Deshacer',
       alHacer: () => {
         // La lista pudo recargarse mientras tanto: se vuelve a poner en la de ahora.
-        const ahora = docs.tareas.datos.lista;
-        if (!tarea(t.id)) ahora.splice(Math.min(pos, ahora.length), 0, t);
+        const ahora = docs.tareas.datos;
+        if (!tarea(t.id)) ahora.lista.splice(Math.min(pos, ahora.lista.length), 0, t);
+        if (t.gcal) ahora.borrados = ahora.borrados.filter((id) => id !== t.gcal.id);
         recien.tarea = t.id;
         cambio(docs.tareas);
         pintar();
@@ -364,19 +420,15 @@
     $$('[aria-invalid]', formTarea).forEach((el) => el.removeAttribute('aria-invalid'));
     $('#dialogo-tarea-titulo').textContent = t ? 'Editar tarea' : 'Agregar tarea';
     $('[data-guardar-tarea]').textContent = t ? 'Guardar cambios' : 'Agregar';
-    const lims = PL.limites(fechaBoda);
+    $('[data-ayuda-fecha]').innerHTML = fechaBoda
+      ? `La boda es el ${conCifras(fechaLarga.format(deDia(fechaBoda)))}. Con fecha, la tarea se ordena en la lista${G.configurado() ? ' y pasa a Google Calendar' : ''}.`
+      : `Con fecha, la tarea se ordena en la lista${G.configurado() ? ' y pasa a Google Calendar' : ''}.`;
     const f = formTarea.elements;
-    f.etapa.innerHTML = PL.ETAPAS.map((e) => `<option value="${e.id}">${esc(e.nombre)}${lims ? ` · hasta el ${esc(fechaLarga.format(deDia(lims[e.id].hasta)))}` : ''}</option>`).join('');
-    $('[data-ayuda-etapa]').textContent = lims ? '' : 'Con la fecha de la boda (pestaña La boda) cada etapa dice hasta cuándo va.';
     if (t) {
       f.titulo.value = t.titulo;
-      f.etapa.value = t.etapa;
+      f.fecha.value = t.fecha || '';
+      f.hora.value = t.hora || '';
       f.nota.value = t.nota || '';
-    } else {
-      // Una tarea nueva cae en la etapa que toca ahora.
-      const hoy = PL.hoy();
-      const ahora = lims && PL.ETAPAS.find((e) => momentoEtapa(lims[e.id], hoy) === 'ahora');
-      f.etapa.value = ahora ? ahora.id : PL.ETAPAS[0].id;
     }
     dlgTarea.showModal();
     f.titulo.focus();
@@ -386,18 +438,28 @@
     e.preventDefault();
     const f = formTarea.elements;
     const titulo = f.titulo.value.trim();
+    const error = (campo, texto) => {
+      campo.setAttribute('aria-invalid', 'true');
+      $('[data-error-tarea]').textContent = texto;
+      campo.focus();
+    };
     if (!titulo) {
-      f.titulo.setAttribute('aria-invalid', 'true');
-      $('[data-error-tarea]').textContent = 'Escribe la tarea.';
-      f.titulo.focus();
+      error(f.titulo, 'Escribe la tarea.');
       return;
     }
-    const datos = { titulo: titulo.slice(0, 120), etapa: f.etapa.value, nota: f.nota.value.trim().slice(0, 300) || null };
+    const fecha = /^\d{4}-\d{2}-\d{2}$/.test(f.fecha.value) ? f.fecha.value : null;
+    const hora = /^\d{2}:\d{2}$/.test(f.hora.value) ? f.hora.value : null;
+    if (hora && !fecha) {
+      error(f.fecha, 'Pon la fecha para poder poner la hora.');
+      return;
+    }
+    const datos = { titulo: titulo.slice(0, 120), fecha, hora, nota: f.nota.value.trim().slice(0, 300) || null };
     if (tareaEditando) {
       Object.assign(tareaEditando, datos);
+      if (fecha) delete tareaEditando.etapa;
       recien.tarea = tareaEditando.id;
     } else {
-      const t = Object.assign({ id: PL.nuevoId(), hecha: false, hechaEn: null, ir: null }, datos);
+      const t = Object.assign({ id: PL.nuevoId(), hecha: false, hechaEn: null, ir: null, gcal: null }, datos);
       docs.tareas.datos.lista.push(t);
       recien.tarea = t.id;
       if (filtros.tareas === 'hechas') filtros.tareas = 'pendientes';
@@ -407,6 +469,166 @@
     pintar();
     panel.aviso(tareaEditando ? 'Tarea actualizada.' : 'Tarea agregada.');
   });
+
+  // ---------- Google Calendar ----------
+
+  const gcal = { sincronizando: false, otraVez: false, temporizador: null, ultimo: null, error: '' };
+  const enlacePanel = () => `${location.origin}${location.pathname}#tareas`;
+
+  function resumenGcal(r) {
+    const partes = [];
+    if (r.creados) partes.push(cuantas(r.creados, 'tarea nueva', 'tareas nuevas'));
+    if (r.cambiados) partes.push(cuantas(r.cambiados, 'cambiada', 'cambiadas'));
+    if (r.borrados) partes.push(cuantas(r.borrados, 'quitada', 'quitadas'));
+    const hecho = partes.length ? `Google Calendar al día: ${partes.join(', ')}.` : 'Google Calendar ya estaba al día.';
+    return r.fallas ? `${hecho} ${cuantas(r.fallas, 'tarea no se pudo pasar', 'tareas no se pudieron pasar')}; se intenta otra vez en la próxima.` : hecho;
+  }
+
+  function pintarGcal() {
+    const doc = docs.tareas;
+    const cal = doc.datos.calendario;
+    if (!G.configurado()) {
+      cajaGcal.dataset.estado = 'sin-configurar';
+      cajaGcal.innerHTML = `<div class="gcal-texto">
+          <h2 class="gcal-titulo">Google Calendar</h2>
+          <p>Las tareas con fecha pueden aparecer en su Google Calendar, con un aviso el día antes, y el panel puede abrirse con su cuenta de Google. Falta el ID de cliente de Google en <code>assets/config.js</code> (<code>google.clientId</code>); los pasos están en el README, en «Entrar con Google y Google Calendar».</p>
+        </div>`;
+      return;
+    }
+    const faltan = listo(doc) ? G.porSincronizar(doc.datos) : 0;
+    const conectado = G.conectado();
+    const yo = G.cuenta();
+    // El calendario es de otra cuenta: no se pasa nada sin que lo pidan.
+    const otra = conectado ? G.otraCuenta(doc.datos) : null;
+    cajaGcal.dataset.estado = gcal.sincronizando ? 'sincronizando' : otra ? 'otra-cuenta' : conectado ? 'conectado' : 'desconectado';
+    let texto;
+    if (gcal.sincronizando) texto = 'Pasando las tareas a Google Calendar…';
+    else if (otra) {
+      texto = `Las tareas van al calendario de ${esc(otra)}. Para no repetirlas en dos calendarios, con esta cuenta no se pasan; «Pasarlas a esta cuenta» las lleva a un calendario nuevo aquí (el de ${esc(otra)} queda como está).`;
+    } else if (gcal.error) texto = esc(gcal.error);
+    else if (!conectado && G.vencido()) {
+      texto = `El permiso de Google Calendar dura una hora y ya venció${faltan ? `: hay ${cuantas(faltan, 'cambio', 'cambios')} por pasar` : ''}. Al renovarlo, si ya lo habían dado, la ventana de Google se cierra sola.`;
+    } else if (!conectado) {
+      texto = cal
+        ? `Las tareas van a su calendario «${esc(cal.nombre || G.NOMBRE)}».${faltan ? ` Hay ${cuantas(faltan, 'cambio', 'cambios')} por pasar: conéctense para enviarlos.` : ''}`
+        : `Al conectar se crea un calendario propio, «${esc(G.NOMBRE)}», con cada tarea que tenga fecha. La app solo puede tocar ese calendario.`;
+    } else if (faltan) texto = `${cuantas(faltan, 'cambio', 'cambios')} por pasar a Google Calendar.`;
+    else if (gcal.ultimo) texto = `Al día. Lo que cambien aquí pasa solo a su calendario «${esc((cal && cal.nombre) || G.NOMBRE)}».`;
+    else texto = 'Conectado. Lo que cambien aquí pasa solo a su calendario.';
+    let botones;
+    if (otra) {
+      botones = `<button class="boton boton-principal" type="button" data-gcal-mover data-icono="calendario"${gcal.sincronizando ? ' disabled' : ''}>Pasarlas a esta cuenta</button>
+        <button class="boton boton-secundario" type="button" data-gcal-desconectar>Desconectar</button>`;
+    } else if (conectado) {
+      botones = `<button class="boton boton-principal" type="button" data-gcal-sincronizar data-icono="actualizar"${gcal.sincronizando ? ' disabled' : ''}>Sincronizar ahora</button>
+        ${cal ? `<a class="boton boton-secundario" href="${esc(G.enlace(doc.datos))}" target="_blank" rel="noopener" data-icono="calendario">Abrir Google Calendar</a>` : ''}
+        <button class="boton boton-secundario" type="button" data-gcal-desconectar>Desconectar</button>`;
+    } else {
+      botones = `<button class="boton boton-principal" type="button" data-gcal-conectar data-icono="calendario">${G.vencido() ? 'Renovar el permiso' : 'Conectar con Google'}</button>`;
+    }
+    cajaGcal.innerHTML = `<div class="gcal-texto">
+        <h2 class="gcal-titulo">Google Calendar${conectado && !otra ? ' <span class="gcal-sello">Conectado</span>' : ''}</h2>
+        <p${gcal.error && !otra ? ' class="gcal-error"' : ''} aria-live="polite">${texto}</p>
+        ${conectado && yo ? `<p class="gcal-cuenta">Con la cuenta <span>${esc(yo.correo)}</span></p>` : ''}
+      </div>
+      <div class="gcal-botones">${botones}</div>`;
+    panel.iconos(cajaGcal);
+  }
+
+  // Después de cambiar una tarea, el estado de cada fila sin pintar la lista.
+  function estadosGcal() {
+    $$('[data-tarea]', cajaTareas).forEach((li) => {
+      const t = tarea(li.dataset.tarea);
+      const viejo = $('.tarea-gcal', li);
+      const html = t ? estadoGcal(t) : '';
+      if (viejo) viejo.outerHTML = html;
+      else if (html) $('.tarea-detalle', li).insertAdjacentHTML('beforeend', html);
+    });
+  }
+
+  async function sincronizarGcal({ avisar = false, mover = false } = {}) {
+    const doc = docs.tareas;
+    if (!G.conectado() || !listo(doc)) return;
+    if (G.otraCuenta(doc.datos) && !mover) {
+      if (vista === 'tareas') pintarGcal();
+      return;
+    }
+    if (gcal.sincronizando) {
+      gcal.otraVez = true;
+      return;
+    }
+    gcal.sincronizando = true;
+    gcal.error = '';
+    if (vista === 'tareas') pintarGcal();
+    try {
+      const r = await G.sincronizar(doc.datos, { enlacePanel: enlacePanel(), mover });
+      gcal.ultimo = r;
+      if (r.creados || r.cambiados || r.borrados || r.nuevo) {
+        // Lo que cambió es solo lo de Google: guardarlo no vuelve a sincronizar.
+        doc.desdeGcal = true;
+        cambio(doc);
+      }
+      if (r.fallas) gcal.error = resumenGcal(r);
+      if (avisar) panel.aviso(resumenGcal(r));
+    } catch (err) {
+      gcal.error = err.message;
+      if (avisar) panel.aviso(err.message, { error: true });
+    } finally {
+      gcal.sincronizando = false;
+      if (vista === 'tareas') {
+        pintarGcal();
+        estadosGcal();
+      }
+      // Lo que cambió mientras tanto (si no, no hace falta otra vuelta).
+      if (gcal.otraVez) {
+        gcal.otraVez = false;
+        sincronizarSiFalta();
+      }
+    }
+  }
+
+  // Si hay permiso y algo por pasar, pasa solo: al entrar con Google, al abrir
+  // las tareas y después de guardarlas.
+  function sincronizarSiFalta() {
+    const doc = docs.tareas;
+    if (G.conectado() && listo(doc) && !G.otraCuenta(doc.datos) && G.porSincronizar(doc.datos)) sincronizarGcal();
+  }
+
+  // Cada vez que se guardan las tareas, si hay permiso, lo nuevo pasa a Google.
+  function alGuardarTareas() {
+    const doc = docs.tareas;
+    if (doc.desdeGcal) {
+      doc.desdeGcal = false;
+      return;
+    }
+    if (vista === 'tareas') estadosGcal();
+    if (!G.conectado()) return;
+    clearTimeout(gcal.temporizador);
+    gcal.temporizador = setTimeout(sincronizarSiFalta, 1200);
+  }
+
+  async function conectarGcal(boton) {
+    boton.disabled = true;
+    try {
+      await G.conectar();
+      gcal.error = '';
+      await sincronizarGcal({ avisar: true });
+    } catch (err) {
+      gcal.error = err.message;
+    } finally {
+      boton.disabled = false;
+      pintarGcal();
+    }
+  }
+
+  // El calendario era de otra cuenta: se crea uno en esta y pasan todas.
+  async function moverGcal() {
+    const antes = G.otraCuenta(docs.tareas.datos);
+    await sincronizarGcal({ avisar: true, mover: true });
+    if (antes && !G.otraCuenta(docs.tareas.datos)) {
+      panel.aviso(`El calendario de ${antes} quedó como estaba: si ya no lo usan, se borra desde su Google Calendar.`, { duracion: 7000 });
+    }
+  }
 
   vistaTareas.addEventListener('change', (e) => {
     const c = e.target.closest('[data-hacer]');
@@ -425,7 +647,15 @@
       return;
     }
     if (!listo(docs.tareas)) return;
-    if (b.matches('[data-nueva-tarea]')) abrirTarea();
+    if (b.matches('[data-gcal-conectar]')) conectarGcal(b);
+    else if (b.matches('[data-gcal-mover]')) moverGcal();
+    else if (b.matches('[data-gcal-sincronizar]')) sincronizarGcal({ avisar: true });
+    else if (b.matches('[data-gcal-desconectar]')) {
+      G.desconectar();
+      gcal.error = '';
+      pintarGcal();
+      panel.aviso('Google Calendar desconectado en este navegador. Su calendario y sus eventos siguen allá.');
+    } else if (b.matches('[data-nueva-tarea]')) abrirTarea();
     else if (b.matches('[data-sembrar-tareas]')) sembrarTareas();
     else if (b.matches('[data-filtro-tarea]')) {
       filtros.tareas = b.dataset.filtroTarea;
@@ -438,7 +668,8 @@
       if (b.matches('[data-editar-tarea]')) abrirTarea(t);
       else {
         const li = b.closest('[data-tarea]');
-        const siguiente = (li.nextElementSibling || li.previousElementSibling || {}).dataset;
+        const vecino = (x) => (x && x.matches('.tareas-grupo') ? x[li.nextElementSibling === x ? 'nextElementSibling' : 'previousElementSibling'] : x);
+        const siguiente = ((vecino(li.nextElementSibling) || vecino(li.previousElementSibling)) || {}).dataset;
         quitarTarea(t);
         const foco = siguiente && siguiente.tarea && $(`[data-tarea="${CSS.escape(siguiente.tarea)}"] [data-hacer]`, vistaTareas);
         (foco || $('[data-nueva-tarea]', vistaTareas)).focus();
@@ -1068,8 +1299,17 @@
     mostrar(nombre) {
       vista = VISTAS.includes(nombre) ? nombre : null;
       if (!vista) return;
+      // El botón «Conectar con Google» abre una ventana: el script ya debe estar.
+      if (vista === 'tareas') G.precargar();
       pintar();
-      recargar();
+      recargar().then(sincronizarSiFalta);
+    },
+    // Recién se entró al panel: si se entró con Google y está el permiso, las
+    // tareas pendientes pasan a Google Calendar sin abrir la pestaña.
+    alEntrar() {
+      gcal.error = '';
+      gcal.ultimo = null;
+      if (G.conectado()) recargar().then(sincronizarSiFalta);
     },
     // Los invitados cambiaron: el costo por invitado también.
     alCambiarInvitados() {

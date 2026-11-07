@@ -4,7 +4,15 @@
  * que nadie más que los administradores puede leer.
  *
  * Cada herramienta es un documento:
- *  - tareas:      { lista: [{ id, titulo, etapa, nota, hecha, hechaEn, ir }] }
+ *  - tareas:      { lista: [{ id, titulo, fecha, hora, nota, hecha, hechaEn,
+ *                   ir, gcal }], calendario, borrados }
+ *                 Una lista con fechas, no por etapas (pedido de Mario,
+ *                 2026-11-05). gcal es el evento de la tarea en Google Calendar
+ *                 ({ id, firma }); calendario, el calendario que la app creó
+ *                 allá ({ id, nombre }); borrados, los eventos de tareas
+ *                 quitadas que faltan por borrar (ver assets/calendario-google.js).
+ *                 Una tarea de antes puede traer su vieja «etapa»: sirve para
+ *                 ponerle fecha cuando se sabe la de la boda.
  *  - presupuesto: { total, partidas: [{ id, categoria, concepto, estimado,
  *                   costo, pagado, vence, proveedor, nota }] }
  *  - proveedores: { lista: [{ id, nombre, categoria, estado, contacto,
@@ -45,8 +53,9 @@
     descartado: 'Descartado',
   };
 
-  // Las etapas de la agenda, de la más lejana a después de la boda. «hasta» es
-  // cuánto antes (o después) de la boda deberían quedar hechas sus tareas.
+  // Las etapas de la lista sugerida, de la más lejana a después de la boda:
+  // «hasta» es cuánto antes (o después) de la boda deberían quedar hechas sus
+  // tareas. Ya no se ven en el panel; dicen qué fecha le toca a cada sugerida.
   const ETAPAS = [
     { id: 'doce', nombre: 'De 12 a 10 meses antes', hasta: { meses: -10 } },
     { id: 'nueve', nombre: 'De 9 a 7 meses antes', hasta: { meses: -7 } },
@@ -161,6 +170,7 @@
   }
 
   const dia = (v) => (DIA.test(String(v || '')) ? String(v) : null);
+  const hora = (v) => (/^([01]\d|2[0-3]):[0-5]\d$/.test(String(v || '')) ? String(v) : null);
   const instante = (v) => (v && !Number.isNaN(Date.parse(v)) ? new Date(v).toISOString() : null);
   const idValido = (v) => (ID.test(String(v || '')) ? String(v) : null);
 
@@ -173,19 +183,40 @@
       .slice(0, max);
   }
 
+  // El id de un evento o de un calendario de Google: letras, números y lo poco
+  // más que usan sus ids.
+  const idGoogle = (v) => (/^[\w.@-]{4,200}$/.test(String(v || '')) ? String(v) : null);
+  const correoGoogle = (v) => (/^[^\s@<>"]{1,64}@[^\s@<>"]{1,190}$/.test(String(v || '')) ? String(v) : null);
+
   function normalizarTarea(x) {
     const id = idValido(x && x.id);
     const titulo = texto(x && x.titulo, 120);
     if (!id || !titulo) return null;
     const hecha = x.hecha === true;
-    return {
+    const fecha = dia(x.fecha);
+    const t = {
       id,
       titulo,
-      etapa: ETAPAS.some((e) => e.id === x.etapa) ? x.etapa : ETAPAS[0].id,
+      fecha,
+      hora: fecha ? hora(x.hora) : null,
       nota: texto(x.nota, 300),
       hecha,
       hechaEn: hecha ? instante(x.hechaEn) : null,
       ir: VISTAS.includes(x.ir) ? x.ir : null,
+      gcal: x.gcal && idGoogle(x.gcal.id) ? { id: x.gcal.id, firma: texto(x.gcal.firma, 600) } : null,
+    };
+    // La etapa de antes solo se guarda mientras la tarea no tenga fecha.
+    if (!fecha && ETAPAS.some((e) => e.id === x.etapa)) t.etapa = x.etapa;
+    return t;
+  }
+
+  function normalizarTareas(d) {
+    const cal = d && d.calendario;
+    return {
+      lista: unicos(d && d.lista, normalizarTarea, 300),
+      // cuenta: el correo de Google donde está el calendario (desde 2026-11-06).
+      calendario: cal && idGoogle(cal.id) ? { id: cal.id, nombre: texto(cal.nombre, 120), cuenta: correoGoogle(cal.cuenta) } : null,
+      borrados: (Array.isArray(d && d.borrados) ? d.borrados : []).map(idGoogle).filter(Boolean).slice(0, 300),
     };
   }
 
@@ -225,7 +256,7 @@
   }
 
   const NORMALIZAR = {
-    tareas: (d) => ({ lista: unicos(d && d.lista, normalizarTarea, 300) }),
+    tareas: normalizarTareas,
     presupuesto: (d) => ({ total: pesos(d && d.total), partidas: unicos(d && d.partidas, normalizarPartida, 300) }),
     proveedores: (d) => ({ lista: unicos(d && d.lista, normalizarProveedor, 200) }),
   };
@@ -292,6 +323,45 @@
     return new Intl.DateTimeFormat('en-CA', { timeZone: 'America/Bogota' }).format(new Date());
   }
 
+  const enDias = (iso) => Date.parse(`${iso}T00:00:00Z`) / 86400000;
+  const deDias = (n) => new Date(Math.round(n) * 86400000).toISOString().slice(0, 10);
+
+  /*
+   * La fecha que le toca a la tarea n.º «puesto» de «cuantas» de una etapa: se
+   * reparten parejo entre el fin de la etapa anterior (o un año antes de la
+   * boda) y el fin de la suya. Si la boda está a menos de un año, lo que antes
+   * de la boda caería en el pasado se aprieta entre hoy y la boda. Sin fecha de
+   * la boda, null.
+   */
+  function fechaSugerida(etapa, puesto, cuantas, fechaBoda, hoyIso = hoy()) {
+    const lims = limites(fechaBoda);
+    if (!lims || !lims[etapa]) return null;
+    const lim = lims[etapa];
+    const desde = enDias(lim.desde || mover(fechaBoda, { meses: -12 }));
+    const hasta = enDias(lim.hasta);
+    let f = desde + ((hasta - desde) * (puesto + 1)) / (cuantas + 1);
+    const boda = enDias(fechaBoda);
+    const inicio = enDias(mover(fechaBoda, { meses: -12 }));
+    const hoyN = enDias(hoyIso);
+    if (f < boda && hoyN > inicio && hoyN < boda) f = hoyN + ((f - inicio) * (boda - hoyN)) / (boda - inicio);
+    return deDias(f);
+  }
+
+  // Las tareas de antes, con su etapa y sin fecha, reciben la del fin de su
+  // etapa. Devuelve cuántas cambiaron.
+  function fecharViejas(lista, fechaBoda) {
+    const lims = limites(fechaBoda);
+    if (!lims) return 0;
+    let n = 0;
+    lista.forEach((t) => {
+      if (t.fecha || !t.etapa || !lims[t.etapa]) return;
+      t.fecha = lims[t.etapa].hasta;
+      delete t.etapa;
+      n += 1;
+    });
+    return n;
+  }
+
   window.Planeador = {
     CATEGORIAS,
     ESTADOS,
@@ -308,5 +378,7 @@
     cuentas,
     limites,
     hoy,
+    fechaSugerida,
+    fecharViejas,
   };
 })();

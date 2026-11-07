@@ -10,8 +10,8 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Castoro:ital@0;1&family=Castoro+Titling&family=Hanken+Grotesk:wght@400;500;600;700&family=Rouge+Script&display=swap">
-  <link rel="stylesheet" href="assets/base.css?v=20261023">
-  <link rel="stylesheet" href="assets/admin.css?v=20261023">
+  <link rel="stylesheet" href="assets/base.css?v=20261107">
+  <link rel="stylesheet" href="assets/admin.css?v=20261107">
 </head>
 <body>
   <!-- Entrada -->
@@ -20,9 +20,22 @@
       <span class="sello-mono" aria-hidden="true"><span>D</span><span>E</span></span>
       <h1 class="entrada-titulo">Libro de sobres</h1>
       <p class="entrada-sub">Invitados y respuestas de la boda de Diego y Erika.</p>
-      <div class="campos" data-campos-entrada></div>
+      <!-- Con Google: la misma cuenta deja conectado el calendario de las tareas. -->
+      <div class="entrada-google" data-entrada-google hidden>
+        <button class="boton boton-google boton-ancho" type="button" data-entrar-google>
+          <svg class="marca-google" viewBox="0 0 48 48" aria-hidden="true"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg>
+          <span data-entrar-google-texto>Continuar con Google</span>
+        </button>
+        <p class="entrada-google-nota">Con tu cuenta de Google entras al panel y queda conectado el calendario de las tareas.</p>
+      </div>
+      <details class="entrada-clave" data-entrada-clave open>
+        <summary data-entrada-clave-titulo hidden></summary>
+        <div class="entrada-clave-cuerpo">
+          <div class="campos" data-campos-entrada></div>
+          <button class="boton boton-principal boton-ancho" type="submit" data-entrar-clave>Entrar</button>
+        </div>
+      </details>
       <p class="campo-error" id="entrada-error" role="alert"></p>
-      <button class="boton boton-principal boton-ancho" type="submit">Entrar</button>
       <p class="entrada-nota" data-nota-modo></p>
     </form>
   </section>
@@ -44,9 +57,11 @@
         <a href="#presupuesto" data-vista="presupuesto">Presupuesto</a>
         <a href="#proveedores" data-vista="proveedores">Proveedores</a>
         <a href="#boda" data-vista="boda">La boda</a>
+        <a href="#diseno" data-vista="diseno">Diseño</a>
       </nav>
       <div class="barra-acciones">
         <span class="chip-modo" data-chip-modo></span>
+        <button class="boton boton-barra" type="button" data-asistente data-icono="tarea">Asistente</button>
         <a class="boton boton-barra" href="index.html" target="_blank" rel="noopener" data-icono="ojo">Ver invitación</a>
         <button class="boton boton-barra" type="button" data-salir data-icono="salir">Salir</button>
       </div>
@@ -95,6 +110,8 @@
           <ol class="correo-lista" data-correo></ol>
           <!-- Lo que contestaron a las preguntas opcionales: para el banquete y la música -->
           <div class="pedidos" data-pedidos hidden></div>
+          <!-- Quiénes van, por nombre -->
+          <div class="pedidos" data-quienes-van hidden></div>
         </aside>
       </div>
     </main>
@@ -132,7 +149,7 @@
           <div class="sentando" data-sentando role="status" hidden></div>
           <div class="plano-marco" data-plano></div>
           <div class="plano-pie">
-            <p class="plano-ayuda">Arrastra las mesas a su lugar y toca una para editarla. Con el teclado: flechas para moverla, Supr para quitarla.</p>
+            <p class="plano-ayuda">Arrastra las mesas a su lugar y toca una para editarla; su tirador le cambia el tamaño. Con el teclado: flechas para moverla, Supr para quitarla.</p>
             <p class="plano-estado" data-estado-plano aria-live="polite"></p>
           </div>
         </section>
@@ -185,7 +202,8 @@
         <div class="filtros filtros-solos">
           <div class="segmentos" role="group" aria-label="Filtrar tareas" data-filtros-tareas></div>
         </div>
-        <div class="etapas" data-etapas></div>
+        <section class="gcal" data-gcal aria-label="Google Calendar"></section>
+        <div class="agenda-lista" data-tareas></div>
         <p class="plano-estado" data-estado-planeacion="tareas" aria-live="polite"></p>
       </section>
     </main>
@@ -254,49 +272,68 @@
       </section>
     </main>
 
+    <!--
+      Diseño: la invitación como en WordPress. A la izquierda los bloques, el
+      tema y lo que se edita; a la derecha la invitación en vivo. Se edita un
+      borrador que solo ven los novios; «Publicar» lo pasa a los invitados.
+    -->
+    <main class="obra obra-diseno" data-vista-panel="diseno" hidden>
+      <div class="diseno" data-diseno data-modo="editar">
+        <header class="diseno-cabeza">
+          <div class="diseno-titulos">
+            <h1 class="libro-titulo">Diseño</h1>
+            <p class="diseno-estado" data-estado-diseno aria-live="polite"></p>
+          </div>
+          <div class="diseno-acciones">
+            <button class="boton boton-secundario" type="button" data-descartar data-icono="deshacer" disabled>Descartar cambios</button>
+            <button class="boton boton-principal" type="button" data-publicar data-icono="check" disabled>Publicar</button>
+          </div>
+        </header>
+
+        <!-- En el teléfono se pasa de editar a ver la invitación -->
+        <div class="segmentos diseno-modos" role="group" aria-label="Qué ver">
+          <button type="button" data-modo="editar" aria-pressed="true">Editar</button>
+          <button type="button" data-modo="vista" aria-pressed="false">Vista previa</button>
+        </div>
+
+        <div class="diseno-cuerpo">
+          <aside class="diseno-lado" aria-label="Editor">
+            <div class="diseno-pestanas" role="tablist" aria-label="Qué editar" data-pestanas>
+              <button type="button" role="tab" id="pestana-bloques" aria-controls="panel-bloques" aria-selected="true" data-pestana="bloques" data-icono="texto">Bloques</button>
+              <button type="button" role="tab" id="pestana-tema" aria-controls="panel-tema" aria-selected="false" tabindex="-1" data-pestana="tema" data-icono="pincel">Tema</button>
+            </div>
+            <section class="diseno-panel" id="panel-bloques" role="tabpanel" aria-labelledby="pestana-bloques" data-panel-bloques></section>
+            <section class="diseno-panel" id="panel-tema" role="tabpanel" aria-labelledby="pestana-tema" data-panel-tema hidden></section>
+            <section class="diseno-panel" data-panel-bloque hidden></section>
+          </aside>
+
+          <section class="diseno-vista" aria-label="Vista previa de la invitación">
+            <div class="vista-barra">
+              <div class="segmentos" role="group" aria-label="Pantalla" data-grupo="dispositivo">
+                <button type="button" data-dispositivo="movil" aria-pressed="true" data-icono="movil">Teléfono</button>
+                <button type="button" data-dispositivo="computador" aria-pressed="false" data-icono="pantalla">Computador</button>
+              </div>
+              <div class="segmentos" role="group" aria-label="Invitación para" data-grupo="invitado">
+                <button type="button" data-invitado="uno" aria-pressed="true">Una persona</button>
+                <button type="button" data-invitado="varios" aria-pressed="false">Una familia</button>
+              </div>
+              <button class="boton boton-secundario boton-chico" type="button" data-ver-sobre data-icono="sobre">Ver el sobre</button>
+            </div>
+            <div class="vista-marco" data-marco>
+              <iframe data-vista-previa title="Vista previa de la invitación: toca un bloque para editarlo"></iframe>
+            </div>
+          </section>
+        </div>
+      </div>
+    </main>
+
     <!-- La boda: fecha, lugares, itinerario y vestimenta -->
     <main class="obra obra-boda" data-vista-panel="boda" hidden>
       <form class="boda" id="form-boda" novalidate>
         <header class="boda-cabeza">
           <h1 class="libro-titulo">La boda</h1>
-          <p class="boda-sub">Lo que ven los invitados en su invitación. Lo que dejes vacío aparece como «por confirmar».</p>
+          <p class="boda-sub">Los datos que ven los invitados en su invitación. Lo que dejes vacío aparece como «por confirmar». Los colores, las letras, el fondo, el orden de las secciones y sus textos se cambian en <a href="#diseno">Diseño</a>.</p>
         </header>
-
-        <section class="hoja" aria-labelledby="hoja-estilo">
-          <h2 class="hoja-titulo" id="hoja-estilo">Estilo</h2>
-          <p class="hoja-ayuda">Los colores y la letra del sobre, de la tarjeta y de toda la invitación.</p>
-          <div class="estilo-editor">
-            <div class="estilo-opciones">
-              <fieldset class="campo">
-                <legend class="campo-etiqueta">Colores</legend>
-                <div class="paletas" data-paletas></div>
-                <div class="color-libre">
-                  <label class="color-libre-rueda">
-                    <input type="color" name="color" value="#c9a3b5">
-                    <span>Elegir cualquier color</span>
-                  </label>
-                  <input class="color-libre-codigo" name="color-codigo" type="text" value="#c9a3b5" maxlength="7" spellcheck="false" autocomplete="off" aria-label="Código del color, por ejemplo #c9a3b5">
-                </div>
-                <p class="campo-ayuda">Al elegir un color se usa «Color libre». Con un color claro, la invitación va en tinta oscura de ese tono, como las pastel; con uno oscuro, en letras claras, como Verde hoja.</p>
-              </fieldset>
-              <fieldset class="campo">
-                <legend class="campo-etiqueta">Letra</legend>
-                <div class="letras" data-letras></div>
-              </fieldset>
-              <div class="campo">
-                <label class="casilla">
-                  <input type="checkbox" name="mariposa" checked>
-                  <span>Mariposa dorada</span>
-                </label>
-                <p class="campo-ayuda">Una mariposa de papel dorado que se posa en el ramo, acompaña a los invitados mientras bajan y se posa en la tarjeta donde se detienen.</p>
-              </div>
-            </div>
-            <div class="estilo-vista">
-              <div class="muestra" data-muestra aria-hidden="true"></div>
-              <a class="boton boton-secundario" href="index.html?vista=panel" target="_blank" rel="noopener" data-ver-estilo data-icono="ojo">Ver la invitación con este estilo</a>
-            </div>
-          </div>
-        </section>
 
         <section class="hoja" aria-labelledby="hoja-portada">
           <h2 class="hoja-titulo" id="hoja-portada">Foto principal</h2>
@@ -381,7 +418,7 @@
 
         <section class="hoja" aria-labelledby="hoja-fotos">
           <h2 class="hoja-titulo" id="hoja-fotos">Fotos de la pareja</h2>
-          <p class="hoja-ayuda">Se reparten por la invitación, una al lado de cada parte, en este orden: los detalles, el itinerario, la historia (si la escriben) y la respuesta; las demás van juntas antes de la vestimenta. Debajo de cada foto dice dónde queda: muévelas para cambiarla de lugar. Hasta 6; los invitados las pueden ver en grande.</p>
+          <p class="hoja-ayuda">Se reparten por la invitación: las tres primeras van en el álbum, justo después de la tarjeta (la primera, la más grande); después, una al lado de cada parte, en este orden: los detalles, el itinerario, la historia (si la escriben) y la respuesta; las demás van juntas antes de la vestimenta. Debajo de cada foto dice dónde queda: muévelas para cambiarla de lugar. Hasta 6; los invitados las pueden ver en grande.</p>
           <div data-galeria></div>
         </section>
 
@@ -568,6 +605,11 @@
             <blockquote class="mensaje-invitado" data-mensaje-texto></blockquote>
           </div>
           <label class="campo" data-pedido-campo>
+            <span class="campo-etiqueta">Quiénes van <em>(uno por renglón)</em></span>
+            <textarea name="quienes" rows="3" maxlength="1700" placeholder="Ana Rodríguez&#10;Luis Rodríguez" autocomplete="off"></textarea>
+            <span class="campo-ayuda">Lo escriben los invitados al confirmar; cámbialo si te respondieron por otro medio.</span>
+          </label>
+          <label class="campo" data-pedido-campo>
             <span class="campo-etiqueta">Alergias o restricciones con la comida <em>(opcional)</em></span>
             <input name="alergias" type="text" maxlength="300" placeholder="Vegetariano, sin gluten…" autocomplete="off">
           </label>
@@ -627,11 +669,17 @@
           <span class="campo-etiqueta">Tarea</span>
           <input name="titulo" type="text" maxlength="120" required placeholder="Reservar la iglesia" autocomplete="off">
         </label>
-        <label class="campo selector">
-          <span class="campo-etiqueta">Cuándo</span>
-          <select name="etapa"></select>
-          <span class="campo-ayuda" data-ayuda-etapa></span>
-        </label>
+        <div class="campos-fila campos-cuando">
+          <label class="campo">
+            <span class="campo-etiqueta">Fecha</span>
+            <input name="fecha" type="date">
+          </label>
+          <label class="campo">
+            <span class="campo-etiqueta">Hora <em>(opcional)</em></span>
+            <input name="hora" type="time">
+          </label>
+        </div>
+        <p class="campo-ayuda" data-ayuda-fecha></p>
         <label class="campo">
           <span class="campo-etiqueta">Nota <em>(opcional)</em></span>
           <textarea name="nota" rows="2" maxlength="300" placeholder="Teléfonos, lo que falta, a quién le toca…"></textarea>
@@ -757,14 +805,18 @@
 
   <div class="avisos" id="avisos" aria-live="polite"></div>
 
-  <script src="assets/config.js?v=20261023"></script>
-  <script src="assets/estilos.js?v=20261023"></script>
-  <script src="assets/datos.js?v=20261023"></script>
-  <script src="assets/papeleria.js?v=20261023"></script>
-  <script src="assets/salon.js?v=20261023"></script>
-  <script src="assets/ramo.js?v=20261023"></script>
-  <script src="assets/planeador.js?v=20261023"></script>
-  <script src="assets/planeacion.js?v=20261023"></script>
-  <script src="assets/admin.js?v=20261023"></script>
+  <script src="assets/config.js?v=20261107"></script>
+  <script src="assets/estilos.js?v=20261107"></script>
+  <script src="assets/pagina.js?v=20261107"></script>
+  <script src="assets/datos.js?v=20261107"></script>
+  <script src="assets/papeleria.js?v=20261107"></script>
+  <script src="assets/salon.js?v=20261107"></script>
+  <script src="assets/ramo.js?v=20261107"></script>
+  <script src="assets/planeador.js?v=20261107"></script>
+  <script src="assets/calendario-google.js?v=20261107"></script>
+  <script src="assets/planeacion.js?v=20261107"></script>
+  <script src="assets/diseno.js?v=20261107"></script>
+  <script src="assets/asistente.js?v=20261107"></script>
+  <script src="assets/admin.js?v=20261107"></script>
 </body>
 </html>

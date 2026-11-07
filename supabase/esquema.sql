@@ -47,6 +47,11 @@ alter table public.invitados add column if not exists mesa text check (mesa ~ '^
 alter table public.invitados add column if not exists alergias text check (char_length(alergias) <= 300);
 alter table public.invitados add column if not exists cancion text check (char_length(cancion) <= 120);
 
+-- Quiénes van: el nombre de cada persona que asiste, que escribe el invitado
+-- al confirmar (o los novios desde el panel). Uno por cupo, hasta 20.
+alter table public.invitados add column if not exists nombres_asistentes text[] not null default '{}'
+  check (cardinality(nombres_asistentes) <= 20);
+
 create table if not exists public.administradores (
   email text primary key
 );
@@ -127,6 +132,7 @@ $$;
 drop function if exists public.ver_invitacion(text, boolean);
 drop function if exists public.responder_invitacion(text, boolean, integer, text);
 drop function if exists public.responder_invitacion(text, boolean, integer, text, text, text);
+drop function if exists public.responder_invitacion(text, boolean, integer, text, text, text, text[]);
 
 -- Lo que ve un invitado al abrir su enlace. p_marcar = false para las vistas
 -- previas desde el panel, que no deben contar como "abierta".
@@ -141,7 +147,8 @@ returns table (
   respondido_en timestamptz,
   mesa text,
   alergias text,
-  cancion text
+  cancion text,
+  nombres_asistentes text[]
 )
 language plpgsql
 security definer
@@ -157,7 +164,8 @@ begin
 
   return query
     select i.numero, i.nombre, i.cupos, i.estado, i.asistentes, i.mensaje, i.respondido_en,
-           public.mesa_a_la_vista(i.estado, i.mesa), i.alergias, i.cancion
+           public.mesa_a_la_vista(i.estado, i.mesa), i.alergias, i.cancion,
+           case when i.estado = 'confirmado' then i.nombres_asistentes else '{}'::text[] end
       from public.invitados i
      where i.codigo = upper(p_codigo);
 end;
@@ -165,14 +173,17 @@ $$;
 
 -- La respuesta del invitado, validada contra sus cupos. p_alergias y p_cancion
 -- llegan solo si la tarjeta hizo esas preguntas; sin ellas (null) lo que había
--- se queda, y vacías lo borran.
+-- se queda, y vacías lo borran. p_nombres: quiénes van, uno por persona (sin
+-- vacíos, 80 letras cada uno, no más que los asistentes); sin la lista (null)
+-- lo que había se queda. Quien no asiste queda sin nombres.
 create or replace function public.responder_invitacion(
   p_codigo text,
   p_asiste boolean,
   p_asistentes integer,
   p_mensaje text,
   p_alergias text default null,
-  p_cancion text default null
+  p_cancion text default null,
+  p_nombres text[] default null
 )
 returns table (
   numero integer,
@@ -184,7 +195,8 @@ returns table (
   respondido_en timestamptz,
   mesa text,
   alergias text,
-  cancion text
+  cancion text,
+  nombres_asistentes text[]
 )
 language plpgsql
 security definer
@@ -208,12 +220,23 @@ begin
          mensaje = nullif(left(btrim(coalesce(p_mensaje, '')), 1000), ''),
          alergias = case when p_alergias is null then i.alergias else nullif(left(btrim(p_alergias), 300), '') end,
          cancion = case when p_cancion is null then i.cancion else nullif(left(btrim(p_cancion), 120), '') end,
+         nombres_asistentes = case
+           when not p_asiste then '{}'::text[]
+           when p_nombres is null then i.nombres_asistentes
+           else array(
+             select left(btrim(n), 80)
+               from unnest(p_nombres) with ordinality as u(n, k)
+              where btrim(coalesce(n, '')) <> ''
+              order by k
+              limit p_asistentes
+           )
+         end,
          respondido_en = now()
    where i.id = v.id;
 
   return query
     select i.numero, i.nombre, i.cupos, i.estado, i.asistentes, i.mensaje, i.respondido_en,
-           public.mesa_a_la_vista(i.estado, i.mesa), i.alergias, i.cancion
+           public.mesa_a_la_vista(i.estado, i.mesa), i.alergias, i.cancion, i.nombres_asistentes
       from public.invitados i
      where i.id = v.id;
 end;
@@ -250,10 +273,17 @@ grant insert, update on public.evento to authenticated;
 -- Una fila por herramienta. Es privada: ni los invitados ni nadie sin sesión
 -- de administrador la puede leer.
 create table if not exists public.planeacion (
-  clave          text primary key check (clave in ('tareas', 'presupuesto', 'proveedores')),
+  clave          text primary key check (clave in ('tareas', 'presupuesto', 'proveedores', 'diseno')),
   datos          jsonb not null default '{}'::jsonb,
   actualizado_en timestamptz not null default now()
 );
+
+-- El borrador de la pestaña «Diseño» también va aquí (clave «diseno»): los
+-- invitados ven solo lo publicado en evento. A una tabla creada antes se le
+-- amplía la lista de claves.
+alter table public.planeacion drop constraint if exists planeacion_clave_check;
+alter table public.planeacion add constraint planeacion_clave_check
+  check (clave in ('tareas', 'presupuesto', 'proveedores', 'diseno'));
 
 alter table public.planeacion enable row level security;
 
@@ -302,12 +332,12 @@ create policy "administradores borran fotos"
   using (bucket_id = 'fotos' and public.es_admin());
 
 revoke all on function public.ver_invitacion(text, boolean) from public;
-revoke all on function public.responder_invitacion(text, boolean, integer, text, text, text) from public;
+revoke all on function public.responder_invitacion(text, boolean, integer, text, text, text, text[]) from public;
 revoke all on function public.es_admin() from public;
 revoke all on function public.mesa_a_la_vista(text, text) from public, anon, authenticated;
 
 grant execute on function public.ver_invitacion(text, boolean) to anon, authenticated;
-grant execute on function public.responder_invitacion(text, boolean, integer, text, text, text) to anon, authenticated;
+grant execute on function public.responder_invitacion(text, boolean, integer, text, text, text, text[]) to anon, authenticated;
 grant execute on function public.es_admin() to authenticated;
 
 -- Después de crear tu usuario en Authentication → Users, autorízalo aquí:

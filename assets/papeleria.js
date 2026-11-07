@@ -4,6 +4,21 @@
  */
 (function () {
   const TRAZOS = {
+    // Iconos lineales del tema Vino & Marfil (itinerario, redes, música).
+    anillos: '<circle cx="9" cy="14.5" r="5"/><circle cx="15" cy="14.5" r="5"/><path d="M13.5 6.8l1.5-2.3 1.5 2.3-1.5 1.7z"/>',
+    copas: '<path d="M4.5 3.5h5l-.5 5a2 2 0 0 1-4 0z"/><path d="M7 10.5v8M5 18.5h4"/><path d="M14.5 3.5h5l-.5 5a2 2 0 0 1-4 0z"/><path d="M17 10.5v8M15 18.5h4"/>',
+    iglesia: '<path d="M12 2.5v4M10.5 4h3"/><path d="M7 21V11l5-4.5 5 4.5v10"/><path d="M3.5 21v-6L7 12.5M20.5 21v-6L17 12.5"/><path d="M10.5 21v-4a1.5 1.5 0 0 1 3 0v4"/><path d="M2.5 21h19"/>',
+    camara: '<path d="M4 8h3l1.5-2h7L17 8h3a1 1 0 0 1 1 1v9a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V9a1 1 0 0 1 1-1z"/><circle cx="12" cy="13" r="3.5"/>',
+    cubiertos: '<path d="M7 3v6.5a2 2 0 0 0 2 2V21M11 3v6.5a2 2 0 0 1-2 2M9 3v5.5"/><path d="M17 21V3c-2 1.5-3 4-3 7 0 1.5.8 2.5 3 3"/>',
+    pastel: '<path d="M5 20.5V14h14v6.5M3.5 20.5h17"/><path d="M7 14v-3.5h10V14"/><path d="M12 10.5V7"/><path d="M12 4.3c.7.6 1 1.1 1 1.6a1 1 0 0 1-2 0c0-.5.3-1 1-1.6z"/><path d="M5 17c1.2 1 2.3 1 3.5 0s2.3-1 3.5 0 2.3 1 3.5 0 2.3-1 3.5 0"/>',
+    musica: '<path d="M9 18V5.5l11-2V16"/><circle cx="6.5" cy="18" r="2.5"/><circle cx="17.5" cy="16" r="2.5"/>',
+    fiesta: '<circle cx="12" cy="13.5" r="7"/><path d="M12 2.5v4M5 13.5h14M12 6.5c-2.2 2-3 4.4-3 7s.8 5 3 7M12 6.5c2.2 2 3 4.4 3 7s-.8 5-3 7M6.3 10h11.4M6.3 17h11.4"/>',
+    ubicacion: '<path d="M12 21s-6.5-6.2-6.5-11a6.5 6.5 0 0 1 13 0c0 4.8-6.5 11-6.5 11z"/><circle cx="12" cy="10" r="2.3"/>',
+    traje: '<path d="M8.5 3.5l3.5 3 3.5-3"/><path d="M8.5 3.5L5 6v14.5h14V6l-3.5-2.5"/><path d="M12 6.5v14M10.6 8.6l1.4 1.8 1.4-1.8"/>',
+    instagram: '<rect x="3.5" y="3.5" width="17" height="17" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.2" cy="6.8" r=".7"/>',
+    compartir: '<circle cx="18" cy="5.5" r="2.5"/><circle cx="6" cy="12" r="2.5"/><circle cx="18" cy="18.5" r="2.5"/><path d="M8.2 10.8l7.6-4.1M8.2 13.2l7.6 4.1"/>',
+    play: '<path d="M8 5v14l11-7z"/>',
+    pausa: '<path d="M8.5 5v14M15.5 5v14"/>',
     copiar: '<rect x="8.5" y="8.5" width="11" height="11" rx="2"/><path d="M15.5 8.5V6.5a2 2 0 0 0-2-2h-7a2 2 0 0 0-2 2v7a2 2 0 0 0 2 2h2"/>',
     whatsapp: '<path d="M4.6 19.4l1.1-3.6A7.9 7.9 0 1 1 8.6 18.6z"/><path d="M9.3 8.6c.2-.5.5-.5.8-.5h.5c.2 0 .4.1.5.4l.6 1.5c.1.2 0 .5-.1.6l-.5.6c.6 1.1 1.4 1.9 2.5 2.5l.6-.5c.2-.2.4-.2.6-.1l1.5.6c.3.1.4.3.4.5v.5c0 .3 0 .6-.5.8-.6.3-1.7.5-3.3-.4a8.6 8.6 0 0 1-3.2-3.2c-.9-1.6-.7-2.7-.4-3.3z"/>',
     editar: '<path d="M14.5 5.5l4 4"/><path d="M4.5 19.5l1-4.2L15.8 5a1.8 1.8 0 0 1 2.6 0l.6.6a1.8 1.8 0 0 1 0 2.6L8.7 18.5z"/>',
@@ -43,6 +58,22 @@
     tarea: '<rect x="4.5" y="4.5" width="15" height="15" rx="2"/><path d="M8.5 12.2l2.4 2.4 4.6-5"/>',
     dinero: '<rect x="3.5" y="7" width="17" height="10" rx="1.5"/><circle cx="12" cy="12" r="2.4"/><path d="M6.5 10v4M17.5 10v4"/>',
     tienda: '<path d="M4.5 9.5h15l-1.2-4h-12.6z"/><path d="M5.5 9.5v9h13v-9"/><path d="M10 18.5v-5h4v5"/>',
+    // Los bloques de la página y el editor de la pestaña «Diseño».
+    corazon: '<path d="M12 19.5s-7.5-4.6-7.5-10a4.2 4.2 0 0 1 7.5-2.6 4.2 4.2 0 0 1 7.5 2.6c0 5.4-7.5 10-7.5 10z"/>',
+    vestido: '<path d="M9.5 3.5h5M9.5 3.5l.8 4.5-3.8 12h11l-3.8-12 .8-4.5"/><path d="M10.3 8h3.4"/>',
+    pregunta: '<circle cx="12" cy="12" r="8"/><path d="M9.6 9.6a2.5 2.5 0 1 1 3.4 2.3c-.6.3-1 .8-1 1.5v.6"/><path d="M12 16.8v.2"/>',
+    texto: '<path d="M5 6.5h14M5 10.5h14M5 14.5h14M5 18.5h9"/>',
+    fotos: '<rect x="3.5" y="7.5" width="13" height="11" rx="1.5"/><path d="M7.5 5h11.5a1.5 1.5 0 0 1 1.5 1.5v9"/><path d="M4 16.5l3.5-3.5 3 3 2-2 3.5 3.5"/>',
+    cita: '<path d="M5 17.5c0-4 1.2-7 4.5-9M5 17.5h4v-4.5H5M13.5 17.5c0-4 1.2-7 4.5-9M13.5 17.5h4v-4.5h-4"/>',
+    flor: '<circle cx="12" cy="9.5" r="2"/><path d="M12 7.5c-1-3.5 2.5-4.5 2.5-1.5M14 9.5c3.5-1 4.5 2.5 1.5 2.5M12 11.5c1 3.5-2.5 4.5-2.5 1.5M10 9.5c-3.5 1-4.5-2.5-1.5-2.5"/><path d="M12 12v8M12 17c-2.5-.2-4-1.4-4.5-3.2 2 0 3.6 1.2 4.5 3.2z"/>',
+    video: '<rect x="3.5" y="6" width="12.5" height="12" rx="2"/><path d="M16 10.5l4.5-2.5v8l-4.5-2.5"/>',
+    arrastrar: '<circle cx="9" cy="6.5" r="1"/><circle cx="15" cy="6.5" r="1"/><circle cx="9" cy="12" r="1"/><circle cx="15" cy="12" r="1"/><circle cx="9" cy="17.5" r="1"/><circle cx="15" cy="17.5" r="1"/>',
+    duplicar: '<rect x="8.5" y="8.5" width="11" height="11" rx="2"/><path d="M15.5 8.5V6.5a2 2 0 0 0-2-2h-7a2 2 0 0 0-2 2v7a2 2 0 0 0 2 2h2"/><path d="M14 11.5v5M11.5 14h5"/>',
+    oculto: '<path d="M4 4l16 16"/><path d="M9.6 6.1A9.6 9.6 0 0 1 12 5.8c5.8 0 9.2 6.2 9.2 6.2a17 17 0 0 1-2.6 3.4M6.4 7.6A16 16 0 0 0 2.8 12s3.4 6.2 9.2 6.2c1.5 0 2.8-.4 4-1"/><path d="M10.2 10.3a2.6 2.6 0 0 0 3.5 3.5"/>',
+    movil: '<rect x="7" y="3.5" width="10" height="17" rx="2"/><path d="M11 17.5h2"/>',
+    pantalla: '<rect x="3.5" y="5" width="17" height="11" rx="1.5"/><path d="M9 19.5h6M12 16v3.5"/>',
+    pincel: '<path d="M14 4.5l5.5 5.5-7.5 7.5-5.5-5.5z"/><path d="M6.5 12L4.5 19.5l7.5-2"/>',
+    deshacer: '<path d="M8.5 6.5L4.5 10.5l4 4"/><path d="M4.5 10.5h9.5a5 5 0 0 1 0 10h-3"/>',
   };
 
   function icono(nombre, clase) {
@@ -192,18 +223,29 @@
 
   // Se reparten por la invitación en el orden del panel: una junto a los
   // detalles, otra junto al itinerario, otra junto a la historia (si la hay) y
-  // otra junto a la respuesta; las demás van juntas antes de la vestimenta.
+  // otra junto a la respuesta; las demás van juntas, sueltas sobre la mesa.
   const LUGARES_FOTO = {
+    album: 'En el álbum, después de la tarjeta',
     detalles: 'Junto a «Los detalles»',
     itinerario: 'Junto al itinerario',
     historia: 'Junto a «Nuestra historia»',
     responder: 'Junto a la respuesta',
-    momentos: 'Con las otras fotos, antes de la vestimenta',
+    momentos: 'Con las otras fotos de la pareja',
+    ninguno: 'No se ve: «Fotos de la pareja» está oculta (Diseño)',
   };
 
-  function lugaresFotos(cuantas, conHistoria) {
-    const pliegos = ['detalles', 'itinerario'].concat(conHistoria ? ['historia'] : [], ['responder']);
-    return Array.from({ length: cuantas }, (_, i) => pliegos[i] || 'momentos');
+  // Con la página (ver assets/pagina.js), los pliegos con foto van en el orden
+  // de sus bloques, y solo los que se ven.
+  // El álbum (si está a la vista) se lleva las tres primeras.
+  const EN_ALBUM = 3;
+  function lugaresFotos(cuantas, conHistoria, pagina) {
+    const bloques = pagina ? pagina.bloques.filter((b) => !b.oculto) : ['album', 'detalles', 'itinerario', 'historia', 'responder', 'fotos'].map((tipo) => ({ tipo }));
+    const album = bloques.some((b) => b.tipo === 'album') ? EN_ALBUM : 0;
+    const pliegos = bloques
+      .filter((b) => ['detalles', 'itinerario', 'historia', 'responder'].includes(b.tipo) && (b.tipo !== 'historia' || conHistoria))
+      .map((b) => b.tipo);
+    const resto = bloques.some((b) => b.tipo === 'fotos') ? 'momentos' : 'ninguno';
+    return Array.from({ length: cuantas }, (_, i) => (i < album ? 'album' : pliegos[i - album] || resto));
   }
 
   window.Papeleria = { icono, sello, matasellos, numeroSobre, escapar, fechaSello, fechaEvento, fechaLarga, diaMes, horaBonita, mapas, LUGARES_FOTO, lugaresFotos };

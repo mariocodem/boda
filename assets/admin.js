@@ -130,23 +130,82 @@
 
   // ---------- Entrada ----------
 
-  function mostrarEntrada() {
+  // Con Google configurado (pedido de Mario, 2026-11-06), se entra con Google y
+  // esa cuenta deja conectado el calendario de las tareas; la clave (o el
+  // correo y la contraseña de Supabase) queda plegada debajo.
+  let conGoogle = null;
+
+  async function mostrarEntrada(error = '') {
     $('#panel').hidden = true;
-    $('#entrada').hidden = false;
     const campos = $('[data-campos-entrada]');
     if (D.modo === 'supabase') {
       campos.innerHTML = `
         <label class="campo"><span class="campo-etiqueta">Correo</span><input name="correo" type="email" autocomplete="username" required></label>
         <label class="campo"><span class="campo-etiqueta">Contraseña</span><input name="clave" type="password" autocomplete="current-password" required></label>`;
-      $('[data-nota-modo]').textContent = 'Entra con la cuenta autorizada en Supabase.';
     } else {
       campos.innerHTML = `
         <label class="campo"><span class="campo-etiqueta">Clave del panel</span><input name="clave" type="password" autocomplete="current-password" required></label>`;
-      $('[data-nota-modo]').textContent = 'Modo local: la lista vive solo en este navegador. Para recibir respuestas reales, conecta Supabase (ver LEEME.md).';
     }
-    const primero = $('input', campos);
-    if (primero) primero.focus();
+    if (conGoogle === null) {
+      conGoogle = await Promise.race([D.googleDisponible(), new Promise((listo) => { setTimeout(() => listo(false), 4000); })]);
+    }
+    const clave = $('[data-entrada-clave]');
+    const titulo = $('[data-entrada-clave-titulo]');
+    const entrarClave = $('[data-entrar-clave]');
+    $('[data-entrada-google]').hidden = !conGoogle;
+    titulo.hidden = !conGoogle;
+    titulo.textContent = D.modo === 'supabase' ? 'o entra con correo y contraseña' : 'o entra con la clave del panel';
+    clave.open = !conGoogle;
+    entrarClave.className = `boton ${conGoogle ? 'boton-secundario' : 'boton-principal'} boton-ancho`;
+    $('[data-nota-modo]').textContent = D.modo === 'supabase'
+      ? (conGoogle ? 'Solo entran las cuentas autorizadas en Supabase.' : 'Entra con la cuenta autorizada en Supabase.')
+      : 'Modo local: la lista vive solo en este navegador. Para recibir respuestas reales, conecta Supabase (ver README).';
+    $('#entrada-error').textContent = error;
+    $('#entrada').hidden = false;
+    if (conGoogle) {
+      // La ventana de Google se abre al tocar: el script ya debe estar.
+      window.CalendarioGoogle.precargar();
+      $('[data-entrar-google]').focus();
+    } else {
+      const primero = $('input', campos);
+      if (primero) primero.focus();
+    }
   }
+
+  // Al abrir «o entra con la clave», el foco va al primer campo.
+  $('[data-entrada-clave]').addEventListener('toggle', (e) => {
+    if (e.currentTarget.open && conGoogle) {
+      const primero = $('[data-campos-entrada] input');
+      if (primero) primero.focus();
+    }
+  });
+
+  $('[data-entrar-google]').addEventListener('click', async (e) => {
+    const boton = e.currentTarget;
+    const texto = $('[data-entrar-google-texto]', boton);
+    const error = $('#entrada-error');
+    error.textContent = '';
+    boton.disabled = true;
+    texto.textContent = 'Abriendo Google…';
+    let sigue = false;
+    try {
+      const r = await D.entrarConGoogle();
+      // Con Supabase la página se va a Google y vuelve sola.
+      if (r && r.redirigiendo) {
+        sigue = true;
+        return;
+      }
+      await mostrarPanel(r);
+      if (r && !r.calendario) aviso('Entraste sin el permiso del calendario: las tareas no pasan a Google Calendar hasta que lo conectes en Tareas.');
+    } catch (err) {
+      error.textContent = err.message;
+    } finally {
+      if (!sigue) {
+        boton.disabled = false;
+        texto.textContent = 'Continuar con Google';
+      }
+    }
+  });
 
   $('#form-entrada').addEventListener('submit', async (e) => {
     e.preventDefault();
@@ -162,8 +221,8 @@
     boton.disabled = true;
     boton.textContent = 'Entrando…';
     try {
-      await D.entrar({ correo: datos.correo, clave: datos.clave });
-      await mostrarPanel();
+      const sesion = await D.entrar({ correo: datos.correo, clave: datos.clave });
+      await mostrarPanel(sesion);
     } catch (err) {
       error.textContent = err.message;
     } finally {
@@ -174,15 +233,21 @@
 
   // ---------- Panel ----------
 
-  async function mostrarPanel() {
+  async function mostrarPanel(sesion) {
     $('#entrada').hidden = true;
     $('#panel').hidden = false;
     const chip = $('[data-chip-modo]');
     chip.dataset.modo = D.modo;
     chip.textContent = D.modo === 'supabase' ? 'Conectado a Supabase' : 'Modo local';
     chip.title = D.modo === 'supabase' ? '' : 'Los datos viven solo en este navegador';
+    // Quién entró, en el botón de salir.
+    const quien = sesion && sesion.correo && sesion.correo !== 'Modo local' ? sesion.correo : '';
+    const salir = $('[data-salir]');
+    salir.title = quien ? `Salir (${quien})` : 'Salir';
+    window.Planeacion.alEntrar();
     mostrarVista(location.hash.slice(1));
     await recargar();
+    window.Asistente.alEntrar();
   }
 
   async function recargar({ silencioso } = {}) {
@@ -335,6 +400,26 @@
     }
   }
 
+  // Quiénes van de una invitación confirmada: los nombres que escribieron; con
+  // un solo cupo y sin nombre, la persona del sobre.
+  const LISTA = new Intl.ListFormat('es', { style: 'long', type: 'conjunction' });
+  function quienesDe(i) {
+    if (i.estado !== 'confirmado') return [];
+    const n = i.nombresAsistentes || [];
+    if (n.length) return n;
+    return i.cupos === 1 ? [i.nombre] : [];
+  }
+
+  // «Van: Ana, Luis y Marta · falta 1 nombre», debajo del nombre del sobre.
+  function lineaQuienes(i) {
+    if (i.estado !== 'confirmado' || i.cupos === 1) return '';
+    const n = i.nombresAsistentes || [];
+    const faltan = Math.max(0, i.asistentes - n.length);
+    if (!n.length && !faltan) return '';
+    const falta = faltan ? `<span class="quienes-faltan">${faltan === 1 ? 'falta 1 nombre' : `faltan ${faltan} nombres`}</span>` : '';
+    return `<div class="invitado-quienes">${n.length ? `<span>Van: ${esc(LISTA.format(n))}</span>` : ''}${falta}</div>`;
+  }
+
   function fila(i) {
     const mesa = mesaDe(i);
     const meta = [
@@ -353,7 +438,7 @@
     const n = esc(i.nombre);
     return `<tr data-id="${esc(i.id)}">
         <td class="col-num"><span class="num-sobre">${P.numeroSobre(i.numero)}</span></td>
-        <td class="col-nombre"><div class="invitado-nombre">${n}</div><div class="invitado-meta">${meta}</div></td>
+        <td class="col-nombre"><div class="invitado-nombre">${n}</div>${lineaQuienes(i)}<div class="invitado-meta">${meta}</div></td>
         <td class="col-cupos"><span class="cupos-celda">${cupos}</span></td>
         <td class="col-estado">${selloEstado(i)}</td>
         <td class="col-lado">${LADOS[i.lado] || 'Ambos'}</td>
@@ -388,6 +473,7 @@
           <div>
             <p class="correo-quien">${esc(i.nombre)}</p>
             <p class="correo-que">${que} · ${esc(hace(i.respondidoEn))}</p>
+            ${va && i.cupos > 1 && (i.nombresAsistentes || []).length ? `<p class="correo-quienes">${esc(LISTA.format(i.nombresAsistentes))}</p>` : ''}
             ${i.mensaje ? `<p class="correo-mensaje">«${esc(i.mensaje)}»</p>` : ''}
           </div>
         </li>`;
@@ -415,12 +501,46 @@
         </li>`)}`;
   }
 
+  // Quiénes van, por nombre: la lista para la entrada, el banquete y las mesas.
+  // Abierta mientras es corta; larga, se abre al tocarla.
+  function pintarQuienesVan() {
+    const caja = $('[data-quienes-van]');
+    const van = estado.lista.filter((i) => i.estado === 'confirmado');
+    caja.hidden = !van.length;
+    if (!van.length) {
+      caja.innerHTML = '';
+      return;
+    }
+    const abierta = caja.querySelector('details') ? caja.querySelector('details').open : null;
+    const gente = van.flatMap((i) => quienesDe(i).map((nombre) => ({ nombre, i })))
+      .sort((a, b) => a.nombre.localeCompare(b.nombre, 'es'));
+    const sinNombre = van.filter((i) => quienesDe(i).length < i.asistentes);
+    const faltan = sinNombre.reduce((n, i) => n + i.asistentes - quienesDe(i).length, 0);
+    const lugar = (i) => {
+      const m = mesaDe(i);
+      return `${esc(i.nombre)}${m ? ` · Mesa ${m.numero}` : ''}`;
+    };
+    caja.innerHTML = `<details class="quienes-van"${(abierta == null ? gente.length + sinNombre.length <= 12 : abierta) ? ' open' : ''}>
+        <summary>
+          <h2 class="correo-titulo">Quiénes van</h2>
+          <span class="quienes-cuenta"><b>${gente.length}</b> ${gente.length === 1 ? 'persona' : 'personas'}${faltan ? ` · <span class="quienes-faltan">${faltan} sin nombre</span>` : ''}</span>
+        </summary>
+        <ul class="quienes-van-lista">
+          ${gente.map(({ nombre, i }) => `<li><span class="quien-nombre">${esc(nombre)}</span><span class="quien-de">${lugar(i)}</span></li>`).join('')}
+          ${sinNombre.map((i) => `<li class="sin-nombre"><span class="quien-nombre">${i.asistentes - quienesDe(i).length === 1 ? '1 persona' : `${i.asistentes - quienesDe(i).length} personas`} sin nombre</span><span class="quien-de">${lugar(i)}</span></li>`).join('')}
+        </ul>
+        ${gente.length ? '<button class="boton boton-secundario boton-chico" type="button" data-exportar-quienes data-icono="descargar">Descargar la lista</button>' : ''}
+      </details>`;
+    iconos(caja);
+  }
+
   function pintar() {
     pintarCifras();
     pintarFiltros();
     pintarTabla();
     pintarCorreo();
     pintarPedidos();
+    pintarQuienesVan();
   }
 
   // ---------- Diálogo de invitado ----------
@@ -450,6 +570,7 @@
       $('[data-mensaje-texto]').textContent = inv.mensaje || '';
       f.alergias.value = inv.alergias || '';
       f.cancion.value = inv.cancion || '';
+      f.quienes.value = (inv.nombresAsistentes || []).join('\n');
       $('[data-enlace-texto]').textContent = D.enlace(inv.codigo);
     }
     sincronizarAsistentes();
@@ -548,6 +669,15 @@
           f.asistentes.focus();
           return;
         }
+        // Quiénes van: uno por renglón, no más que los asistentes. Solo se manda si cambió.
+        const quienes = f.quienes.value.split('\n').map((x) => x.trim().slice(0, 80)).filter(Boolean);
+        if (quienes.length > datos.asistentes) {
+          f.quienes.setAttribute('aria-invalid', 'true');
+          error.textContent = `Hay ${quienes.length} nombres para ${datos.asistentes} ${datos.asistentes === 1 ? 'asistente' : 'asistentes'}: quita los que sobran o sube el número.`;
+          f.quienes.focus();
+          return;
+        }
+        if (quienes.join('\n') !== (estado.editando.nombresAsistentes || []).join('\n')) datos.nombresAsistentes = quienes;
       }
     }
     const boton = $('[data-guardar]');
@@ -644,25 +774,39 @@
 
   // ---------- Exportar ----------
 
-  function exportar() {
-    const campos = ['N.º', 'Nombre', 'Cupos', 'De', 'WhatsApp', 'Respuesta', 'Asistentes', 'Mesa', 'Mensaje', 'Alergias o restricciones', 'Canción', 'Notas', 'Abierta', 'Respondió', 'Enlace'];
-    const txt = { pendiente: 'Pendiente', confirmado: 'Confirmado', declinado: 'No asiste' };
+  // Un CSV con punto y coma y BOM, listo para abrir en Excel.
+  function descargarCsv(nombre, campos, filas) {
     const celda = (v) => `"${String(v == null ? '' : v).replace(/"/g, '""')}"`;
-    const fecha = (iso) => (iso ? new Date(iso).toLocaleString('es-CO') : '');
-    const mesa = (i) => {
-      const m = mesaDe(i);
-      return m ? `${m.numero}${m.nombre ? ` (${m.nombre})` : ''}` : '';
-    };
-    const filas = estado.lista.map((i) => [
-      P.numeroSobre(i.numero), i.nombre, i.cupos, LADOS[i.lado] || 'Ambos', i.telefono, txt[i.estado],
-      i.estado === 'confirmado' ? i.asistentes : 0, mesa(i), i.mensaje, i.alergias, i.cancion, i.notas, fecha(i.abiertoEn), fecha(i.respondidoEn), D.enlace(i.codigo),
-    ].map(celda).join(';'));
-    const csv = '﻿' + [campos.map(celda).join(';')].concat(filas).join('\r\n');
+    const csv = '\ufeff' + [campos].concat(filas).map((f) => f.map(celda).join(';')).join('\r\n');
     const a = document.createElement('a');
     a.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv;charset=utf-8' }));
-    a.download = `invitados-diego-y-erika-${new Date().toISOString().slice(0, 10)}.csv`;
+    a.download = `${nombre}-diego-y-erika-${new Date().toISOString().slice(0, 10)}.csv`;
     a.click();
     setTimeout(() => URL.revokeObjectURL(a.href), 2000);
+  }
+
+  const mesaCsv = (i) => {
+    const m = mesaDe(i);
+    return m ? `${m.numero}${m.nombre ? ` (${m.nombre})` : ''}` : '';
+  };
+
+  function exportar() {
+    const campos = ['N.º', 'Nombre', 'Cupos', 'De', 'WhatsApp', 'Respuesta', 'Asistentes', 'Quiénes van', 'Mesa', 'Mensaje', 'Alergias o restricciones', 'Canción', 'Notas', 'Abierta', 'Respondió', 'Enlace'];
+    const txt = { pendiente: 'Pendiente', confirmado: 'Confirmado', declinado: 'No asiste' };
+    const fecha = (iso) => (iso ? new Date(iso).toLocaleString('es-CO') : '');
+    descargarCsv('invitados', campos, estado.lista.map((i) => [
+      P.numeroSobre(i.numero), i.nombre, i.cupos, LADOS[i.lado] || 'Ambos', i.telefono, txt[i.estado],
+      i.estado === 'confirmado' ? i.asistentes : 0, quienesDe(i).join(', '), mesaCsv(i), i.mensaje, i.alergias, i.cancion, i.notas, fecha(i.abiertoEn), fecha(i.respondidoEn), D.enlace(i.codigo),
+    ]));
+  }
+
+  // Una fila por persona que va: para la entrada, el banquete y las mesas.
+  function exportarQuienes() {
+    const filas = estado.lista
+      .filter((i) => i.estado === 'confirmado')
+      .flatMap((i) => quienesDe(i).map((nombre) => [nombre, i.nombre, P.numeroSobre(i.numero), mesaCsv(i), LADOS[i.lado] || 'Ambos', i.alergias]))
+      .sort((a, b) => a[0].localeCompare(b[0], 'es'));
+    descargarCsv('asistentes', ['Nombre', 'Invitación', 'N.º de sobre', 'Mesa', 'De', 'Alergias o restricciones (de la invitación)'], filas);
   }
 
   // ---------- Ejemplos (solo modo local) ----------
@@ -673,8 +817,8 @@
     await D.crearVarios([
       { nombre: 'Familia Rodríguez Gómez', cupos: 4, telefono: '3001234567', lado: 'erika', notas: 'Ejemplo' },
       { nombre: 'Lucía Méndez', cupos: 1, lado: 'diego', notas: 'Ejemplo', estado: 'confirmado', asistentes: 1, mensaje: '¡Allá estaré! Los quiero mucho.', abiertoEn: dias(5), respondidoEn: dias(4) },
-      { nombre: 'Tíos Triana Pardo', cupos: 2, telefono: '3109876543', lado: 'diego', notas: 'Ejemplo', estado: 'confirmado', asistentes: 2, mensaje: 'Felicitaciones, mijo. Ahí estaremos.', cancion: 'La bilirrubina, Juan Luis Guerra', abiertoEn: dias(3), respondidoEn: dias(2) },
-      { nombre: 'Familia Ramos Ortiz', cupos: 5, lado: 'erika', notas: 'Ejemplo', estado: 'confirmado', asistentes: 3, alergias: 'Uno es vegetariano', abiertoEn: dias(2), respondidoEn: dias(1) },
+      { nombre: 'Tíos Triana Pardo', cupos: 2, telefono: '3109876543', lado: 'diego', notas: 'Ejemplo', estado: 'confirmado', asistentes: 2, nombresAsistentes: ['Jorge Triana', 'Marina Pardo'], mensaje: 'Felicitaciones, mijo. Ahí estaremos.', cancion: 'La bilirrubina, Juan Luis Guerra', abiertoEn: dias(3), respondidoEn: dias(2) },
+      { nombre: 'Familia Ramos Ortiz', cupos: 5, lado: 'erika', notas: 'Ejemplo', estado: 'confirmado', asistentes: 3, nombresAsistentes: ['Alberto Ramos', 'Gloria Ortiz'], alergias: 'Uno es vegetariano', abiertoEn: dias(2), respondidoEn: dias(1) },
       { nombre: 'Andrés y Paula', cupos: 2, lado: 'ambos', notas: 'Ejemplo', estado: 'declinado', mensaje: 'Estaremos de viaje, ¡qué tristeza! Los celebramos a la vuelta.', abiertoEn: dias(6), respondidoEn: dias(6) },
       { nombre: 'Camila Herrera', cupos: 2, telefono: '3204567890', lado: 'erika', notas: 'Ejemplo', abiertoEn: dias(1) },
     ]);
@@ -698,6 +842,7 @@
     // Fotos en edición: { url, blob, vista, forma, encuadre?, nota?, carpeta, falta }.
     // blob sin url = elegida y aún sin subir (se sube al guardar).
     fotos: { portada: null, galeria: [], vestimenta: [] },
+    pagina: null,
     cargandoFotos: Promise.resolve(),
     turnoFotos: 0,
     refsGuardadas: new Set(),
@@ -942,8 +1087,6 @@
         ? { url: boda.fotos.portada.url, forma: boda.fotos.portada.forma, encuadre: boda.fotos.portada.encuadre }
         : null,
       fotos: boda.fotos.galeria.filter((x) => x.url).map((x) => ({ url: x.url, forma: x.forma })),
-      estilo: estiloElegido(),
-      mariposa: f.mariposa.checked,
     };
   }
 
@@ -970,14 +1113,8 @@
     pintarFilas('preguntas', ev.preguntas);
     f['pedir-alergias'].checked = ev.respuesta.alergias;
     f['pedir-cancion'].checked = ev.respuesta.cancion;
-    const e = Estilos.normalizar(ev.estilo);
-    f.color.value = e.color || Estilos.COLOR_LIBRE;
-    f['color-codigo'].value = f.color.value;
-    f['color-codigo'].removeAttribute('aria-invalid');
-    $(`input[name="paleta"][value="${e.paleta}"]`, formBoda).checked = true;
-    $(`input[name="letra"][value="${e.letra}"]`, formBoda).checked = true;
-    f.mariposa.checked = ev.mariposa !== false;
-    pintarEstilo();
+    // El orden de los bloques (Diseño) decide junto a qué parte va cada foto.
+    boda.pagina = ev.pagina;
     boda.cargandoFotos = cargarFotos(ev);
     sincronizarMismoLugar();
     pintarVistaFecha();
@@ -1164,97 +1301,6 @@
     if (m.mapa.getZoom() < 14) m.mapa.setZoom(16);
   }
 
-  // ---------- La boda: estilo ----------
-
-  const NOMBRES = { uno: C.pareja.uno.nombre, dos: C.pareja.dos.nombre };
-
-  function opcionesEstilo() {
-    const paletas = Object.entries(Estilos.PALETAS).concat([[Estilos.LIBRE, { nombre: 'Color libre' }]]);
-    $('[data-paletas]', formBoda).innerHTML = paletas.map(([clave, p]) => `<label class="paleta${clave === Estilos.LIBRE ? ' paleta-libre' : ''}">
-        <input type="radio" name="paleta" value="${clave}">
-        <span class="paleta-muestra" data-paleta-muestra="${clave}" aria-hidden="true">
-          <span class="paleta-sobre"></span>
-          <span class="paleta-carta">${esc(NOMBRES.uno[0])}<i>&amp;</i>${esc(NOMBRES.dos[0])}</span>
-        </span>
-        <span class="paleta-nombre">${esc(p.nombre)}</span>
-      </label>`).join('');
-    $('[data-letras]', formBoda).innerHTML = Object.entries(Estilos.LETRAS).map(([clave, l]) => `<label class="letra">
-        <input type="radio" name="letra" value="${clave}">
-        <span class="letra-muestra" data-letra-muestra="${clave}" aria-hidden="true">
-          <span class="letra-nombres">${esc(NOMBRES.uno)} <i>&amp;</i> ${esc(NOMBRES.dos)}</span>
-          <span class="letra-texto">tienen el gusto de invitarte</span>
-        </span>
-        <span class="letra-nombre">${esc(l.nombre)}<small>${esc(l.descripcion)}</small></span>
-      </label>`).join('');
-    Object.keys(Estilos.LETRAS).forEach(Estilos.cargarLetra);
-  }
-
-  function estiloElegido() {
-    const f = formBoda.elements;
-    return Estilos.normalizar({ paleta: f.paleta.value, letra: f.letra.value, color: f.color.value });
-  }
-
-  // Cada opción se pinta con su paleta (o su letra) y lo demás elegido.
-  function pintarEstilo() {
-    const e = estiloElegido();
-    $$('[data-paleta-muestra]', formBoda).forEach((el) => Estilos.aplicar({ paleta: el.dataset.paletaMuestra, letra: e.letra, color: e.color }, el));
-    $$('[data-letra-muestra]', formBoda).forEach((el) => Estilos.aplicar(Object.assign({}, e, { letra: el.dataset.letraMuestra }), el));
-    const color = e.paleta === Estilos.LIBRE ? `&color=${encodeURIComponent(e.color)}` : '';
-    const mariposa = formBoda.elements.mariposa.checked ? '' : '&mariposa=no';
-    $('[data-ver-estilo]', formBoda).href = `index.html?vista=panel&paleta=${e.paleta}&letra=${e.letra}${color}${mariposa}`;
-    pintarMuestra();
-  }
-
-  // El selector de color y su código van juntos; tocar cualquiera elige «Color libre».
-  let pintandoColor = 0;
-  function elegirColor(t) {
-    const f = formBoda.elements;
-    if (t.name === 'color-codigo') {
-      let v = t.value.trim().toLowerCase();
-      if (!v.startsWith('#')) v = `#${v}`;
-      if (/^#[0-9a-f]{3}$/.test(v)) v = `#${[...v.slice(1)].map((x) => x + x).join('')}`;
-      if (!/^#[0-9a-f]{6}$/.test(v)) {
-        t.setAttribute('aria-invalid', 'true');
-        return;
-      }
-      f.color.value = v;
-    } else {
-      f['color-codigo'].value = t.value;
-      f['color-codigo'].removeAttribute('aria-invalid');
-    }
-    $(`input[name="paleta"][value="${Estilos.LIBRE}"]`, formBoda).checked = true;
-    // Al arrastrar el selector llegan muchos cambios: se pinta una vez por cuadro.
-    cancelAnimationFrame(pintandoColor);
-    pintandoColor = requestAnimationFrame(pintarEstilo);
-  }
-
-  // Vista previa: el sobre y la tarjeta en pequeño, con la foto principal.
-  async function pintarMuestra() {
-    const e = estiloElegido();
-    const caja = $('[data-muestra]', formBoda);
-    const portada = boda.fotos.portada;
-    Estilos.aplicar(e, caja);
-    caja.innerHTML = `
-      <div class="muestra-sobre">
-        <span class="muestra-numero">N.º <span class="cifra">027</span></span>
-        <span class="muestra-sello sello-postal">${P.sello(Estilos.paleta(e).sello)}</span>
-        <span class="muestra-para">Para</span>
-        <span class="muestra-nombre">Familia Rodríguez</span>
-        <span class="muestra-rubrica"></span>
-      </div>
-      <div class="muestra-carta">
-        <span class="muestra-arco">${portada && portada.vista && !portada.falta ? `<img src="${esc(portada.vista)}" alt="" style="object-position:${esc(portada.encuadre)}">` : ''}</span>
-        <span class="muestra-nombres">${esc(NOMBRES.uno)}</span>
-        <span class="muestra-y">&amp;</span>
-        <span class="muestra-nombres">${esc(NOMBRES.dos)}</span>
-        <span class="muestra-texto">tienen el gusto de invitarte a celebrar su matrimonio</span>
-      </div>`;
-    const forro = await Estilos.forro(e);
-    const ahora = estiloElegido();
-    // Ruta absoluta: dentro de una variable, una ruta relativa se leería desde admin.css.
-    if (ahora.paleta === e.paleta && ahora.color === e.color) caja.style.setProperty('--forro-img', forro || `url("${new URL('assets/forro.svg', location.href).href}")`);
-  }
-
   // ---------- La boda: fotos ----------
 
   const LISTAS = {
@@ -1317,7 +1363,6 @@
     pintarPortada();
     pintarLista('galeria');
     pintarLista('vestimenta');
-    pintarMuestra();
   }
 
   function todasLasFotos() {
@@ -1402,8 +1447,6 @@
     Object.assign($('[data-punto]', caja).style, { left: `${c(x)}%`, top: `${c(y)}%` });
     const arco = $('[data-arco-img]', caja);
     if (arco) arco.style.objectPosition = f.encuadre;
-    const mini = $('.muestra-arco img', formBoda);
-    if (mini) mini.style.objectPosition = f.encuadre;
     marcarSucio();
   }
 
@@ -1438,10 +1481,11 @@
   }
 
   // Debajo de cada foto de la pareja, en qué parte de la invitación queda
-  // (ver P.lugaresFotos): depende del orden y de si hay historia.
+  // (ver P.lugaresFotos): depende del orden de las fotos, del de los bloques
+  // (Diseño) y de si hay historia.
   function rotularGaleria() {
     const rotulos = $$('[data-lugar-foto]', formBoda);
-    const lugares = P.lugaresFotos(rotulos.length, Boolean(formBoda.elements.historia.value.trim()));
+    const lugares = P.lugaresFotos(rotulos.length, Boolean(formBoda.elements.historia.value.trim()), boda.pagina);
     rotulos.forEach((p, i) => { p.textContent = P.LUGARES_FOTO[lugares[i]]; });
   }
 
@@ -1465,7 +1509,6 @@
         aviso(err.message, { error: true });
       }
       pintarPortada();
-      pintarMuestra();
       return;
     }
     const cfg = LISTAS[clave];
@@ -1508,8 +1551,6 @@
     boda.subidas.clear();
   }
 
-  opcionesEstilo();
-
   async function abrirBoda() {
     if (boda.cargada) return;
     const e = $('[data-estado-boda]', formBoda);
@@ -1545,7 +1586,6 @@
       const f = boda.fotos.vestimenta[Number(t.closest('[data-i]').dataset.i)];
       if (f) f.nota = t.value;
     }
-    if (t.name === 'color' || t.name === 'color-codigo') elegirColor(t);
     if (t.name === 'historia') rotularGaleria();
   });
 
@@ -1579,12 +1619,6 @@
       recibirArchivos(zona.dataset.subir, t.files);
       t.value = '';
       return;
-    }
-    if (t.name === 'paleta' || t.name === 'letra' || t.name === 'mariposa') pintarEstilo();
-    // Un código a medio escribir vuelve al color elegido al salir del campo.
-    if (t.name === 'color-codigo') {
-      t.value = formBoda.elements.color.value;
-      t.removeAttribute('aria-invalid');
     }
     if (t.name === 'recepcion-mismo') sincronizarMismoLugar();
     if (t.dataset.campo === 'mapa') {
@@ -1655,7 +1689,6 @@
       soltarVista(boda.fotos.portada);
       boda.fotos.portada = null;
       pintarPortada();
-      pintarMuestra();
       marcarSucio();
       $('[data-portada] input[type="file"]', formBoda).focus();
       return;
@@ -1768,7 +1801,10 @@
     try {
       await subirFotosNuevas(estadoEl);
       estadoEl.textContent = 'Guardando…';
-      const guardado = await D.guardarEvento(leerBoda());
+      // Solo cambia lo de esta pestaña: el diseño publicado (página, estilo y
+      // mariposa) se queda como está.
+      const actual = await D.evento();
+      const guardado = await D.guardarEvento(Object.assign({}, actual, leerBoda()));
       limpiarFotos(guardado);
       boda.sucio = false;
       escribirBoda(guardado);
@@ -1792,6 +1828,13 @@
     e.returnValue = '';
   });
 
+  // Al publicar el diseño cambia el orden de los bloques, y con él junto a qué
+  // parte va cada foto de la pareja.
+  document.addEventListener('diseno:publicado', (e) => {
+    boda.pagina = e.detail;
+    if (boda.cargada) rotularGaleria();
+  });
+
   // ---------- Mesas: el plano del salón ----------
 
   const S = window.Salon;
@@ -1809,7 +1852,8 @@
     guardando: false,
     otraVez: false,
     temporizador: null,
-    arrastre: null,    // una pieza que se mueve (o un espacio que cambia de tamaño)
+    arrastre: null,    // una pieza que se mueve (o que cambia de tamaño con su tirador)
+    piso: null,        // un toque en el piso del salón, que suelta la pieza elegida
     familia: null,     // una familia que se lleva con el ratón hasta su mesa
     cuadro: 0,
     ignorarClic: false,
@@ -1949,6 +1993,7 @@
       ocupacion: o,
       eligiendo: Boolean(mesas.sentando),
       tamZona: planoChico.matches ? 34 : 22,
+      tirador: planoChico.matches ? 36 : 17,
       titulo: 'Plano del salón',
     }) + vacio;
     if (vacio) iconos(marcoPlano);
@@ -2039,6 +2084,7 @@
         <label class="campo"><span class="campo-etiqueta">Número</span>${paso('numero', p.numero, { min: 1, max: 999, menos: 'Número anterior', mas: 'Número siguiente' })}</label>
         <label class="campo"><span class="campo-etiqueta">Puestos</span>${paso('puestos', p.puestos, { min: 1, max: 30, menos: 'Un puesto menos', mas: 'Un puesto más' })}</label>
       </div>
+      <p class="campo-ayuda">También puedes arrastrar el tirador ${p.forma === 'redonda' ? 'del borde' : 'de la punta'} de la mesa: crece o se achica con sus puestos.</p>
       <label class="campo">
         <span class="campo-etiqueta">Nombre <em>(opcional)</em></span>
         <input type="text" data-pz="nombre" maxlength="40" placeholder="Por ejemplo, Los padrinos" value="${esc(p.nombre || '')}" autocomplete="off">
@@ -2328,12 +2374,18 @@
   }
 
   const redondear = (n, salto = 10) => Math.round(n / salto) * salto;
+  const TRAMO_PUESTO = 14; // píxeles de arrastre del tirador de una mesa por puesto
 
   marcoPlano.addEventListener('pointerdown', (e) => {
     if (e.button !== 0 || mesas.arrastre) return;
     const g = e.target.closest('[data-pieza]');
     const p = g && pieza(g.dataset.pieza);
-    if (!p) return;
+    if (!p) {
+      // El piso se suelta al levantar el dedo, no con el clic: con el puntero
+      // capturado, Firefox manda al marco el clic de cada pieza que se toca.
+      mesas.piso = e.target.closest('svg') ? { puntero: e.pointerId, x: e.clientX, y: e.clientY } : null;
+      return;
+    }
     e.preventDefault();
     g.focus({ preventScroll: true });
     mesas.arrastre = {
@@ -2341,7 +2393,7 @@
       tipo: e.target.closest('[data-tirador]') ? 'tamano' : 'mover',
       inicio: puntoPlano(e),
       pantalla: { x: e.clientX, y: e.clientY },
-      desde: { x: p.x, y: p.y, ancho: p.ancho, alto: p.alto },
+      desde: { x: p.x, y: p.y, ancho: p.ancho, alto: p.alto, puestos: p.puestos },
       movido: false,
       puntero: e.pointerId,
     };
@@ -2359,7 +2411,15 @@
     const q = puntoPlano(e);
     const dx = q.x - a.inicio.x;
     const dy = q.y - a.inicio.y;
-    if (a.tipo === 'tamano') {
+    if (a.tipo === 'tamano' && S.esMesa(p)) {
+      // La mesa crece o se achica desde su centro: un puesto por cada tramo
+      // que el tirador se lleva hacia afuera (en la larga, dos: uno por lado,
+      // que es cuando cambia su largo). Cada puesto agranda la mesa apenas
+      // unos píxeles; por tramos se controla igual en el teléfono.
+      const [ex, ey] = p.forma === 'redonda' ? [Math.SQRT1_2, Math.SQRT1_2] : p.giro === 90 ? [0, 1] : [1, 0];
+      const tramos = Math.round(((e.clientX - a.pantalla.x) * ex + (e.clientY - a.pantalla.y) * ey) / TRAMO_PUESTO);
+      p.puestos = Math.min(30, Math.max(1, a.desde.puestos + (p.forma === 'larga' ? 2 : 1) * tramos));
+    } else if (a.tipo === 'tamano') {
       // La esquina de arriba a la izquierda queda quieta.
       p.ancho = Math.min(S.ANCHO, Math.max(60, redondear(a.desde.ancho + dx, 20)));
       p.alto = Math.min(S.ALTO, Math.max(60, redondear(a.desde.alto + dy, 20)));
@@ -2386,8 +2446,6 @@
     marcoPlano.classList.remove('arrastrando');
     if (marcoPlano.hasPointerCapture(e.pointerId)) marcoPlano.releasePointerCapture(e.pointerId);
     if (a.movido) {
-      mesas.ignorarClic = true;
-      setTimeout(() => { mesas.ignorarClic = false; });
       if (!mesas.sentando) mesas.seleccion = a.id;
       cambioPlano();
       pintarMesas();
@@ -2397,6 +2455,20 @@
   }
   marcoPlano.addEventListener('pointerup', soltarPieza);
   marcoPlano.addEventListener('pointercancel', soltarPieza);
+
+  // Tocar el piso del salón (sin arrastrar) suelta la pieza elegida.
+  function soltarPiso(e) {
+    const t = mesas.piso;
+    if (!t || e.pointerId !== t.puntero) return;
+    mesas.piso = null;
+    if (e.type !== 'pointerup' || Math.hypot(e.clientX - t.x, e.clientY - t.y) >= 5) return;
+    if (mesas.seleccion && !mesas.sentando) {
+      mesas.seleccion = null;
+      pintarMesas();
+    }
+  }
+  marcoPlano.addEventListener('pointerup', soltarPiso);
+  marcoPlano.addEventListener('pointercancel', soltarPiso);
 
   marcoPlano.addEventListener('keydown', (e) => {
     const g = e.target.closest('[data-pieza]');
@@ -2474,14 +2546,7 @@
   vistaMesas.addEventListener('click', (e) => {
     if (mesas.ignorarClic) return;
     const b = e.target.closest('button');
-    if (!b) {
-      // Tocar el piso del salón suelta la mesa elegida.
-      if (e.target.closest('[data-plano]') && !e.target.closest('[data-pieza], .plano-vacio') && mesas.seleccion && !mesas.sentando) {
-        mesas.seleccion = null;
-        pintarMesas();
-      }
-      return;
-    }
+    if (!b) return;
     // Con teclado (detail 0) el foco sigue a la tarea: lo que se pinta de nuevo no lo pierde.
     const teclado = e.detail === 0;
     const enfocar = (selector, raiz, i) => {
@@ -2585,9 +2650,9 @@
     }
   });
 
-  // ---------- Vistas: invitados, mesas y la boda ----------
+  // ---------- Vistas: invitados, mesas, la boda y el diseño ----------
 
-  const VISTAS = ['invitados', 'mesas', 'tareas', 'presupuesto', 'proveedores', 'boda'];
+  const VISTAS = ['invitados', 'mesas', 'tareas', 'presupuesto', 'proveedores', 'boda', 'diseno'];
 
   function mostrarVista(nombre) {
     const vista = VISTAS.includes(nombre) ? nombre : 'invitados';
@@ -2607,6 +2672,7 @@
     if (vista === 'boda') abrirBoda();
     if (vista === 'mesas') pintarMesas();
     window.Planeacion.mostrar(vista);
+    window.Diseno.mostrar(vista);
   }
 
   addEventListener('hashchange', () => {
@@ -2620,6 +2686,7 @@
     if (!t) return;
     if (t.matches('[data-agregar]')) abrirInvitado();
     else if (t.matches('[data-importar]')) abrirImportar();
+    else if (t.matches('[data-exportar-quienes]')) exportarQuienes();
     else if (t.matches('[data-exportar]')) {
       if (estado.lista.length) exportar();
       else aviso('No hay invitados para exportar todavía.');
@@ -2644,6 +2711,7 @@
       if (nuevo) nuevo.focus();
     } else if (t.matches('[data-salir]')) {
       await D.salir();
+      window.CalendarioGoogle.olvidar();
       estado.lista = [];
       mostrarEntrada();
     } else if (t.dataset.accion) {
@@ -2699,16 +2767,20 @@
   // ---------- Arranque ----------
 
   window.Planeacion.iniciar({ aviso, iconos, cifra, hace, telefonoWa, telefonoBonito, invitados: () => estado.lista });
+  window.Diseno.iniciar({ aviso, iconos, hace, prepararFoto });
 
   (async function arrancar() {
     iconos();
     let sesion = null;
+    let error = '';
     try {
       sesion = await D.sesion();
-    } catch {
+    } catch (e) {
+      // Por ejemplo, al volver de Google con una cuenta sin permiso.
       sesion = null;
+      error = e.message;
     }
-    if (sesion) await mostrarPanel();
-    else mostrarEntrada();
+    if (sesion) await mostrarPanel(sesion);
+    else mostrarEntrada(error);
   })();
 })();

@@ -1,0 +1,291 @@
+/*
+ * Tema Victoriano (pedido de Mario, 2026-11-05): la invitación como una suite
+ * de papelería victoriana. El suelo es terciopelo vino con el forro estampado
+ * asomando como un damasco; las piezas son papel marfil con doble filete
+ * dorado de esquinas cortadas (adornos/marco-victoriano.svg); los títulos van
+ * en caligrafía inglesa con una floritura de 1870 debajo
+ * (adornos/floritura-harpel.svg); las fotos de la pareja, en un álbum con
+ * ventanas ovaladas de bisel dorado; los sellos, de lacre dorado.
+ *
+ * Va después de assets/invitacion.css y solo pinta lo que cambia. Los colores
+ * salen de la paleta (Vino, en assets/estilos.js); el oro trae su respaldo
+ * por si el tema se usa con otra paleta.
+ */
+
+html[data-tema='victoriano'] {
+  --oro-v: var(--oro, #c9a04e);
+  --oro-v-claro: var(--oro-claro, #f1d999);
+  --oro-v-hondo: var(--oro-hondo, #8b6522);
+  /* El oro de las florituras: una hoja dorada con su brillo */
+  --dorado: linear-gradient(100deg, var(--oro-v-hondo), var(--oro-v-claro) 30%, var(--oro-v) 52%, var(--oro-v-claro) 74%, var(--oro-v-hondo));
+  --papel-marfil: radial-gradient(130% 90% at 50% 0%, #fffdf7, var(--algodon) 58%, var(--algodon-hondo));
+}
+
+/* ---------- El suelo: terciopelo con el damasco del forro ---------- */
+
+html[data-tema='victoriano'] body {
+  background:
+    var(--fibra),
+    var(--grano-suelo),
+    radial-gradient(110% 70% at 50% 0%, var(--brillo-suelo), transparent 70%),
+    radial-gradient(150% 100% at 50% 115%, color-mix(in srgb, var(--verde-hondo) 75%, transparent), transparent 62%),
+    linear-gradient(color-mix(in srgb, var(--verde) 90%, transparent), color-mix(in srgb, var(--verde) 90%, transparent)),
+    var(--forro-img) center top / 360px repeat,
+    var(--verde);
+}
+
+/* ---------- Títulos: caligrafía inglesa con la floritura de Harpel ---------- */
+
+html[data-tema='victoriano'] .pliego-titulo {
+  font-family: var(--f-mano);
+  text-transform: none;
+  letter-spacing: 0;
+  font-size: calc(clamp(2.9rem, 1.8rem + 4.4vw, 5rem) * var(--escala-mano));
+  line-height: 1.05;
+  text-align: center;
+}
+
+html[data-tema='victoriano'] .pliego-responder .pliego-titulo {
+  font-size: calc(clamp(2.6rem, 1.6rem + 3.6vw, 4.2rem) * var(--escala-mano));
+}
+
+html[data-tema='victoriano'] .pliego-titulo::after,
+html[data-tema='victoriano'] .album-titulo::after {
+  width: min(250px, 72%);
+  height: auto;
+  aspect-ratio: 232.6 / 33.9;
+  margin: 0.22em auto 0;
+  opacity: 1;
+  background: var(--dorado);
+  -webkit-mask: url(adornos/floritura-harpel.svg) center / contain no-repeat;
+  mask: url(adornos/floritura-harpel.svg) center / contain no-repeat;
+}
+
+html[data-tema='victoriano'] .album-titulo::after {
+  content: '';
+  display: block;
+  width: min(300px, 80%);
+}
+
+/* ---------- El papel: marfil con doble filete dorado ---------- */
+
+html[data-tema='victoriano'] .tarjeta {
+  background: var(--papel-claro), var(--papel-marfil);
+  border-radius: 2px;
+}
+
+html[data-tema='victoriano'] .tarjeta::before {
+  inset: 7px;
+  border: 22px solid transparent;
+  border-image: url(adornos/marco-victoriano.svg) 40 stretch;
+  box-shadow: none;
+}
+
+html[data-tema='victoriano'] .capitulo-titulo {
+  font-family: var(--f-mano);
+  text-transform: none;
+  letter-spacing: 0;
+  font-size: calc(2.3rem * var(--escala-mano));
+  line-height: 1.1;
+  color: var(--verde-forro);
+}
+
+/* ---------- La tarjeta de la portada ---------- */
+
+html[data-tema='victoriano'] .tarjeta-invitacion::before {
+  inset: 12px;
+  border-width: 30px;
+  outline: 0;
+}
+
+html[data-tema='victoriano'] .nombre {
+  font-family: var(--f-mano);
+  text-transform: none;
+  letter-spacing: 0;
+  font-size: calc(clamp(3rem, min(15vw, 8svh), 5.6rem) * var(--escala-mano));
+  line-height: 1;
+  color: var(--tinta);
+}
+
+html[data-tema='victoriano'] .y {
+  color: var(--oro-v-hondo);
+}
+
+html[data-tema='victoriano'] .retrato-marco {
+  outline: 1.5px solid var(--oro-v);
+  outline-offset: 6px;
+}
+
+/* ---------- El álbum: una página con ventanas ovaladas ---------- */
+
+html[data-tema='victoriano'] .album-pagina {
+  gap: clamp(18px, 3vw, 30px);
+  padding: clamp(44px, 6vw, 84px) clamp(30px, 5vw, 76px) clamp(48px, 6vw, 88px);
+  background: var(--papel-claro), var(--papel-marfil);
+  border-radius: 3px;
+  box-shadow: var(--sombra-tarjeta);
+}
+
+html[data-tema='victoriano'] .album-pagina::before {
+  content: '';
+  position: absolute;
+  inset: 10px;
+  border: 30px solid transparent;
+  border-image: url(adornos/marco-victoriano.svg) 40 stretch;
+  pointer-events: none;
+}
+
+/* Cada ventana: un óvalo cortado en la página, con su bisel dorado */
+html[data-tema='victoriano'] .album-ventana {
+  padding: clamp(6px, 0.8vw, 10px);
+  border-radius: 50%;
+  background: conic-gradient(from 200deg, var(--oro-v-hondo), var(--oro-v-claro), var(--oro-v), var(--oro-v-claro), var(--oro-v-hondo), var(--oro-v-claro), var(--oro-v-hondo));
+  box-shadow:
+    0 0 0 1px color-mix(in srgb, var(--oro-v-hondo) 80%, transparent),
+    0 6px 14px -6px color-mix(in srgb, var(--sombra) 55%, transparent);
+}
+
+/* La foto queda hundida en el óvalo, con la sombra del corte encima */
+html[data-tema='victoriano'] .album-ventana::after {
+  content: '';
+  position: absolute;
+  inset: clamp(6px, 0.8vw, 10px);
+  border-radius: 50%;
+  box-shadow:
+    inset 0 2px 9px color-mix(in srgb, var(--sombra) 55%, transparent),
+    inset 0 0 0 1px color-mix(in srgb, var(--oro-v-hondo) 70%, transparent);
+  pointer-events: none;
+}
+
+html[data-tema='victoriano'] .album-ventana .foto,
+html[data-tema='victoriano'] .album-ventana .foto-marco,
+html[data-tema='victoriano'] .album-ventana .foto-boton,
+html[data-tema='victoriano'] .album-ventana img {
+  border-radius: 50%;
+}
+
+/* Un tono de copia antigua que une las fotos a color con las de blanco y negro */
+html[data-tema='victoriano'] .album-ventana img {
+  filter: sepia(0.16) saturate(0.92) contrast(1.03);
+}
+
+/* Las rosas pintadas en dos esquinas de la página, como en un álbum cromolitografiado */
+html[data-tema='victoriano'] .album-flor {
+  width: clamp(104px, 20vw, 230px);
+  mix-blend-mode: multiply;
+}
+
+html[data-tema='victoriano'] .album-flor-izq {
+  left: clamp(12px, 2vw, 26px);
+  top: clamp(12px, 2vw, 26px);
+  transform: rotate(-14deg);
+}
+
+html[data-tema='victoriano'] .album-flor-der {
+  right: clamp(12px, 2vw, 26px);
+  bottom: clamp(12px, 2vw, 26px);
+  transform: rotate(10deg) scaleX(-1);
+}
+
+html[data-tema='victoriano'] .album-frase {
+  font-family: var(--f-grabada);
+  font-style: normal;
+  text-transform: uppercase;
+  letter-spacing: 0.3em;
+  font-size: clamp(0.82rem, 0.76rem + 0.3vw, 1rem);
+  color: var(--salvia);
+}
+
+/* ---------- El gran día ---------- */
+
+html[data-tema='victoriano'] .calendario-mes caption {
+  margin-bottom: 18px;
+  font-family: var(--f-mano);
+  text-transform: none;
+  letter-spacing: 0;
+  font-size: calc(2.6rem * var(--escala-mano));
+  line-height: 1;
+  color: var(--verde-forro);
+}
+
+html[data-tema='victoriano'] .calendario-nombre {
+  text-transform: capitalize;
+}
+
+html[data-tema='victoriano'] .calendario-mes caption .cifra {
+  font-size: 0.42em;
+  letter-spacing: 0.2em;
+  vertical-align: 0.3em;
+  color: var(--tinta-suave);
+}
+
+html[data-tema='victoriano'] .calendario-mes th {
+  font-family: var(--f-grabada);
+  font-weight: 400;
+  letter-spacing: 0.14em;
+  border-bottom-color: color-mix(in srgb, var(--oro-v) 55%, transparent);
+}
+
+html[data-tema='victoriano'] .calendario-anillo path {
+  stroke: var(--verde-forro);
+}
+
+/* ---------- Responder: el botón dorado ---------- */
+
+html[data-tema='victoriano'] .boton-responder {
+  background: linear-gradient(180deg, #ecd08a, var(--polen) 55%, #a8812f);
+  color: #2b1306;
+  border-radius: 2px;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.55),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.18),
+    0 2px 0 var(--polen-hondo),
+    0 10px 18px -10px color-mix(in srgb, var(--sombra) 70%, transparent);
+}
+
+html[data-tema='victoriano'] .boton-responder:hover:not(:disabled) {
+  background: linear-gradient(180deg, #f4dea4, var(--polen-claro) 55%, #b8903a);
+}
+
+/* ---------- Los sellos: lacre dorado con el monograma ---------- */
+
+html[data-tema='victoriano'] .sobre-sello-cierre,
+html[data-tema='victoriano'] .remite-sello {
+  border-radius: 52% 48% 50% 50% / 49% 53% 47% 51%;
+  background: radial-gradient(circle at 34% 28%, #fbe7ad, #d9b264 22%, #b48a3c 50%, #8b6522 80%, #6b4c17);
+  color: #5c3e10;
+  font-family: var(--f-mano);
+  text-transform: none;
+  text-shadow: 0 1px 0 rgba(255, 238, 196, 0.6), 0 -1px 0 rgba(60, 36, 4, 0.35);
+}
+
+html[data-tema='victoriano'] .sobre-sello-cierre {
+  font-size: calc(var(--sello-cierre) * 0.34);
+  box-shadow:
+    inset 0 0 0 calc(var(--sello-cierre) * 0.07) rgba(0, 0, 0, 0.12),
+    inset 0 2px 3px rgba(255, 255, 255, 0.45),
+    inset 0 -3px 7px rgba(60, 36, 4, 0.4),
+    0 4px 10px rgba(0, 0, 0, 0.5);
+}
+
+html[data-tema='victoriano'] .remite-sello {
+  font-size: 1.6rem;
+  box-shadow:
+    inset 0 0 0 5px rgba(0, 0, 0, 0.12),
+    inset 0 2px 3px rgba(255, 255, 255, 0.45),
+    inset 0 -3px 7px rgba(60, 36, 4, 0.4),
+    0 4px 10px rgba(0, 0, 0, 0.5);
+}
+
+/* ---------- Teléfono ---------- */
+
+@media (max-width: 899px) {
+  html[data-tema='victoriano'] .album-pagina {
+    padding: 52px 26px 56px;
+  }
+
+  html[data-tema='victoriano'] .album-principal {
+    width: 88%;
+    justify-self: center;
+  }
+}

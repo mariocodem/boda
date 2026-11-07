@@ -16,6 +16,9 @@
   const C = window.BODA;
   const CLAVE_LOCAL = 'boda-diego-erika:invitados';
   const CLAVE_SESION_LOCAL = 'boda-diego-erika:panel';
+  // La pestaña del panel que estaba abierta al ir a Google, para volver a ella.
+  const CLAVE_VISTA = 'boda-diego-erika:vista';
+  const Google = () => window.CalendarioGoogle;
   const ALFABETO = 'ABCDEFGHJKMNPQRSTUVWXYZ23456789';
   const SUPABASE_JS = 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js';
 
@@ -35,7 +38,9 @@
   async function sb() {
     if (cliente) return cliente;
     if (!window.supabase) await cargarScript(SUPABASE_JS);
-    cliente = window.supabase.createClient(C.supabase.url, C.supabase.anonKey);
+    // PKCE: al volver de Google llega ?code=… en la dirección, sin tocar el
+    // #pestaña del panel.
+    cliente = window.supabase.createClient(C.supabase.url, C.supabase.anonKey, { auth: { flowType: 'pkce' } });
     return cliente;
   }
 
@@ -69,6 +74,7 @@
       mensaje: f.mensaje || '',
       alergias: f.alergias || '',
       cancion: f.cancion || '',
+      nombresAsistentes: Array.isArray(f.nombres_asistentes) ? f.nombres_asistentes : [],
       mesa: f.mesa || null,
       abiertoEn: f.abierto_en || null,
       respondidoEn: f.respondido_en || null,
@@ -88,6 +94,7 @@
     if ('mensaje' in i) fila.mensaje = i.mensaje || null;
     if ('alergias' in i) fila.alergias = texto(i.alergias, 300);
     if ('cancion' in i) fila.cancion = texto(i.cancion, 120);
+    if ('nombresAsistentes' in i) fila.nombres_asistentes = nombres(i.nombresAsistentes);
     if ('mesa' in i) fila.mesa = limpiarMesa(i.mesa);
     if ('respondidoEn' in i) fila.respondido_en = i.respondidoEn;
     if ('abiertoEn' in i) fila.abierto_en = i.abiertoEn;
@@ -109,9 +116,24 @@
   function traducirError(e) {
     if (!e) return new Error('Algo salió mal.');
     const msg = String(e.message || e);
+    if (/Signups not allowed|signup.*disabled/i.test(msg)) {
+      return new Error('Esa cuenta de Google todavía no tiene usuario en Supabase. Créalo en Authentication → Users con el mismo correo (ver README, «Entrar con Google»).');
+    }
+    if (/provider is not enabled|Unsupported provider/i.test(msg)) {
+      return new Error('Falta activar Google en Supabase (Authentication → Sign In / Providers). Ver README, «Entrar con Google».');
+    }
+    if (/access_denied/i.test(msg)) return new Error('Se canceló la entrada con Google.');
     const falta = /42P01|42703|PGRST202|PGRST204|PGRST205|does not exist|schema cache/i.test(`${msg} ${e.code || ''}`);
     if (/planeacion/.test(msg) && falta) {
       return new Error('Faltan las tareas, el presupuesto y los proveedores en Supabase. Vuelve a ejecutar supabase/esquema.sql.');
+    }
+    // El borrador del diseño va en planeacion con la clave «diseno», que un
+    // esquema viejo no deja guardar.
+    if (/planeacion_clave_check|23514/.test(`${msg} ${e.code || ''}`)) {
+      return new Error('Falta el borrador del diseño en Supabase. Vuelve a ejecutar supabase/esquema.sql.');
+    }
+    if (/nombres_asistentes|p_nombres/.test(msg) && falta) {
+      return new Error('Faltan los nombres de los asistentes en Supabase. Vuelve a ejecutar supabase/esquema.sql.');
     }
     if (/alergias|cancion/.test(msg) && falta) {
       return new Error('Faltan las preguntas de la respuesta en Supabase. Vuelve a ejecutar supabase/esquema.sql.');
@@ -142,6 +164,11 @@
   function texto(v, max) {
     const s = v == null ? '' : String(v).trim();
     return s ? s.slice(0, max) : null;
+  }
+
+  // Quiénes van: un nombre por persona, sin vacíos, hasta «max».
+  function nombres(lista, max = 20) {
+    return (Array.isArray(lista) ? lista : []).map((x) => texto(x, 80)).filter(Boolean).slice(0, max);
   }
 
   function coordenada(v, limite) {
@@ -266,22 +293,52 @@
       respuesta: { alergias: Boolean(x.respuesta && x.respuesta.alergias), cancion: Boolean(x.respuesta && x.respuesta.cancion) },
       fotoPortada: x.fotoPortada ? Object.assign(foto(x.fotoPortada) || {}, { encuadre: encuadre(x.fotoPortada.encuadre) }) : null,
       fotos: fotos(x.fotos, 6),
+      // De qué versión de las fotos de arranque (config.js) vienen estas fotos.
+      fotosArranque: texto(x.fotosArranque, 40),
       estilo: {
         paleta: /^[a-z]{2,20}$/.test((x.estilo && x.estilo.paleta) || '') ? x.estilo.paleta : 'verde',
         letra: /^[a-z]{2,20}$/.test((x.estilo && x.estilo.letra) || '') ? x.estilo.letra : 'grabada',
         // El color de la paleta «libre» (ver Estilos.LIBRE).
         color: /^#[0-9a-f]{6}$/i.test((x.estilo && x.estilo.color) || '') ? x.estilo.color.toLowerCase() : undefined,
+        // La letra del texto, si es otra que la de los títulos.
+        letraTexto: /^[a-z]{2,20}$/.test((x.estilo && x.estilo.letraTexto) || '') ? x.estilo.letraTexto : undefined,
       },
-      // La mariposa de papel dorado; se apaga desde el panel (Estilo).
+      // La mariposa de papel dorado; se apaga desde el panel (Diseño → Tema).
       mariposa: x.mariposa !== false,
+      // El tema, el fondo, los textos y los bloques (ver assets/pagina.js).
+      pagina: window.Pagina.normalizar(x.pagina),
     };
     if (limpio.fotoPortada && !limpio.fotoPortada.url) limpio.fotoPortada = null;
     return limpio;
   }
 
   // Lo guardado desde el panel reemplaza, campo por campo, lo de config.js.
+  // Las fotos de arranque (config.js, con su versión en fotosArranque) son la
+  // excepción: si se pusieron después de lo guardado, reemplazan una vez la
+  // foto principal y las de la pareja guardadas. En cuanto el panel guarda con
+  // esa versión, vuelven a mandar las del panel.
   function mezclarEvento(guardado) {
-    return normalizarEvento(guardado ? Object.assign({}, C, guardado) : C);
+    const g = guardado && C.fotosArranque && guardado.fotosArranque !== C.fotosArranque
+      ? Object.assign({}, guardado, { fotoPortada: C.fotoPortada, fotos: C.fotos, fotosArranque: C.fotosArranque })
+      : guardado;
+    return normalizarEvento(g ? Object.assign({}, C, g) : C);
+  }
+
+  // El borrador de la pestaña «Diseño»: lo que se publica en el evento (la
+  // página, el estilo y la mariposa) y las fotos que se subieron para él.
+  // Es privado: los invitados ven solo lo publicado.
+  const CLAVE_DISENO = 'boda-diego-erika:diseno';
+
+  function normalizarDiseno(d) {
+    if (!d || !d.pagina) return null;
+    const ev = normalizarEvento({ pagina: d.pagina, estilo: d.estilo, mariposa: d.mariposa });
+    return {
+      pagina: ev.pagina,
+      estilo: ev.estilo,
+      mariposa: ev.mariposa,
+      subidas: (Array.isArray(d.subidas) ? d.subidas : []).map(refFoto).filter(Boolean).slice(0, 200),
+      editadoEn: typeof d.editadoEn === 'string' && !Number.isNaN(Date.parse(d.editadoEn)) ? d.editadoEn : null,
+    };
   }
 
   // ---------- Fotos ----------
@@ -381,6 +438,7 @@
       mensaje: i.mensaje,
       alergias: i.alergias || '',
       cancion: i.cancion || '',
+      nombresAsistentes: i.estado === 'confirmado' ? nombres(i.nombresAsistentes) : [],
       respondidoEn: i.respondidoEn,
       mesa: i.estado === 'confirmado' && salonLocal().mostrar ? i.mesa || null : null,
     };
@@ -408,13 +466,19 @@
       // Sin la pregunta en la tarjeta, lo que ya había se queda.
       if (r.alergias != null) i.alergias = texto(r.alergias, 300) || '';
       if (r.cancion != null) i.cancion = texto(r.cancion, 120) || '';
+      // Quiénes van: sin la lista (una tarjeta vieja) lo que había se queda.
+      if (!r.asiste) i.nombresAsistentes = [];
+      else if (r.nombres != null) i.nombresAsistentes = nombres(r.nombres, i.asistentes);
       i.respondidoEn = new Date().toISOString();
       guardarLocal(lista);
       return publico(i);
     },
     async sesion() {
       try {
-        return sessionStorage.getItem(CLAVE_SESION_LOCAL) === '1' ? { correo: 'Modo local' } : null;
+        const v = sessionStorage.getItem(CLAVE_SESION_LOCAL);
+        if (v === '1') return { correo: 'Modo local' };
+        const g = v && JSON.parse(v);
+        return g && g.correo ? { correo: g.correo, nombre: g.nombre || '', google: true } : null;
       } catch {
         return null;
       }
@@ -423,6 +487,17 @@
       if (clave !== C.claveLocal) throw new Error('Esa no es la clave del panel.');
       try { sessionStorage.setItem(CLAVE_SESION_LOCAL, '1'); } catch { /* sin almacenamiento: la sesión dura lo que la página */ }
       return { correo: 'Modo local' };
+    },
+    // Con Google se entra sin la clave: los datos viven en este navegador, así
+    // que la cuenta sirve para saber quién entró y para el calendario.
+    googleDisponible() {
+      return Boolean(Google() && Google().configurado());
+    },
+    async entrarConGoogle() {
+      const p = await Google().entrar();
+      const s = { correo: p.correo, nombre: p.nombre, google: true };
+      try { sessionStorage.setItem(CLAVE_SESION_LOCAL, JSON.stringify(s)); } catch { /* dura lo que la página */ }
+      return Object.assign({ calendario: p.calendario }, s);
     },
     async salir() {
       try { sessionStorage.removeItem(CLAVE_SESION_LOCAL); } catch { /* nada que limpiar */ }
@@ -454,6 +529,7 @@
           mensaje: n.mensaje || '',
           alergias: texto(n.alergias, 300) || '',
           cancion: texto(n.cancion, 120) || '',
+          nombresAsistentes: n.estado === 'confirmado' ? nombres(n.nombresAsistentes, Number(n.asistentes)) : [],
           mesa: limpiarMesa(n.mesa),
           abiertoEn: n.abiertoEn || null,
           respondidoEn: n.respondidoEn || (n.estado && n.estado !== 'pendiente' ? new Date().toISOString() : null),
@@ -476,6 +552,8 @@
       if ('mesa' in cambios) nuevo.mesa = limpiarMesa(cambios.mesa);
       if ('alergias' in cambios) nuevo.alergias = texto(cambios.alergias, 300) || '';
       if ('cancion' in cambios) nuevo.cancion = texto(cambios.cancion, 120) || '';
+      if ('nombresAsistentes' in cambios) nuevo.nombresAsistentes = nombres(cambios.nombresAsistentes, nuevo.asistentes);
+      if (nuevo.estado !== 'confirmado') nuevo.nombresAsistentes = [];
       Object.assign(i, nuevo);
       guardarLocal(lista);
       return i;
@@ -514,6 +592,23 @@
       const id = idFoto();
       await fotosLocales('readwrite', (st) => st.put(blob, id));
       return `local:${id}`;
+    },
+    async diseno() {
+      try {
+        return normalizarDiseno(JSON.parse(localStorage.getItem(CLAVE_DISENO)));
+      } catch {
+        return null;
+      }
+    },
+    async guardarDiseno(d) {
+      const limpio = normalizarDiseno(d);
+      try {
+        if (limpio) localStorage.setItem(CLAVE_DISENO, JSON.stringify(limpio));
+        else localStorage.removeItem(CLAVE_DISENO);
+      } catch {
+        throw new Error('Este navegador no permite guardar datos (¿modo privado?).');
+      }
+      return limpio;
     },
     async salon() {
       return salonLocal();
@@ -564,6 +659,7 @@
       mensaje: f.mensaje || '',
       alergias: f.alergias || '',
       cancion: f.cancion || '',
+      nombresAsistentes: Array.isArray(f.nombres_asistentes) ? f.nombres_asistentes : [],
       respondidoEn: f.respondido_en,
       mesa: f.mesa || null,
     } : null;
@@ -589,18 +685,84 @@
       const extra = {};
       if (r.alergias != null) extra.p_alergias = String(r.alergias).trim().slice(0, 300);
       if (r.cancion != null) extra.p_cancion = String(r.cancion).trim().slice(0, 120);
-      let { data, error } = await s.rpc('responder_invitacion', Object.assign({}, base, extra));
-      // Con el esquema viejo (sin esas preguntas) la respuesta llega igual.
-      if (error && Object.keys(extra).length && /PGRST202|Could not find the function/i.test(`${error.code} ${error.message}`)) {
+      const conNombres = r.nombres != null ? { p_nombres: nombres(r.nombres, r.asistentes) } : {};
+      const sinFuncion = (err) => err && /PGRST202|Could not find the function/i.test(`${err.code} ${err.message}`);
+      let { data, error } = await s.rpc('responder_invitacion', Object.assign({}, base, extra, conNombres));
+      // Con un esquema viejo (sin los nombres, o sin las preguntas) la respuesta llega igual.
+      if (sinFuncion(error) && Object.keys(conNombres).length) {
+        ({ data, error } = await s.rpc('responder_invitacion', Object.assign({}, base, extra)));
+      }
+      if (sinFuncion(error) && Object.keys(extra).length) {
         ({ data, error } = await s.rpc('responder_invitacion', base));
       }
       if (error) throw traducirError(error);
       return publicoDesdeFila(Array.isArray(data) ? data[0] : data);
     },
     async sesion() {
+      // ¿Vuelve de Google? Trae ?code=… (o el error) en la dirección.
+      const params = new URLSearchParams(location.search);
+      const hash = new URLSearchParams(location.hash.slice(1));
+      const vuelta = params.has('code') || params.has('error') || hash.has('error');
+      const limpiarDireccion = () => {
+        if (!vuelta) return;
+        let vista = '';
+        try {
+          vista = sessionStorage.getItem(CLAVE_VISTA) || '';
+          sessionStorage.removeItem(CLAVE_VISTA);
+        } catch { /* sin pestaña guardada */ }
+        history.replaceState(null, '', location.pathname + (/^#[a-z]+$/.test(vista) ? vista : ''));
+      };
+      const codigoFallo = params.get('error') || hash.get('error') || '';
+      const detalleFallo = params.get('error_description') || hash.get('error_description') || '';
+      const fallo = [detalleFallo, codigoFallo && `(${codigoFallo})`].filter(Boolean).join(' ');
       const s = await sb();
       const { data } = await s.auth.getSession();
-      return data.session ? { correo: data.session.user.email } : null;
+      limpiarDireccion();
+      if (fallo && !data.session) throw traducirError(new Error(fallo));
+      const sesion = data.session;
+      if (!sesion) return null;
+      // Una cuenta de Google cualquiera puede entrar a Supabase: el panel es
+      // solo para las de la tabla administradores.
+      const { data: esAdmin, error } = await s.rpc('es_admin');
+      if (error) throw traducirError(error);
+      if (!esAdmin) {
+        await s.auth.signOut();
+        throw new Error(`La cuenta ${sesion.user.email} no está autorizada para el panel. Agrégala a la tabla administradores (ver README).`);
+      }
+      const meta = sesion.user.user_metadata || {};
+      const proveedores = (sesion.user.app_metadata && sesion.user.app_metadata.providers) || [];
+      const google = proveedores.includes('google');
+      // El permiso del calendario solo llega justo al volver de Google.
+      if (Google()) await Google().recibir(vuelta ? sesion.provider_token : null, sesion.user.email, meta.full_name || meta.name || '');
+      return { correo: sesion.user.email, nombre: meta.full_name || meta.name || '', google };
+    },
+    // Google en Supabase: hace falta el ID de cliente en config.js (para
+    // renovar el permiso del calendario) y Google activo en el proyecto.
+    async googleDisponible() {
+      if (!Google() || !Google().configurado()) return false;
+      try {
+        const r = await fetch(`${C.supabase.url.replace(/\/+$/, '')}/auth/v1/settings`, { headers: { apikey: C.supabase.anonKey } });
+        const ajustes = await r.json();
+        return Boolean(ajustes && ajustes.external && ajustes.external.google);
+      } catch {
+        return false;
+      }
+    },
+    // Va a Google y vuelve a admin.html con la sesión (y el permiso del
+    // calendario). La página se va: esta promesa no hace falta esperarla.
+    async entrarConGoogle() {
+      const s = await sb();
+      try { sessionStorage.setItem(CLAVE_VISTA, location.hash); } catch { /* vuelve a la primera pestaña */ }
+      const { error } = await s.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          redirectTo: location.origin + location.pathname,
+          scopes: Google().ALCANCE,
+          queryParams: { prompt: 'select_account' },
+        },
+      });
+      if (error) throw traducirError(error);
+      return { redirigiendo: true };
     },
     async entrar({ correo, clave }) {
       const s = await sb();
@@ -723,6 +885,20 @@
       if (error) throw traducirError(error);
       return limpio;
     },
+    // El borrador va en la tabla planeacion, que solo ven los administradores.
+    async diseno() {
+      const s = await sb();
+      const { data, error } = await s.from('planeacion').select('datos').eq('clave', 'diseno').maybeSingle();
+      if (error) throw traducirError(error);
+      return normalizarDiseno(data && data.datos);
+    },
+    async guardarDiseno(d) {
+      const s = await sb();
+      const limpio = normalizarDiseno(d);
+      const { error } = await s.from('planeacion').upsert({ clave: 'diseno', datos: limpio || {}, actualizado_en: new Date().toISOString() });
+      if (error) throw traducirError(error);
+      return limpio;
+    },
     async subirFoto(blob, carpeta) {
       const s = await sb();
       const ruta = `${carpeta || 'fotos'}/${Date.now().toString(36)}-${idFoto()}.jpg`;
@@ -757,6 +933,8 @@
     responder: envolver((codigo, r) => motor.responder(limpiarCodigo(codigo), r)),
     sesion: envolver(() => motor.sesion()),
     entrar: envolver((cred) => motor.entrar(cred)),
+    googleDisponible: () => Promise.resolve(motor.googleDisponible()).catch(() => false),
+    entrarConGoogle: envolver(() => motor.entrarConGoogle()),
     salir: envolver(() => motor.salir()),
     listar: envolver(() => motor.listar()),
     crear: envolver(async (inv) => (await motor.crearVarios([inv]))[0]),
@@ -769,6 +947,8 @@
     guardarSalon: envolver((plan) => motor.guardarSalon(plan)),
     planeacion: envolver((clave) => motor.planeacion(clave)),
     guardarPlaneacion: envolver((clave, datos) => motor.guardarPlaneacion(clave, datos)),
+    diseno: envolver(() => motor.diseno()),
+    guardarDiseno: envolver((d) => motor.guardarDiseno(d)),
     evento: envolver(() => motor.evento()),
     guardarEvento: envolver((ev) => motor.guardarEvento(ev)),
     eventoBase: () => mezclarEvento(null),

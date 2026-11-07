@@ -228,8 +228,12 @@
     ctx.globalAlpha = 1;
   }
 
+  // En el tema Vino & Marfil (pedido de Mario, 2026-11-06) y con «Animaciones:
+  // ninguna» no hay destellos: el lienzo se oculta y ni se prepara ni se pinta.
+  const apagado = () => doc.dataset.tema === 'vino' || doc.dataset.animacion === 'ninguna';
+
   function cuadro(ms) {
-    pintar(ms / 1000);
+    if (!apagado()) pintar(ms / 1000);
     requestAnimationFrame(cuadro);
   }
 
@@ -243,19 +247,28 @@
     });
   }
 
-  medir();
-  leerPaleta();
-  if ('ResizeObserver' in window) {
-    new ResizeObserver(() => {
-      medir();
-      if (reducido) repintar();
-    }).observe(caja);
-  }
-  // El panel o Supabase pueden cambiar la paleta después de pintar.
-  new MutationObserver(() => {
-    if (leerPaleta() && reducido) repintar();
-  }).observe(doc, { attributes: true, attributeFilter: ['style', 'data-paleta', 'data-color'] });
+  let encendido = false;
+  function encender() {
+    if (encendido || apagado()) return;
+    encendido = true;
+    medir();
+    leerPaleta();
+    if ('ResizeObserver' in window) {
+      new ResizeObserver(() => {
+        medir();
+        if (reducido) repintar();
+      }).observe(caja);
+    }
+    // El panel o Supabase pueden cambiar la paleta después de pintar.
+    new MutationObserver(() => {
+      if (leerPaleta() && reducido) repintar();
+    }).observe(doc, { attributes: true, attributeFilter: ['style', 'data-paleta', 'data-color'] });
 
-  if (reducido) repintar();
-  else requestAnimationFrame(cuadro);
+    if (reducido) repintar();
+    else requestAnimationFrame(cuadro);
+  }
+
+  // Se encienden cuando el tema los usa (puede cambiar al llegar los datos).
+  encender();
+  new MutationObserver(encender).observe(doc, { attributes: true, attributeFilter: ['data-tema', 'data-animacion'] });
 })();
