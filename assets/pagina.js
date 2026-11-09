@@ -211,18 +211,22 @@
       datos: 'vestimenta',
       campos: [
         titulo('Código de vestimenta'),
-        linea('subtitulo', 'Frase debajo del código', 'Queremos que se vean espectaculares y estén cómodos para disfrutar con nosotros.', { max: 200 }),
-        parrafos('ellos', 'Ellos: una idea por línea', { defecto: 'Traje oscuro (azul marino, gris marengo o negro)\nCamisa de vestir\nCorbata\nZapatos de vestir\nAccesorios a gusto', max: 600 }),
-        parrafos('ellas', 'Ellas: una idea por línea', { defecto: 'Vestido largo, midi o de cóctel elegante\nTacones o sandalias elegantes\nAccesorios a gusto para complementar\nBolso pequeño o de mano', max: 600 }),
-        { clave: 'paleta', tipo: 'colores', etiqueta: 'Paleta de colores sugerida', max: 10, ayuda: 'Los atuendos de ejemplo se visten con estos colores.', defecto: [
-          { nombre: 'Durazno empolvado', hex: '#e2a38a' }, { nombre: 'Rosa empolvado', hex: '#d98287' },
-          { nombre: 'Borgoña', hex: '#8c1c33' }, { nombre: 'Malva', hex: '#8e5867' },
-          { nombre: 'Verde salvia', hex: '#a9b48e' }, { nombre: 'Verde oliva', hex: '#56613b' },
-          { nombre: 'Terracota', hex: '#b9562f' }, { nombre: 'Azul marino', hex: '#1f3556' },
+        linea('subtitulo', 'Frase debajo del código', 'Queremos que luzcan espectaculares y cómodos para disfrutar de nuestra celebración al aire libre.', { max: 200 }),
+        parrafos('ellos', 'Ellos: una idea por línea', { defecto: 'Traje oscuro (azul marino, gris marengo o negro)\nCamisa de vestir\nCorbata\nZapatos de vestir (preferiblemente Oxford)\nAccesorios a gusto', max: 600 }),
+        parrafos('ellas', 'Ellas: una idea por línea', { defecto: 'Vestidos largos, cortes midi (a la pantorrilla) o vestidos de cóctel sofisticados\nTacones o sandalias elegantes\nAccesorios a gusto para complementar el look\nBolso tipo clutch o pequeño', max: 600 }),
+        { clave: 'paleta', tipo: 'colores', etiqueta: 'Paleta de colores sugerida', max: 10, ayuda: 'Los círculos de la lámina.', defecto: [
+          { nombre: 'Durazno empolvado', hex: '#dfa58f' }, { nombre: 'Rosa empolvado', hex: '#d58288' },
+          { nombre: 'Borgoña', hex: '#861d38' }, { nombre: 'Malva', hex: '#92566c' },
+          { nombre: 'Verde salvia', hex: '#a7b18c' }, { nombre: 'Verde oliva', hex: '#515c3b' },
+          { nombre: 'Terracota', hex: '#b85231' }, { nombre: 'Azul marino', hex: '#203c56' },
+        ] },
+        { clave: 'atuendos', tipo: 'colores', etiqueta: 'Ejemplos de atuendos: color de cada vestido', max: 4, ayuda: 'Una pareja por color, en orden (hasta 4). El vestido se pinta del color elegido.', defecto: [
+          { nombre: 'Borgoña', hex: '#7a4f4f' }, { nombre: 'Verde oliva', hex: '#75735a' },
+          { nombre: 'Terracota', hex: '#8e462e' }, { nombre: 'Malva', hex: '#996968' },
         ] },
         { clave: 'evitar', tipo: 'colores', etiqueta: 'Colores a evitar', max: 8, defecto: [
-          { nombre: 'Blanco', hex: '#ffffff' }, { nombre: 'Champaña', hex: '#efe0cc' },
-          { nombre: 'Biscotti', hex: '#e2c6a8' }, { nombre: 'Beige', hex: '#e6cfb5' },
+          { nombre: 'Blanco', hex: '#fffaf5' }, { nombre: 'Champagne', hex: '#e9d4c0' },
+          { nombre: 'Biscotti', hex: '#d5b699' }, { nombre: 'Beige', hex: '#dcc4aa' },
         ] },
         linea('notaEvitar', 'Nota de los colores a evitar (opcional)', '', { max: 160 }),
         { clave: 'ideas', tipo: 'enlace', etiqueta: 'Enlace a ideas (opcional)', ayuda: 'Un tablero de Pinterest, por ejemplo. Empieza por https://' },

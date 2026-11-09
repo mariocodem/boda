@@ -51,7 +51,7 @@ window.BODA = {
   itinerario: [],
 
   vestimenta: {
-    codigo: null,   // 'Formal'
+    codigo: 'Formal elegante',
     nota: null,     // 'Evitar el blanco, que es de la novia.' (por ejemplo)
   },
   regalos: null,    // 'Lluvia de sobres el día de la boda.' (por ejemplo)

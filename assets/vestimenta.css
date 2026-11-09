@@ -1,0 +1,523 @@
+/*
+ * Código de vestimenta: la lámina a todo el ancho (bloque «vestimenta»,
+ * HTML en assets/bloques.js → vestimentaLamina()).
+ *
+ * Reproduce la lámina de referencia (referencias-boda/referencias/
+ * CodigoDeVestimenta.png): papel marfil con doble filete beige y dorado,
+ * rosas de Redouté en las cuatro esquinas, títulos romanos en versales con
+ * filetes, Ellos y Ellas a los lados de sus figuras, la paleta sugerida, los
+ * ejemplos de atuendos y los colores a evitar tachados.
+ *
+ * Todo cuelga de .dc-seccion / .dc-lamina con colores y letras propios, así
+ * que se ve igual en cualquier tema y los estilos del tema no se cuelan.
+ */
+
+.dc-seccion {
+  --dc-papel: #f8f3ec;
+  --dc-papel-borde: #f3ece2;
+  --dc-tinta: #3a2e29;
+  --dc-tinta-suave: #5a4a43;
+  --dc-titulo: #5b3a32;
+  --dc-filete: #d8c8b5;
+  --dc-oro: #c4ab88;
+  --dc-tache: #7a5048;
+  --dc-romana: 'Cinzel', 'Cormorant Garamond', 'Trajan Pro', Georgia, serif;
+  --dc-texto: 'Cormorant Garamond', 'EB Garamond', Garamond, Georgia, 'Times New Roman', serif;
+
+  position: relative;
+  width: 100%;
+  margin: var(--entre-pliegos, 72px) 0 0;
+  padding: 0;
+}
+
+.dc-lamina {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  width: 100%;
+  margin: 0;
+  padding:
+    clamp(64px, 6vw + 32px, 120px)
+    clamp(22px, 6vw, 96px)
+    clamp(118px, 4vw + 96px, 160px);
+  color: var(--dc-tinta);
+  font-family: var(--dc-texto);
+  font-weight: 500;
+  text-align: center;
+  background:
+    radial-gradient(ellipse at 50% 30%, rgba(255, 255, 255, 0.55), transparent 70%),
+    radial-gradient(ellipse at 50% 100%, var(--dc-papel-borde), transparent 75%),
+    var(--dc-papel);
+}
+
+/* Doble filete: uno beige y, por dentro, uno dorado apagado. */
+.dc-lamina::before,
+.dc-lamina::after {
+  content: '';
+  position: absolute;
+  z-index: 1;
+  pointer-events: none;
+}
+
+.dc-lamina::before {
+  inset: clamp(10px, 1.4vw, 20px);
+  border: 1px solid var(--dc-filete);
+}
+
+.dc-lamina::after {
+  inset: calc(clamp(10px, 1.4vw, 20px) + 5px);
+  border: 1px solid color-mix(in srgb, var(--dc-oro) 70%, transparent);
+}
+
+/* ---------- Rosas en las esquinas ---------- */
+
+.dc-flor {
+  position: absolute;
+  z-index: 0;
+  width: var(--dc-flor, clamp(104px, 15vw, 250px));
+  aspect-ratio: 536 / 600;
+  pointer-events: none;
+  background: var(--dc-flor-img) center / contain no-repeat;
+  opacity: 0.82;
+  filter: saturate(0.72) brightness(1.04);
+}
+
+/* Arriba a la izquierda, una rama de hojas más pequeña. */
+.dc-flor-ai {
+  --dc-flor-img: url('flores/rosa-alba-foliacea-600.webp');
+  --dc-flor: clamp(90px, 10vw, 170px);
+  top: clamp(-34px, -2vw, -16px);
+  left: clamp(-40px, -2.4vw, -18px);
+  opacity: 0.55;
+  transform: rotate(-38deg);
+}
+
+.dc-flor-ad {
+  --dc-flor-img: url('flores/rosa-alba-regalis-600.webp');
+  top: clamp(-46px, -2.8vw, -20px);
+  right: clamp(-54px, -3.2vw, -24px);
+  transform: rotate(40deg);
+}
+
+.dc-flor-bi {
+  --dc-flor-img: url('flores/rosa-indica-fragrans-600.webp');
+  bottom: clamp(-50px, -3vw, -22px);
+  left: clamp(-50px, -3vw, -22px);
+  transform: rotate(-140deg);
+}
+
+.dc-flor-bd {
+  --dc-flor-img: url('flores/rosa-alba-regalis-600.webp');
+  --dc-flor: clamp(96px, 13vw, 220px);
+  bottom: clamp(-46px, -2.8vw, -20px);
+  right: clamp(-46px, -2.8vw, -20px);
+  transform: rotate(140deg) scaleX(-1);
+}
+
+/* ---------- Contenido ---------- */
+
+.dc-contenido {
+  position: relative;
+  z-index: 2;
+  display: grid;
+  gap: clamp(36px, 3vw + 18px, 64px);
+  width: min(100%, 1180px);
+  margin: 0 auto;
+}
+
+.dc-lamina :is(h2, h3, p, ul, figure) {
+  margin: 0;
+}
+
+.dc-lamina ul {
+  padding: 0;
+  list-style: none;
+}
+
+/* ---------- 1. Encabezado ---------- */
+
+.dc-cabecera {
+  display: grid;
+  justify-items: center;
+  gap: clamp(8px, 0.8vw, 14px);
+}
+
+.dc-titulo {
+  font-family: var(--dc-romana);
+  font-weight: 400;
+  font-size: clamp(1.65rem, 1rem + 2.9vw, 3.4rem);
+  line-height: 1.1;
+  letter-spacing: 0.07em;
+  padding-left: 0.07em;
+  text-transform: uppercase;
+  text-wrap: balance;
+  color: var(--dc-titulo);
+}
+
+.dc-codigo {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: clamp(12px, 1.4vw, 20px);
+  font-family: var(--dc-romana);
+  font-weight: 400;
+  font-size: clamp(1rem, 0.82rem + 0.8vw, 1.55rem);
+  line-height: 1.2;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--dc-tinta);
+}
+
+.dc-codigo::before,
+.dc-codigo::after {
+  content: '';
+  flex: 0 0 clamp(28px, 5vw, 72px);
+  height: 1px;
+  background: var(--dc-filete);
+}
+
+.dc-codigo.por-confirmar {
+  font-style: normal;
+  opacity: 0.7;
+}
+
+.dc-intro {
+  max-width: 36em;
+  margin-top: clamp(4px, 0.6vw, 10px) !important;
+  font-size: clamp(1.08rem, 0.95rem + 0.55vw, 1.45rem);
+  line-height: 1.42;
+  text-wrap: balance;
+  color: var(--dc-tinta);
+}
+
+.dc-nota {
+  max-width: 36em;
+  font-style: italic;
+  font-size: clamp(1rem, 0.92rem + 0.35vw, 1.2rem);
+  color: var(--dc-tinta-suave);
+}
+
+.dc-nota[hidden] {
+  display: none;
+}
+
+/* ---------- 2. Ellos y Ellas ----------
+   Los rótulos y las listas entran a la cuadrícula (display: contents) para
+   que, en el teléfono, cada figura quede entre su rótulo y su lista. */
+
+.dc-ellos-ellas {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 1px minmax(0, 1fr);
+  grid-template-areas:
+    'qa . qb'
+    'fa d fb'
+    'la d lb';
+  column-gap: clamp(14px, 4vw, 28px);
+  row-gap: 14px;
+  text-align: left;
+}
+
+.dc-col {
+  display: contents;
+}
+
+.dc-col-ellos .dc-quien { grid-area: qa; }
+.dc-col-ellas .dc-quien { grid-area: qb; }
+.dc-col-ellos .dc-lista { grid-area: la; }
+.dc-col-ellas .dc-lista { grid-area: lb; }
+.dc-figura-el { grid-area: fa; }
+.dc-figura-ella { grid-area: fb; }
+.dc-divisor { grid-area: d; }
+
+.dc-quien {
+  align-self: end;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--dc-filete);
+  font-family: var(--dc-romana);
+  font-weight: 400;
+  font-size: clamp(1.05rem, 0.85rem + 0.9vw, 1.6rem);
+  line-height: 1.1;
+  letter-spacing: 0.1em;
+  text-align: center;
+  text-transform: uppercase;
+  color: var(--dc-titulo);
+}
+
+.dc-lista {
+  display: grid;
+  align-content: start;
+  gap: clamp(8px, 1vw, 16px);
+  font-size: clamp(0.98rem, 0.88rem + 0.42vw, 1.28rem);
+  line-height: 1.3;
+}
+
+.dc-lista li {
+  position: relative;
+  padding-left: 1em;
+  text-wrap: pretty;
+}
+
+.dc-lista li::before {
+  content: '';
+  position: absolute;
+  left: 0.15em;
+  top: 0.62em;
+  width: 0.26em;
+  height: 0.26em;
+  border-radius: 50%;
+  background: var(--dc-tinta);
+}
+
+.dc-figura {
+  display: flex;
+  justify-content: center;
+  align-items: flex-end;
+}
+
+.dc-figura img,
+.dc-atuendos img {
+  display: block;
+  height: auto;
+  max-width: 100%;
+}
+
+.dc-figura img {
+  width: auto;
+  height: clamp(250px, 62vw, 330px);
+}
+
+.dc-divisor {
+  justify-self: center;
+  align-self: stretch;
+  width: 1px;
+  background: linear-gradient(transparent, var(--dc-filete) 8%, var(--dc-filete) 92%, transparent);
+}
+
+/* En pantalla ancha, como en la lámina: lista · figura | figura · lista */
+@media (min-width: 760px) {
+  .dc-ellos-ellas {
+    grid-template-columns: minmax(0, 1.25fr) auto 1px auto minmax(0, 1.25fr);
+    grid-template-rows: auto 1fr;
+    grid-template-areas:
+      'qa fa d fb qb'
+      'la fa d fb lb';
+    column-gap: clamp(18px, 2.6vw, 44px);
+    row-gap: clamp(16px, 1.8vw, 26px);
+    align-items: start;
+  }
+
+  .dc-quien {
+    align-self: start;
+    margin-top: clamp(8px, 2vw, 30px);
+  }
+
+  .dc-figura img {
+    height: clamp(360px, 26vw + 170px, 540px);
+  }
+}
+
+/* ---------- Rótulos con filetes (paleta, ejemplos, a evitar) ---------- */
+
+.dc-bloque {
+  display: grid;
+  gap: clamp(20px, 2vw, 32px);
+}
+
+.dc-rotulo {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: clamp(12px, 1.6vw, 22px);
+  font-family: var(--dc-romana);
+  font-weight: 400;
+  font-size: clamp(0.86rem, 0.72rem + 0.6vw, 1.22rem);
+  line-height: 1.3;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--dc-tinta);
+}
+
+.dc-rotulo span {
+  flex: 0 1 auto;
+  max-width: 30em;
+  text-wrap: balance;
+}
+
+.dc-rotulo::before,
+.dc-rotulo::after {
+  content: '';
+  flex: 1 1 0;
+  min-width: 18px;
+  max-width: 200px;
+  height: 1px;
+  background: var(--dc-filete);
+}
+
+/* ---------- 3. Paleta y 5. colores a evitar ---------- */
+
+.dc-colores {
+  --dc-punto: clamp(52px, 13vw, 64px);
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  justify-items: center;
+  gap: 20px 10px;
+}
+
+.dc-color {
+  display: grid;
+  justify-items: center;
+  align-content: start;
+  gap: 8px;
+  max-width: 7.5em;
+  font-size: clamp(0.92rem, 0.84rem + 0.32vw, 1.12rem);
+  line-height: 1.12;
+  color: var(--dc-tinta);
+}
+
+.dc-circulo {
+  position: relative;
+  display: block;
+  width: var(--dc-punto);
+  aspect-ratio: 1;
+  border-radius: 50%;
+  background: var(--c, transparent);
+  box-shadow: inset 0 0 0 1px rgba(80, 52, 42, 0.12);
+}
+
+/* Una palabra por línea, como en la lámina («Verde / salvia») */
+.dc-color-nombre {
+  width: min-content;
+}
+
+/* La X: dos trazos finos de lado a lado, un poco más largos que el círculo */
+.dc-color-evitar .dc-circulo {
+  box-shadow: inset 0 0 0 1px rgba(80, 52, 42, 0.2);
+}
+
+.dc-color-evitar .dc-circulo::before,
+.dc-color-evitar .dc-circulo::after {
+  content: '';
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 136%;
+  height: 1.4px;
+  background: var(--dc-tache);
+  transform: translate(-50%, -50%) rotate(45deg);
+}
+
+.dc-color-evitar .dc-circulo::after {
+  transform: translate(-50%, -50%) rotate(-45deg);
+}
+
+.dc-colores-evitar {
+  --dc-punto: clamp(54px, 14vw, 76px);
+  width: min(100%, 560px);
+  margin: 0 auto !important;
+}
+
+.dc-nota-evitar {
+  font-style: italic;
+  color: var(--dc-tinta-suave);
+}
+
+@media (min-width: 760px) {
+  .dc-paleta .dc-colores {
+    --dc-punto: clamp(60px, 2.6vw + 36px, 82px);
+    grid-template-columns: repeat(8, minmax(0, 1fr));
+    width: min(100%, 1040px);
+    margin: 0 auto;
+    column-gap: clamp(10px, 1.4vw, 24px);
+  }
+
+  .dc-colores-evitar {
+    --dc-punto: clamp(66px, 2.4vw + 44px, 86px);
+  }
+}
+
+/* ---------- 4. Ejemplos de atuendos ---------- */
+
+.dc-atuendos {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  align-items: end;
+  justify-items: center;
+  gap: clamp(18px, 4vw, 28px) clamp(10px, 3vw, 20px);
+}
+
+.dc-atuendos li {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+}
+
+.dc-atuendos img {
+  width: auto;
+  height: clamp(190px, 50vw, 260px);
+}
+
+/* El vestido, pintado del color elegido: el color de fondo, con las sombras
+   del vestido original encima (hard-light: el gris medio deja el color tal
+   cual, lo oscuro lo sombrea y lo claro lo ilumina), recortado a su silueta. */
+.dc-atuendo {
+  position: relative;
+  display: block;
+  isolation: isolate;
+}
+
+.dc-vestido {
+  position: absolute;
+  inset: 0;
+  background-color: var(--c, #7a4f4f);
+  background-size: 100% 100%;
+  background-repeat: no-repeat;
+  background-blend-mode: hard-light;
+  -webkit-mask-size: 100% 100%;
+  mask-size: 100% 100%;
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
+  pointer-events: none;
+}
+
+@media (min-width: 760px) {
+  .dc-atuendos {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    width: min(100%, 1080px);
+    margin: 0 auto;
+  }
+
+  .dc-atuendos img {
+    height: clamp(240px, 14vw + 130px, 340px);
+  }
+}
+
+/* ---------- Ideas y fotos de referencia ---------- */
+
+.dc-ideas {
+  display: flex;
+  justify-content: center;
+}
+
+.dc-lamina .vestimenta-fotos {
+  margin-top: 0;
+}
+
+/* ---------- Teléfono angosto ---------- */
+
+@media (max-width: 400px) {
+  .dc-lamina {
+    padding-inline: 18px;
+  }
+
+  .dc-ellos-ellas {
+    column-gap: 12px;
+  }
+
+  .dc-lista {
+    font-size: 0.95rem;
+  }
+
+  .dc-colores {
+    column-gap: 6px;
+  }
+}

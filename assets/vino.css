@@ -35,6 +35,7 @@ html[data-tema='vino'] body {
 
 /* Una banda oscura de lado a lado sin cambiar el ancho del bloque. */
 html[data-tema='vino'] .pliego-programa,
+html[data-tema='vino'] .pliego-preguntas,
 html[data-tema='vino'] .pliego-polaroids,
 html[data-tema='vino'] .remite {
   background: var(--v-noche);
@@ -81,14 +82,34 @@ html[data-tema='vino'] .escena-atras {
   z-index: 0;
 }
 
-/* El sobre deja de llenar la pantalla: flota, apaisado, en el centro. Sus
-   piezas se miden contra el propio sobre (cqw/cqh). */
+/* La intro en columna: los textos arriba, el sobre en el espacio que queda
+   libre y los nombres justo debajo, con «Toca el sobre» al pie; nada se
+   monta, sea cual sea la pantalla. assets/invitacion.js (medirIntro) mide
+   lo que ocupan los textos y lo deja en --i-arriba, --i-nombres y --i-abajo;
+   sin eso, valen estos de reserva. */
+html[data-tema='vino'] .escena {
+  --i-top: max(4svh, calc(env(safe-area-inset-top) + 16px));
+  --i-sep: clamp(10px, 2.4svh, 26px);
+  --i-arriba: calc(var(--i-top) + 130px);
+  --i-nombres: 60px;
+  --i-abajo: 70px;
+  /* El alto libre para el sobre, y su ancho (apaisado, 0.68 de alto) */
+  --i-libre: calc(100svh - var(--i-arriba) - var(--i-nombres) - var(--i-abajo) - 3 * var(--i-sep));
+  --sobre-w: min(88vw, 560px, max(170px, var(--i-libre) / 0.68));
+  --sobre-h: calc(var(--sobre-w) * 0.68);
+  /* Centro del sobre: en medio del espacio libre */
+  --sobre-cy: calc(var(--i-arriba) + var(--i-sep) + (100svh - var(--i-arriba) - var(--i-nombres) - var(--i-abajo) - 3 * var(--i-sep)) / 2);
+}
+
+/* El sobre deja de llenar la pantalla: flota, apaisado, en el espacio libre.
+   Sus piezas se miden contra el propio sobre (cqw/cqh). */
 html[data-tema='vino'] .escena-capa .sobre {
   container-type: size;
-  inset: 0;
-  margin: auto;
-  width: min(88vw, 560px, 112svh);
-  height: calc(min(88vw, 560px, 112svh) * 0.68);
+  inset: auto 0;
+  top: max(calc(var(--i-arriba) + var(--i-sep)), calc(var(--sobre-cy) - var(--sobre-h) / 2));
+  margin: 0 auto;
+  width: var(--sobre-w);
+  height: var(--sobre-h);
   --margen: 6cqw;
   --arriba: 7cqh;
   --sello-postal: 17cqw;
@@ -131,6 +152,30 @@ html[data-tema='vino'] .sobre-carta {
   top: 9cqh;
 }
 
+/* El forro de adentro, 1px más chico que el sobre: así su borde claro no se
+   asoma como un hilo alrededor del bolsillo (las dos capas miden lo mismo y
+   el suavizado de los bordes lo dejaba ver). */
+html[data-tema='vino'] .sobre-interior {
+  inset: 1px;
+}
+
+/* Al abrir, el título y los nombres se van antes de que la carta suba: van
+   en la capa de adelante y, si no, quedan pintados encima de la carta. */
+html[data-tema='vino'] .intro-textos,
+html[data-tema='vino'] .intro-nombres {
+  transition: opacity 0.45s ease, translate 0.45s ease;
+}
+
+html[data-tema='vino'].abriendo .intro-textos {
+  opacity: 0;
+  translate: 0 -10px;
+}
+
+html[data-tema='vino'].abriendo .intro-nombres {
+  opacity: 0;
+  translate: 0 10px;
+}
+
 html[data-tema='vino'] .solapa-remite {
   margin-top: 9cqh;
   font-size: calc(6cqw * var(--escala-mano));
@@ -168,24 +213,25 @@ html[data-tema='vino'] .intro-textos {
   position: absolute;
   left: 16px;
   right: 16px;
-  top: max(6svh, calc(env(safe-area-inset-top) + 24px));
+  top: var(--i-top);
   text-align: center;
   color: #f6efe6;
   text-shadow: 0 2px 12px rgba(0, 0, 0, 0.55);
 }
 
+/* Las letras de la intro se achican también con el alto de la pantalla */
 html[data-tema='vino'] .intro-arriba {
   margin: 0;
   max-width: 24ch;
   font-family: var(--f-texto);
-  font-size: clamp(1rem, 0.9rem + 0.6vw, 1.3rem);
+  font-size: clamp(0.88rem, min(0.9rem + 0.6vw, 2.9svh), 1.3rem);
   line-height: 1.3;
 }
 
 html[data-tema='vino'] .intro-frase {
   margin: 0;
   font-family: var(--f-mano);
-  font-size: calc(clamp(2.2rem, 1.6rem + 3vw, 3.6rem) * var(--escala-mano));
+  font-size: calc(clamp(1.8rem, min(1.6rem + 3vw, 7.6svh), 3.6rem) * var(--escala-mano));
   line-height: 1.1;
 }
 
@@ -194,11 +240,12 @@ html[data-tema='vino'] .intro-nombres {
   position: absolute;
   left: 16px;
   right: 16px;
-  top: calc(50% + min(88vw, 560px, 112svh) * 0.34 + 18px);
+  top: calc(max(calc(var(--i-arriba) + var(--i-sep)), calc(var(--sobre-cy) - var(--sobre-h) / 2)) + var(--sobre-h) + var(--i-sep));
   margin: 0;
+  line-height: 1.15;
   text-align: center;
   font-family: var(--f-mano);
-  font-size: calc(clamp(2rem, 1.5rem + 2.6vw, 3.2rem) * var(--escala-mano));
+  font-size: calc(clamp(1.7rem, min(1.5rem + 2.6vw, 6.6svh), 3.2rem) * var(--escala-mano));
   color: #f6efe6;
   text-shadow: 0 2px 12px rgba(0, 0, 0, 0.6);
 }
@@ -766,6 +813,47 @@ html[data-tema='vino'] .dia-hilo {
   background: var(--v-oro);
 }
 
+/* ---------- Preguntas frecuentes: la misma banda del itinerario ---------- */
+
+html[data-tema='vino'] .pliego.pliego-preguntas {
+  --linea: color-mix(in srgb, var(--v-linea) 55%, transparent);
+  /* Sobre la banda oscura, también el aviso de «aún no hay preguntas» */
+  --tinta: #fbf6ee;
+  --tinta-suave: color-mix(in srgb, #f3e6d8 80%, transparent);
+  width: min(100% - 32px, 1080px);
+  margin-inline: auto;
+  padding: 80px 0 88px;
+  color: #f3e6d8;
+  border-block: 0;
+}
+
+html[data-tema='vino'] .pliego-preguntas .pliego-titulo {
+  color: #f3e6d8;
+}
+
+html[data-tema='vino'] .pliego-preguntas .pliego-titulo::after {
+  background: var(--v-linea);
+}
+
+html[data-tema='vino'] .pregunta summary {
+  font-family: var(--f-texto);
+  font-size: clamp(1.12rem, 1.02rem + 0.4vw, 1.3rem);
+  color: #fbf6ee;
+}
+
+html[data-tema='vino'] .pregunta-signo::before,
+html[data-tema='vino'] .pregunta-signo::after {
+  background: var(--v-oro-claro);
+}
+
+html[data-tema='vino'] .pregunta-respuesta p {
+  color: color-mix(in srgb, #f3e6d8 82%, transparent);
+}
+
+html[data-tema='vino'] .pregunta summary:focus-visible {
+  outline-color: var(--v-oro-claro);
+}
+
 /* ---------- Foto con frase (parallax) ---------- */
 
 html[data-tema='vino'] .parallax {
@@ -775,6 +863,12 @@ html[data-tema='vino'] .parallax {
   height: min(80svh, 760px);
   margin-top: var(--entre-pliegos);
   overflow: hidden;
+}
+
+/* Las bandas de lado a lado (itinerario, polaroids, preguntas) y la foto con
+   frase se tocan: sin una franja del fondo del bosque entre ellas. */
+html[data-tema='vino'] :is(.pliego-programa, .pliego-polaroids, .pliego-preguntas, .parallax) + :is(.pliego-programa, .pliego-polaroids, .pliego-preguntas, .parallax) {
+  margin-top: 0;
 }
 
 html[data-tema='vino'] .parallax[hidden] {
@@ -851,14 +945,7 @@ html[data-tema='vino'] .titulo-grabado {
   color: var(--v-hondo);
 }
 
-html[data-tema='vino'] .vestimenta-codigo {
-  font-family: var(--f-mano);
-  font-size: calc(2.2rem * var(--escala-mano));
-  color: var(--v);
-}
-
-html[data-tema='vino'] .silueta,
-html[data-tema='vino'] .vestimenta-rotulo {
+html[data-tema='vino'] .silueta {
   color: var(--v);
 }
 
@@ -905,11 +992,6 @@ html[data-tema='vino'] .social-playlist p {
   margin: 0;
   font-style: italic;
 }
-
-
-
-
-
 
 /* ---------- Cierre: camafeo, frase, «¡Gracias!» y el pie ---------- */
 
@@ -1057,22 +1139,6 @@ html[data-tema='vino'] .sobre-rubrica path {
   stroke: var(--v-oro-claro);
 }
 
-html[data-tema='vino'] .vestimenta-codigo {
-  text-transform: none;
-  letter-spacing: 0;
-  line-height: 1.1;
-}
-
-html[data-tema='vino'] .vestimenta-col ul {
-  padding: 0;
-  list-style: none;
-  text-align: center;
-}
-
-html[data-tema='vino'] .vestimenta-colores {
-  margin-top: 10px;
-}
-
 html[data-tema='vino'] .remite-firma i {
   color: var(--v-oro-claro);
 }
@@ -1147,27 +1213,33 @@ html[data-tema='vino'] {
   --entre-pliegos: clamp(56px, 8vh, 96px);
 }
 
-/* Lo escrito sobre el bosque va en marfil, sea cual sea la paleta. */
-html[data-tema='vino'] body {
-  --tinta-sobre: #f3e6d8;
-  --salvia: #d9b9b9;
-  background: #0f1310;
+/* La página va sobre el mismo marfil de la lámina de vestimenta
+   (2026-11-07; antes, el bosque oscuro): lo escrito directo sobre ella va en
+   tinta vino. Las bandas vino tinto (itinerario, polaroids, preguntas,
+   cierre) y el sobre de la intro siguen igual. */
+html[data-tema='vino'] {
+  --fondo-pagina: #f8f3ec;
+  background: var(--fondo-pagina);
 }
 
-/* El bosque al crepúsculo, quieto detrás de toda la página. */
+html[data-tema='vino'] body {
+  --tinta-sobre: var(--v-hondo, #4a0a12);
+  --salvia: var(--v-linea, #b86a76);
+  background: var(--fondo-pagina);
+}
+
+/* El marfil, quieto detrás de toda la página, con la misma luz de papel
+   que la lámina de vestimenta. */
 html[data-tema='vino'] body::before {
   content: '';
   position: fixed;
   inset: 0;
   z-index: -1;
   pointer-events: none;
-  /* Sin filtros (son caros de pintar): el crepúsculo sale de los velos. */
   background:
-    radial-gradient(120% 55% at 50% 105%, rgba(214, 218, 212, 0.16), transparent 65%),
-    linear-gradient(rgba(16, 21, 19, 0.7), rgba(12, 15, 14, 0.88)),
-    linear-gradient(rgba(70, 82, 76, 0.35), rgba(70, 82, 76, 0.35)),
-    var(--intro-foto, none) center / cover no-repeat,
-    linear-gradient(#1e2a1f, #0d130e);
+    radial-gradient(ellipse at 50% 30%, rgba(255, 255, 255, 0.55), transparent 70%),
+    radial-gradient(ellipse at 50% 100%, #f3ece2, transparent 75%),
+    var(--fondo-pagina);
 }
 
 /* Sin la tarjeta de portada ni las fotos chicas del álbum: después del sobre
@@ -1217,112 +1289,395 @@ html[data-tema='vino'].abriendo .sobre-para-dorso {
   opacity: 0;
 }
 
-/* La tarjeta que sale del sobre al abrirlo, con su filigrana. */
-html[data-tema='vino'] .sobre-carta {
-  background: var(--papel-claro), var(--v-papel);
+/* ==========================================================================
+   El sobre de la intro y la carta que sale de él (2026-11-07)
+   - El sobre, de terciopelo rojo con oro: doble filete dorado, filigrana en
+     las esquinas de abajo y el filo de la solapa dorado.
+   - La carta, blanca con borde vino: un ramo de rosas vino arriba y los
+     nombres en caligrafía vino.
+   Todo se mide contra el sobre (cqw), así que escala con él.
+   ========================================================================== */
+
+html[data-tema='vino'] .escena-capa .sobre {
+  --oro-gala: linear-gradient(135deg, #8b6522 0%, #e9cf8a 28%, #b8913f 50%, #f1d999 74%, #a07a2e 100%);
+  --terciopelo: radial-gradient(ellipse 90% 85% at 50% 65%, #8e1b2c 0%, #66101f 55%, #420713 100%);
+  --vino-carta: #6e1322;
 }
 
+/* ---------- El sobre: el bolsillo de terciopelo ---------- */
+
+html[data-tema='vino'] .sobre-bolsillo {
+  background:
+    var(--pliegues) 0 0 / 100% 100%,
+    var(--grano),
+    var(--terciopelo);
+}
+
+/* Doble filete dorado a lo largo del borde */
+html[data-tema='vino'] .sobre-bolsillo::before {
+  content: '';
+  position: absolute;
+  inset: 3.2cqw;
+  border: 1px solid #d4af66;
+  box-shadow:
+    inset 0 0 0 0.8cqw transparent,
+    inset 0 0 0 calc(0.8cqw + 1px) color-mix(in srgb, #d4af66 70%, transparent);
+  pointer-events: none;
+}
+
+/* Filigrana de oro en las dos esquinas de abajo */
+html[data-tema='vino'] .sobre-bolsillo::after {
+  content: '';
+  position: absolute;
+  inset: 1.4cqw;
+  background: var(--oro-gala);
+  -webkit-mask: url('adornos/esquina-filigrana-bl.svg') left bottom / 15cqw no-repeat, url('adornos/esquina-filigrana-br.svg') right bottom / 15cqw no-repeat;
+  mask: url('adornos/esquina-filigrana-bl.svg') left bottom / 15cqw no-repeat, url('adornos/esquina-filigrana-br.svg') right bottom / 15cqw no-repeat;
+  pointer-events: none;
+}
+
+/* ---------- La solapa: terciopelo con el filo dorado ---------- */
+
+/* El fondo de la solapa es oro; encima, el terciopelo un poco más chico deja
+   ver un filo dorado a lo largo de los dos lados de la V. */
+html[data-tema='vino'] .solapa-forma {
+  background: var(--oro-gala);
+}
+
+html[data-tema='vino'] .solapa-forma::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  clip-path: polygon(1.8% 0, 98.2% 0, 50% 95.5%);
+  background:
+    var(--grano),
+    linear-gradient(to bottom, rgba(255, 255, 255, 0.06), rgba(0, 0, 0, 0.14)),
+    radial-gradient(ellipse 80% 90% at 50% 20%, #861a2a 0%, #5e0d1b 70%, #470915 100%);
+}
+
+/* La cresta de filigrana dorada, arriba al centro de la solapa */
+html[data-tema='vino'] .solapa-forma::before {
+  content: '';
+  position: absolute;
+  z-index: 1;
+  left: 50%;
+  top: 4cqh;
+  width: 26cqw;
+  height: 9cqw;
+  translate: -50% 0;
+  background: var(--oro-gala);
+  -webkit-mask: url('adornos/cresta-filigrana.svg') center top / contain no-repeat;
+  mask: url('adornos/cresta-filigrana.svg') center top / contain no-repeat;
+}
+
+/* ---------- La carta: blanca, con borde vino y un ramo de rosas ---------- */
+
+html[data-tema='vino'] .sobre-carta {
+  overflow: hidden;
+  border: 1.1cqw solid var(--vino-carta);
+  border-bottom: 0;
+  background: var(--papel-claro), #fffdf9;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.9),
+    0 -2px 12px -2px rgba(0, 0, 0, 0.45);
+}
+
+/* Un filete vino fino por dentro del borde */
+html[data-tema='vino'] .sobre-carta::before {
+  inset: 2cqw 2cqw -2px;
+  border: 1px solid color-mix(in srgb, var(--vino-carta) 35%, transparent);
+  border-bottom: 0;
+}
+
+/* El ramo: las láminas de rosas teñidas de vino, asomando por arriba */
 html[data-tema='vino'] .sobre-carta::after {
   content: '';
   position: absolute;
-  inset: 7px 7px 0;
-  background: var(--v);
-  -webkit-mask: url('adornos/esquina-filigrana-tl.svg') left top / 15cqw no-repeat, url('adornos/esquina-filigrana-tr.svg') right top / 15cqw no-repeat, url('adornos/cresta-filigrana.svg') center top / 28cqw no-repeat;
-  mask: url('adornos/esquina-filigrana-tl.svg') left top / 15cqw no-repeat, url('adornos/esquina-filigrana-tr.svg') right top / 15cqw no-repeat, url('adornos/cresta-filigrana.svg') center top / 28cqw no-repeat;
+  z-index: 1;
+  left: -4cqw;
+  right: -4cqw;
+  top: -2cqw;
+  height: 22cqw;
+  pointer-events: none;
+  /* Varias láminas encimadas para un ramo tupido de lado a lado */
+  background:
+    url('flores/rosa-centifolia-foliacea-600.webp') 50% -9cqw / 30cqw auto no-repeat,
+    url('flores/rosa-indica-fragrans-600.webp') 22% -8cqw / 30cqw auto no-repeat,
+    url('flores/rosa-centifolia-foliacea-600.webp') 80% -7cqw / 29cqw auto no-repeat,
+    url('flores/rosa-multiflora-carnea-600.webp') left -6cqw top -6cqw / 30cqw auto no-repeat,
+    url('flores/rosa-indica-fragrans-600.webp') right -6cqw top -7cqw / 30cqw auto no-repeat,
+    url('flores/rosa-multiflora-carnea-600.webp') 64% -4cqw / 26cqw auto no-repeat,
+    url('flores/rosa-alba-regalis-600.webp') 36% -5cqw / 24cqw auto no-repeat;
+  /* Rosas teñidas de vino hondo y hojas oscuras */
+  filter: sepia(0.35) saturate(2.5) brightness(0.52) contrast(1.28) hue-rotate(-16deg);
+  -webkit-mask: linear-gradient(to bottom, #000 70%, transparent);
+  mask: linear-gradient(to bottom, #000 70%, transparent);
 }
 
-/* ---------- La invitación formal sale de su sobre ---------- */
+html[data-tema='vino'] .carta-gala {
+  display: grid;
+  justify-items: center;
+  gap: 0.6cqw;
+  position: absolute;
+  z-index: 2;
+  left: 6cqw;
+  right: 6cqw;
+  top: 19.5cqw;
+  text-align: center;
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+html[data-tema='vino'] .carta-gala p {
+  margin: 0;
+}
+
+html[data-tema='vino'] .carta-gala-arriba {
+  font-family: var(--f-grabada);
+  font-size: 2.2cqw;
+  letter-spacing: 0.32em;
+  padding-left: 0.32em;
+  text-transform: uppercase;
+  color: color-mix(in srgb, var(--vino-carta) 80%, #000);
+}
+
+/* Los nombres lado a lado en caligrafía vino, con el & en medio */
+html[data-tema='vino'] .carta-gala-nombres {
+  display: flex;
+  align-items: baseline;
+  justify-content: center;
+  gap: 2.4cqw;
+  font-family: var(--f-mano);
+  font-size: calc(8.4cqw * var(--escala-mano));
+  line-height: 1.05;
+  white-space: nowrap;
+  color: var(--vino-carta);
+}
+
+html[data-tema='vino'] .carta-gala-nombres i {
+  font-family: var(--f-mano);
+  font-style: normal;
+  font-size: 0.8em;
+  color: #b8913f;
+}
+
+/* ---------- La invitación formal: el sobre abierto y la carta al lado ----------
+   Después de abrir la intro, el mismo sobre de terciopelo rojo con oro, ya
+   abierto y dejado a un lado, y la carta blanca con borde vino y su ramo,
+   como si la hubieran sacado y dejado sobre la mesa. De fondo, el bosque al
+   atardecer (assets/fondos/arboles-fondo.jpg). */
 
 html[data-tema='vino'] .pliego-formal {
   display: block;
   width: 100%;
   margin-top: 0;
-  padding: clamp(72px, 11vh, 120px) 16px clamp(40px, 6vh, 72px);
+  padding: clamp(72px, 11vh, 120px) 16px clamp(64px, 9vh, 104px);
+  overflow: hidden;
   background:
-    var(--grano),
-    radial-gradient(80% 60% at 50% 35%, rgba(255, 255, 255, 0.28), transparent 70%),
-    linear-gradient(#a3a6a1, #7d807c);
+    linear-gradient(to bottom, rgba(20, 8, 10, 0.18), rgba(20, 8, 10, 0.05) 40%, rgba(20, 8, 10, 0.32)),
+    url('fondos/arboles-fondo.jpg') center 40% / cover no-repeat,
+    #6f6a63;
   box-shadow: inset 0 24px 40px -24px rgba(0, 0, 0, 0.45);
 }
 
+/* La mesa: el sobre arriba a la izquierda y la carta abajo, montada un poco
+   sobre él; en pantalla ancha, lado a lado. */
 html[data-tema='vino'] .formal-sobre {
+  --vino-carta: #6e1322;
   position: relative;
-  width: min(100%, 540px);
+  display: grid;
+  justify-items: center;
+  width: min(100%, 1040px);
   margin: 0 auto;
-  padding-bottom: 150px;
+  padding: 0;
 }
 
-/* El sobre por detrás, con la solapa abierta hacia arriba. */
+/* ---------- El sobre abierto ---------- */
+
+html[data-tema='vino'] .formal-envoltura {
+  container-type: inline-size;
+  position: relative;
+  z-index: 0;
+  justify-self: start;
+  width: min(66%, 320px);
+  aspect-ratio: 1 / 0.68;
+  margin: calc(min(60vw, 320px) * 0.34) 0 0 3%;
+  rotate: -8deg;
+  filter: drop-shadow(0 18px 22px rgba(20, 5, 8, 0.45)) drop-shadow(0 3px 5px rgba(20, 5, 8, 0.3));
+}
+
+/* La solapa abierta hacia arriba, con su filo dorado */
+html[data-tema='vino'] .formal-solapa {
+  position: absolute;
+  left: 0;
+  bottom: 100%;
+  display: block;
+  width: 100%;
+  height: 50%;
+  margin-bottom: -1px;
+  overflow: visible;
+}
+
+/* El forro de adentro, que se ve por la V del bolsillo */
 html[data-tema='vino'] .formal-sobre-fondo {
   position: absolute;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  height: 250px;
-  border-radius: 3px;
-  background: var(--fibra), linear-gradient(var(--v-hondo), color-mix(in srgb, var(--v-hondo) 80%, #000));
+  inset: 0;
+  background:
+    linear-gradient(to bottom, rgba(30, 0, 8, 0.55), rgba(30, 0, 8, 0.15) 55%),
+    var(--forro-img, none) 0 0 / 30cqw,
+    #4a0915;
 }
 
-html[data-tema='vino'] .formal-sobre-fondo::before {
+/* El bolsillo de terciopelo, con doble filete y filigrana de oro */
+html[data-tema='vino'] .formal-bolsillo {
+  position: absolute;
+  inset: 0;
+  clip-path: polygon(0 0, 50% 50%, 100% 0, 100% 100%, 0 100%);
+  background:
+    var(--pliegues) 0 0 / 100% 100%,
+    var(--grano),
+    radial-gradient(ellipse 90% 85% at 50% 65%, #8e1b2c 0%, #66101f 55%, #420713 100%);
+}
+
+html[data-tema='vino'] .formal-bolsillo::before {
   content: '';
   position: absolute;
-  left: 0;
-  right: 0;
-  bottom: 100%;
-  height: 150px;
-  clip-path: polygon(0 100%, 50% 0, 100% 100%);
-  background: var(--fibra), linear-gradient(color-mix(in srgb, var(--v) 85%, #000), var(--v-hondo));
+  inset: 3.2cqw;
+  border: 1px solid #d4af66;
+  box-shadow:
+    inset 0 0 0 0.8cqw transparent,
+    inset 0 0 0 calc(0.8cqw + 1px) color-mix(in srgb, #d4af66 70%, transparent);
 }
 
-html[data-tema='vino'] .tarjeta-formal {
+html[data-tema='vino'] .formal-bolsillo::after {
+  content: '';
+  position: absolute;
+  inset: 1.4cqw;
+  background: linear-gradient(135deg, #8b6522 0%, #e9cf8a 28%, #b8913f 50%, #f1d999 74%, #a07a2e 100%);
+  -webkit-mask: url('adornos/esquina-filigrana-bl.svg') left bottom / 15cqw no-repeat, url('adornos/esquina-filigrana-br.svg') right bottom / 15cqw no-repeat;
+  mask: url('adornos/esquina-filigrana-bl.svg') left bottom / 15cqw no-repeat, url('adornos/esquina-filigrana-br.svg') right bottom / 15cqw no-repeat;
+}
+
+/* El filo dorado de la V del bolsillo */
+html[data-tema='vino'] .formal-bolsillo-filo {
+  position: absolute;
+  inset: 0;
+  display: block;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+
+/* ---------- La carta: blanca, con borde vino y el ramo arriba ---------- */
+
+html[data-tema='vino'] .formal-sobre .tarjeta-formal {
+  /* El ancho de la carta: con él se mide el ramo (cqw) y el aire de arriba */
+  --ancho-carta: min(100vw - 72px, 400px);
+  container-type: inline-size;
+  box-sizing: border-box;
   position: relative;
   z-index: 1;
-  width: 90%;
-  margin: 0 auto;
-  padding-bottom: 130px;
-  transform: translateY(170px);
-  transition: transform 1.3s cubic-bezier(.2, .7, .2, 1);
+  justify-self: end;
+  width: var(--ancho-carta);
+  margin: -6% 4% 0 0;
+  padding: calc(var(--ancho-carta) * 0.4) 26px 44px;
+  border: 9px solid var(--vino-carta);
+  border-radius: 2px;
+  background: var(--papel-claro), #fffdf9;
+  box-shadow:
+    0 30px 44px -26px rgba(20, 5, 8, 0.6),
+    0 4px 10px -4px rgba(20, 5, 8, 0.35);
+  /* Recién sacada del sobre: llega desde él y se acomoda */
+  translate: -18% -30%;
+  rotate: -10deg;
+  opacity: 0;
+  transition:
+    translate 1.3s cubic-bezier(.2, .7, .2, 1),
+    rotate 1.3s cubic-bezier(.2, .7, .2, 1),
+    opacity 0.5s ease;
   animation: none;
 }
 
 html[data-tema='vino'] .formal-sobre.fuera .tarjeta-formal {
-  transform: none;
+  translate: 0 0;
+  rotate: 2.5deg;
+  opacity: 1;
 }
 
-/* El bolsillo de adelante, con su corte en V. */
-html[data-tema='vino'] .formal-bolsillo {
-  position: absolute;
-  z-index: 2;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  height: 250px;
-  border-radius: 0 0 3px 3px;
-  clip-path: polygon(0 0, 50% 34%, 100% 0, 100% 100%, 0 100%);
+/* Un filete vino fino por dentro del borde */
+html[data-tema='vino'] .tarjeta-formal::before {
+  inset: 8px;
+  border: 1px solid color-mix(in srgb, var(--vino-carta) 30%, transparent);
+}
+
+/* El ramo de rosas vino, de lado a lado arriba (en lugar de la filigrana) */
+html[data-tema='vino'] .tarjeta-formal .filigrana {
+  inset: -2px -2cqw auto;
+  height: 38cqw;
   background:
-    var(--fibra),
-    linear-gradient(160deg, rgba(255, 255, 255, 0.08), transparent 40%),
-    linear-gradient(var(--v), var(--v-hondo));
-  filter: drop-shadow(0 -2px 3px rgba(0, 0, 0, 0.25));
+    url('flores/rosa-centifolia-foliacea-600.webp') 50% -13cqw / 32cqw auto no-repeat,
+    url('flores/rosa-indica-fragrans-600.webp') 18% -11.5cqw / 32cqw auto no-repeat,
+    url('flores/rosa-centifolia-foliacea-600.webp') 84% -10cqw / 30cqw auto no-repeat,
+    url('flores/rosa-multiflora-carnea-600.webp') left -8.5cqw top -8.5cqw / 32cqw auto no-repeat,
+    url('flores/rosa-indica-fragrans-600.webp') right -9cqw top -10.5cqw / 32cqw auto no-repeat,
+    url('flores/rosa-multiflora-carnea-600.webp') 66% -6.4cqw / 28cqw auto no-repeat,
+    url('flores/rosa-alba-regalis-600.webp') 34% -7.7cqw / 26cqw auto no-repeat;
+  filter: sepia(0.35) saturate(2.5) brightness(0.52) contrast(1.28) hue-rotate(-16deg);
+  -webkit-mask: linear-gradient(to bottom, #000 68%, transparent);
+  mask: linear-gradient(to bottom, #000 68%, transparent);
 }
 
+/* El lacre quedó roto al abrir el sobre: la carta va sin él */
 html[data-tema='vino'] .formal-lacre {
-  position: absolute;
-  z-index: 3;
-  left: 50%;
-  top: -24px;
-  display: grid;
-  place-items: center;
-  width: 58px;
-  height: 58px;
-  margin-left: -29px;
-  border-radius: 47% 53% 50% 50% / 52% 48% 52% 48%;
-  background: var(--v-dorado);
-  font-family: var(--f-mano);
-  font-size: 1.5rem;
-  letter-spacing: -0.04em;
-  color: #6e4b14;
-  box-shadow: inset 0 -3px 6px rgba(110, 75, 20, 0.45), 0 3px 8px rgba(0, 0, 0, 0.4);
+  display: none;
+}
+
+html[data-tema='vino'] .tarjeta-formal :is(.formal-encabezado, .formal-rotulo, .formal-fecha) {
+  color: color-mix(in srgb, var(--vino-carta) 85%, #000);
+}
+
+html[data-tema='vino'] .tarjeta-formal .formal-nombres {
+  color: var(--vino-carta);
+}
+
+html[data-tema='vino'] .tarjeta-formal .formal-nombres i {
+  color: #b8913f;
+}
+
+/* En pantalla ancha: el sobre a la izquierda y la carta a su derecha */
+@media (min-width: 860px) {
+  html[data-tema='vino'] .formal-sobre {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1.05fr);
+    align-items: center;
+  }
+
+  html[data-tema='vino'] .formal-envoltura {
+    justify-self: end;
+    width: min(100%, 430px);
+    margin: 150px -40px 0 0;
+    rotate: -9deg;
+  }
+
+  html[data-tema='vino'] .formal-sobre .tarjeta-formal {
+    --ancho-carta: min(46vw, 470px);
+    justify-self: start;
+    margin: 0;
+    padding-inline: 30px;
+    padding-bottom: 48px;
+    translate: -55% 8%;
+    rotate: -12deg;
+  }
+
+  html[data-tema='vino'] .formal-sobre.fuera .tarjeta-formal {
+    translate: 0 0;
+    rotate: 2.5deg;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html[data-tema='vino'] .tarjeta-formal {
+    transition: none;
+  }
 }
 
 /* ---------- Polaroids: a color, grandes, entran desde la izquierda ---------- */
@@ -1389,60 +1744,6 @@ html[data-tema='vino'] .tarjeta {
 
 html[data-tema='vino'] .tarjeta-calendario {
   width: min(100%, 600px);
-}
-
-/* ---------- Vestimenta: la lámina ---------- */
-
-html[data-tema='vino'] .vegetal-vestimenta {
-  width: min(100%, 980px);
-  padding: 56px clamp(20px, 5vw, 64px) 52px;
-  gap: 30px;
-}
-
-/* Rosas de Redouté en dos esquinas, como en las láminas de vestimenta. */
-html[data-tema='vino'] .vegetal-vestimenta::after {
-  content: '';
-  position: absolute;
-  inset: -18px;
-  pointer-events: none;
-  background:
-    url('flores/rosa-alba-regalis-600.webp') right top / clamp(96px, 16vw, 170px) no-repeat,
-    url('flores/rosa-damascena-subalba-600.webp') left bottom / clamp(104px, 18vw, 190px) no-repeat;
-}
-
-html[data-tema='vino'] .vestimenta-codigo {
-  display: flex;
-  align-items: center;
-  gap: 16px;
-  margin-top: -14px;
-  font-family: var(--f-grabada);
-  font-size: clamp(0.95rem, 0.85rem + 0.5vw, 1.2rem);
-  letter-spacing: 0.22em;
-  text-transform: uppercase;
-  color: var(--v-hondo);
-}
-
-html[data-tema='vino'] .vestimenta-codigo::before,
-html[data-tema='vino'] .vestimenta-codigo::after {
-  content: '';
-  flex: 1;
-  height: 1px;
-  background: color-mix(in srgb, var(--v) 40%, transparent);
-}
-
-html[data-tema='vino'] .vestimenta-col ul {
-  padding-left: 1.1em;
-  list-style: disc;
-  text-align: left;
-}
-
-html[data-tema='vino'] .vestimenta-col li::marker {
-  color: var(--v);
-}
-
-html[data-tema='vino'] .vestimenta-rotulo,
-html[data-tema='vino'] .rotulo-filetes {
-  color: var(--v-hondo);
 }
 
 /* ---------- El cierre sobre damasco vino ---------- */

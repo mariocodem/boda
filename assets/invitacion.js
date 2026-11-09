@@ -1629,6 +1629,7 @@
       if (!reducido) fuentesListas().then(() => { if (ramoSvg) Ramo.florecer(ramoSvg); });
     } else {
       $('#sobre').addEventListener('click', abrir);
+      medirIntro();
     }
 
     $('[data-volver]').addEventListener('click', () => {
@@ -1641,6 +1642,38 @@
     cargarSalon();
     cargar();
     pedirCuadro();
+  }
+
+  /*
+   * La intro del sobre (tema Vino & Marfil): mide lo que ocupan los textos de
+   * arriba, los nombres y «Toca el sobre» y lo deja en variables de #escena,
+   * para que vino.css acomode el sobre en el espacio libre sin taparlos. Se
+   * vuelve a medir si cambian de tamaño (otra pantalla, la letra que llega,
+   * un texto nuevo desde el panel).
+   */
+  function medirIntro() {
+    const escena = $('#escena');
+    const textos = $('.intro-textos');
+    const nombres = $('.intro-nombres');
+    const pista = $('#escena-pista');
+    if (!escena || !textos || !pista) return;
+    const medir = () => {
+      if (!doc.classList.contains('intro') || doc.classList.contains('abriendo')) return;
+      const alto = window.innerHeight;
+      const t = textos.getBoundingClientRect();
+      const p = pista.getBoundingClientRect();
+      const n = nombres && getComputedStyle(nombres).display !== 'none' ? nombres.offsetHeight : 0;
+      escena.style.setProperty('--i-arriba', `${Math.ceil(t.bottom)}px`);
+      escena.style.setProperty('--i-nombres', `${Math.ceil(n)}px`);
+      escena.style.setProperty('--i-abajo', `${Math.ceil(alto - p.top)}px`);
+    };
+    medir();
+    if ('ResizeObserver' in window) {
+      const ro = new ResizeObserver(medir);
+      [textos, nombres, pista].filter(Boolean).forEach((el) => ro.observe(el));
+    }
+    addEventListener('resize', medir);
+    fuentesListas().then(medir);
   }
 
   iniciar();
