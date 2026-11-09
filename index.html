@@ -23,14 +23,17 @@
   <!-- Las letras de base no frenan el primer cuadro: se cargan aparte (display=swap). -->
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Castoro:ital@0;1&family=Castoro+Titling&family=Hanken+Grotesk:wght@400;500;600;700&family=Rouge+Script&display=swap" media="print" onload="this.media='all'">
   <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Castoro:ital@0;1&family=Castoro+Titling&family=Hanken+Grotesk:wght@400;500;600;700&family=Rouge+Script&display=swap"></noscript>
-  <link rel="stylesheet" href="assets/base.css?v=20261107">
-  <link rel="stylesheet" href="assets/invitacion.css?v=20261107">
-  <link rel="stylesheet" href="assets/victoriano.css?v=20261107">
-  <link rel="stylesheet" href="assets/mariposa.css?v=20261107">
-  <link rel="stylesheet" href="assets/vino.css?v=20261107">
+  <link rel="stylesheet" href="assets/base.css?v=20261109">
+  <link rel="stylesheet" href="assets/invitacion.css?v=20261109">
+  <link rel="stylesheet" href="assets/victoriano.css?v=20261109">
+  <link rel="stylesheet" href="assets/mariposa.css?v=20261109">
+  <link rel="stylesheet" href="assets/vino.css?v=20261109">
+  <!-- Código de vestimenta: la lámina con sus propias letras (Cinzel y Cormorant), en cualquier tema -->
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;500&family=Cormorant+Garamond:ital,wght@0,500;0,600;1,500&display=swap" media="print" onload="this.media='all'">
+  <link rel="stylesheet" href="assets/vestimenta.css?v=20261109">
   <!-- El estilo (colores y letra) se aplica antes de pintar -->
-  <script src="assets/config.js?v=20261107"></script>
-  <script src="assets/estilos.js?v=20261107"></script>
+  <script src="assets/config.js?v=20261109"></script>
+  <script src="assets/estilos.js?v=20261109"></script>
   <script>Estilos.arrancar();
     // El tema de la última visita (Vino & Marfil la primera): así el sobre
     // tiene su tamaño desde el primer cuadro.
@@ -61,7 +64,13 @@
     <div class="escena-capa escena-atras" aria-hidden="true">
       <div class="sobre sobre-atras" data-cara="frente">
         <div class="sobre-interior"></div>
-        <div class="sobre-carta"></div>
+        <div class="sobre-carta">
+          <!-- Vino & Marfil: la carta de gala que sube al abrir el sobre (terciopelo vino y oro) -->
+          <div class="carta-gala">
+            <p class="carta-gala-arriba">Nos casamos</p>
+            <p class="carta-gala-nombres"><span>Diego</span> <i>&amp;</i> <span>Erika</span></p>
+          </div>
+        </div>
       </div>
     </div>
     <div class="escena-capa escena-delante">
@@ -178,15 +187,15 @@
     </div>
   </dialog>
 
-  <script src="assets/destellos.js?v=20261107"></script>
-  <script src="assets/pagina.js?v=20261107"></script>
-  <script src="assets/datos.js?v=20261107"></script>
-  <script src="assets/papeleria.js?v=20261107"></script>
-  <script src="assets/bloques.js?v=20261107"></script>
-  <script src="assets/salon.js?v=20261107"></script>
-  <script src="assets/ramo.js?v=20261107"></script>
-  <script src="assets/mariposa.js?v=20261107"></script>
-  <script src="assets/musica.js?v=20261107"></script>
-  <script src="assets/invitacion.js?v=20261107"></script>
+  <script src="assets/destellos.js?v=20261109"></script>
+  <script src="assets/pagina.js?v=20261109"></script>
+  <script src="assets/datos.js?v=20261109"></script>
+  <script src="assets/papeleria.js?v=20261109"></script>
+  <script src="assets/bloques.js?v=20261109"></script>
+  <script src="assets/salon.js?v=20261109"></script>
+  <script src="assets/ramo.js?v=20261109"></script>
+  <script src="assets/mariposa.js?v=20261109"></script>
+  <script src="assets/musica.js?v=20261109"></script>
+  <script src="assets/invitacion.js?v=20261109"></script>
 </body>
 </html>

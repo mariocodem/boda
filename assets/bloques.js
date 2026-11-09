@@ -46,77 +46,85 @@
   const nombresMano = () => `<span>${esc(C.pareja.uno.nombre)}</span> <i>&amp;</i> <span>${esc(C.pareja.dos.nombre)}</span>`;
   const lineas = (t) => String(t || '').split('\n').map((l) => l.trim().replace(/^[-•·*]\s*/, '')).filter(Boolean).slice(0, 12);
 
-  // Figuras para la vestimenta (dibujo propio): un traje y un vestido que se
-  // visten con los colores de la paleta. hex ya viene validado (#rrggbb).
-  const PIEL = '#e6bd9c';
-  const PIEL_SOMBRA = '#d4a27f';
-  function figuraEl(traje, x = 0) {
-    return `<g transform="translate(${x} 0)">
-      <ellipse cx="50" cy="252" rx="24" ry="3.5" fill="rgba(0,0,0,.14)"/>
-      <path d="M37 136 L34 246 L46.5 246 L50 158 L53.5 246 L66 246 L63 136 Z" fill="${traje}"/>
-      <path d="M50 158 L53.5 246 L66 246 L63 136 L50 136 Z" fill="rgba(0,0,0,.16)"/>
-      <path d="M31.5 244.5h15v5.5H28.5c0-2.7 1.2-4.6 3-5.5zM53.5 244.5h15c1.8.9 3 2.8 3 5.5h-18z" fill="#1c1b1d"/>
-      <path d="M31 62 C35 56.5 42.5 54.5 50 54.5 C57.5 54.5 65 56.5 69 62 L72.5 104 L67 140 L33 140 L27.5 104 Z" fill="${traje}"/>
-      <path d="M30.5 63 C24.5 71 22.5 93 23.5 119 L30.5 119 C30.5 99 32.5 83 35.5 71 Z" fill="${traje}"/>
-      <path d="M69.5 63 C75.5 71 77.5 93 76.5 119 L69.5 119 C69.5 99 67.5 83 64.5 71 Z" fill="${traje}"/>
-      <path d="M69.5 63 C75.5 71 77.5 93 76.5 119 L72 119 C72 99 70 83 66 70 Z" fill="rgba(0,0,0,.16)"/>
-      <path d="M43.5 56 L50 85 L56.5 56 Z" fill="#f6f3ee"/>
-      <path d="M48.6 60 L51.4 60 L53 83 L50 89 L47 83 Z" fill="#26252b"/>
-      <path d="M43.5 56 L50 85 L39.5 70 Z" fill="rgba(0,0,0,.2)"/>
-      <path d="M56.5 56 L50 85 L60.5 70 Z" fill="rgba(0,0,0,.2)"/>
-      <path d="M58.5 73 l5 -1.5 l.6 3 z" fill="#f6f3ee"/>
-      <ellipse cx="27" cy="122" rx="3.6" ry="4.6" fill="${PIEL}"/>
-      <ellipse cx="73" cy="122" rx="3.6" ry="4.6" fill="${PIEL}"/>
-      <path d="M45 43 h10 v13 h-10z" fill="${PIEL_SOMBRA}"/>
-      <ellipse cx="50" cy="32" rx="10.5" ry="13" fill="${PIEL}"/>
-      <path d="M39.5 31 C38.5 18 45 13.5 51 13.5 C58.5 13.5 62.5 19.5 60.5 30 C59.5 24.5 56 21.5 50.5 22 C45.5 22 41.5 25 39.5 31 Z" fill="#2a2120"/>
-    </g>`;
-  }
-  function figuraElla(vestido, x = 0) {
-    return `<g transform="translate(${x} 0)">
-      <ellipse cx="50" cy="252" rx="26" ry="3.5" fill="rgba(0,0,0,.14)"/>
-      <path d="M38.5 27 C36 48 34.5 66 38.5 80 L61.5 80 C65.5 66 64 48 61.5 27 Z" fill="#4a3022"/>
-      <path d="M36.5 63 C31.5 76 30.5 96 32.5 121 L36.5 121 C36.5 101 38.5 85 40.5 71 Z" fill="${PIEL}"/>
-      <path d="M63.5 63 C68.5 76 69.5 96 67.5 121 L63.5 121 C63.5 101 61.5 85 59.5 71 Z" fill="${PIEL}"/>
-      <path d="M46 44 h8 v12 h-8z" fill="${PIEL_SOMBRA}"/>
-      <path d="M37 64 C39 57.5 44.5 55.5 50 55.5 C55.5 55.5 61 57.5 63 64 Z" fill="${PIEL}"/>
-      <path d="M38 64 L45 61.5 L50 82 L55 61.5 L62 64 L60 99 C64.5 140 70.5 190 75 246 L25 246 C29.5 190 35.5 140 40 99 Z" fill="${vestido}"/>
-      <path d="M40 98 C46 101 54 101 60 98 L60.4 103 C54 106 46 106 39.6 103 Z" fill="rgba(0,0,0,.18)"/>
-      <path d="M55 150 L61 246 L53.5 246 Z" fill="rgba(0,0,0,.2)"/>
-      <path d="M46 120 C44 160 40 200 36 246 M51 118 C51 160 49 205 47 246" stroke="rgba(0,0,0,.12)" stroke-width="1.3" fill="none"/>
-      <path d="M29 128 h8 v6 h-8z" fill="#cdb38a"/>
-      <ellipse cx="34.5" cy="124" rx="3.3" ry="4.2" fill="${PIEL}"/>
-      <ellipse cx="65.5" cy="124" rx="3.3" ry="4.2" fill="${PIEL}"/>
-      <ellipse cx="50" cy="32" rx="10" ry="12.5" fill="${PIEL}"/>
-      <path d="M39.5 33 C38.5 19 45 14 51 14 C58 14 62 19.5 61 33 C58.5 25 54 21.5 48.5 22.5 C45 23.5 42 27.5 39.5 33 Z" fill="#4a3022"/>
-      <path d="M41 46 l2 2 M58 46 l-2 2" stroke="#cdb38a" stroke-width="1.2"/>
-    </g>`;
-  }
-  const figura = (contenido, ancho) => `<svg class="figura" viewBox="0 0 ${ancho} 258" aria-hidden="true" focusable="false">${contenido}</svg>`;
-  const TRAJES = ['#1f2a44', '#2e2f33', '#1f2a44', '#57595e'];
-  // Qué color de la paleta lleva cada vestido de los ejemplos (como en la lámina).
-  const VESTIDOS = [3, 5, 6, 1];
+  // Vestimenta: la lámina «Código de vestimenta» (encabezado, Ellos y Ellas
+  // con su figura, paleta sugerida, ejemplos de atuendos y colores a evitar).
+  // Las figuras son ilustraciones en assets/vestimenta/ (recortadas de
+  // referencias-boda/referencias/CodigoDeVestimenta.png). Todo va dentro de
+  // .dc-lamina: sus estilos (assets/vestimenta.css) no dependen del tema.
+  const DC_IMG = 'assets/vestimenta/';
+  // Cada pareja de ejemplo trae aparte el vestido (pareja-N-vestido.webp: sus
+  // sombras en gris y su silueta): encima de la ilustración se pinta del
+  // color elegido en el panel (campo «atuendos»).
+  const ATUENDOS = [
+    { img: 'pareja-1', w: 384, vestido: 'vestido largo', traje: 'traje azul marino' },
+    { img: 'pareja-2', w: 384, vestido: 'vestido', traje: 'traje oscuro' },
+    { img: 'pareja-3', w: 392, vestido: 'vestido de un hombro', traje: 'traje azul marino' },
+    { img: 'pareja-4', w: 400, vestido: 'vestido', traje: 'traje gris oscuro' },
+  ];
+  const atuendo = (a, c) => {
+    const color = /^#[0-9a-f]{6}$/i.test(c.hex || '') ? c.hex : '#7a4f4f';
+    const nombre = c.nombre ? ` ${esc(c.nombre.toLowerCase())}` : '';
+    const capa = `url('${DC_IMG}${a.img}-vestido.webp')`;
+    return `<li><span class="dc-atuendo" style="--c: ${color}">
+            <img src="${DC_IMG}${a.img}.webp" width="${a.w}" height="616" alt="Pareja de ejemplo: ${a.vestido}${nombre} y ${a.traje}" loading="lazy" decoding="async">
+            <span class="dc-vestido" style="background-image: ${capa}; -webkit-mask-image: ${capa}; mask-image: ${capa}" aria-hidden="true"></span>
+          </span></li>`;
+  };
 
-  function vestimentaExtra(b, x) {
+  function vestimentaLamina(b, x) {
     const items = (clave) => lineas(Pg.texto(x.pagina, b, clave));
-    const ellos = items('ellos');
-    const ellas = items('ellas');
     const paleta = Pg.colores(b, 'paleta');
     const evitar = Pg.colores(b, 'evitar');
-    const color = (k) => (paleta.length ? paleta[k % paleta.length].hex : '#56613b');
-    const punto = (c, tachado) => `<li${tachado ? ' class="color-tachado"' : ''}><span class="color-punto" style="--c: ${c.hex}"></span><span class="color-nombre">${esc(c.nombre)}</span></li>`;
-    const lista = (quien, titulo, cosas) => `<div class="vestimenta-col vestimenta-${quien}"><h3 class="vestimenta-rotulo">${titulo}</h3>${cosas.length ? `<ul>${cosas.map((i) => `<li>${cifras(i)}</li>`).join('')}</ul>` : ''}</div>`;
-    const principal = color(paleta.length > 5 ? 5 : paleta.length - 1);
-    return `${b.subtitulo || Pg.campo('vestimenta', 'subtitulo') ? `<p class="vestimenta-sub">${cifras(Pg.texto(x.pagina, b, 'subtitulo'))}</p>` : ''}
-      <div class="vestimenta-figuras">
-        ${lista('ellos', 'Ellos', ellos)}
-        <div class="vestimenta-pareja">${figura(figuraEl(TRAJES[0]), 100)}${figura(figuraElla(principal), 100)}</div>
-        ${lista('ellas', 'Ellas', ellas)}
+    const atuendos = Pg.colores(b, 'atuendos').slice(0, ATUENDOS.length);
+    const sub = Pg.texto(x.pagina, b, 'subtitulo');
+    const rotulo = (t) => `<h3 class="dc-rotulo"><span>${t}</span></h3>`;
+    const punto = (c, tachado) => `<li class="dc-color${tachado ? ' dc-color-evitar' : ''}"><span class="dc-circulo" style="--c: ${c.hex}"></span><span class="dc-color-nombre">${esc(c.nombre)}</span></li>`;
+    const lista = (quien, titulo, cosas) => `<div class="dc-col dc-col-${quien}">
+          <h3 class="dc-quien">${titulo}</h3>
+          ${cosas.length ? `<ul class="dc-lista">${cosas.map((i) => `<li>${cifras(i)}</li>`).join('')}</ul>` : ''}
+        </div>`;
+    const figura = (img, w, alt, clase) => `<figure class="dc-figura ${clase}"><img src="${DC_IMG}${img}.webp" width="${w}" height="928" alt="${alt}" loading="lazy" decoding="async"></figure>`;
+    return `<article class="dc-lamina" aria-labelledby="vestimenta-titulo">
+      <span class="dc-flor dc-flor-ai" aria-hidden="true"></span>
+      <span class="dc-flor dc-flor-ad" aria-hidden="true"></span>
+      <span class="dc-flor dc-flor-bi" aria-hidden="true"></span>
+      <span class="dc-flor dc-flor-bd" aria-hidden="true"></span>
+      <div class="dc-contenido">
+        <header class="dc-cabecera">
+          <h2 class="dc-titulo" id="vestimenta-titulo">${titulo(x, b)}</h2>
+          <p class="dc-codigo vestimenta-codigo" data-vestimenta-codigo></p>
+          ${sub ? `<p class="dc-intro">${cifras(sub)}</p>` : ''}
+          <p class="dc-nota vestimenta-nota" data-vestimenta-nota hidden></p>
+        </header>
+
+        <section class="dc-ellos-ellas" aria-label="Qué ponerse">
+          ${lista('ellos', 'Ellos', items('ellos'))}
+          ${figura('el', 340, 'Ilustración: hombre con traje azul marino, camisa blanca y corbata', 'dc-figura-el')}
+          <span class="dc-divisor" aria-hidden="true"></span>
+          ${figura('ella', 336, 'Ilustración: mujer con vestido largo verde y sandalias', 'dc-figura-ella')}
+          ${lista('ellas', 'Ellas', items('ellas'))}
+        </section>
+
+        ${paleta.length ? `<section class="dc-bloque dc-paleta">
+          ${rotulo('Paleta de colores sugerida para vestidos')}
+          <ul class="dc-colores">${paleta.map((c) => punto(c)).join('')}</ul>
+        </section>` : ''}
+
+        ${atuendos.length ? `<section class="dc-bloque dc-ejemplos">
+          ${rotulo('Ejemplos de atuendos')}
+          <ul class="dc-atuendos">${atuendos.map((c, i) => atuendo(ATUENDOS[i], c)).join('')}</ul>
+        </section>` : ''}
+
+        ${evitar.length ? `<section class="dc-bloque dc-evitar">
+          ${rotulo('Colores a evitar')}
+          <ul class="dc-colores dc-colores-evitar">${evitar.map((c) => punto(c, true)).join('')}</ul>
+          ${b.notaEvitar ? `<p class="dc-nota-evitar">${cifras(b.notaEvitar)}</p>` : ''}
+        </section>` : ''}
+
+        ${b.ideas ? `<p class="dc-ideas"><a class="boton-pildora" href="${esc(b.ideas)}" target="_blank" rel="noopener">${esc(Pg.texto(x.pagina, b, 'ideasTexto'))}${P.icono('externo')}</a></p>` : ''}
+        <ul class="vestimenta-fotos" data-vestimenta-fotos aria-label="Fotos de referencia" hidden></ul>
       </div>
-      ${paleta.length ? `<div class="vestimenta-colores"><h3 class="rotulo-filetes">Paleta de colores sugerida</h3><ul class="colores">${paleta.map((c) => punto(c)).join('')}</ul></div>` : ''}
-      ${paleta.length ? `<div class="vestimenta-ejemplos"><h3 class="rotulo-filetes">Ejemplos de atuendos</h3><ul class="atuendos">${VESTIDOS.map((k, i) => `<li>${figura(figuraElla(color(k), 0) + figuraEl(TRAJES[i], 52), 152)}</li>`).join('')}</ul></div>` : ''}
-      ${evitar.length ? `<div class="vestimenta-colores vestimenta-evitar"><h3 class="rotulo-filetes">Colores a evitar</h3><ul class="colores">${evitar.map((c) => punto(c, true)).join('')}</ul>${b.notaEvitar ? `<p class="vestimenta-nota-evitar">${cifras(b.notaEvitar)}</p>` : ''}</div>` : ''}
-      ${b.ideas ? `<p class="vestimenta-ideas"><a class="boton-pildora" href="${esc(b.ideas)}" target="_blank" rel="noopener">${esc(Pg.texto(x.pagina, b, 'ideasTexto'))}${P.icono('externo')}</a></p>` : ''}`;
+    </article>`;
   }
 
   const VINO = {
@@ -124,7 +132,26 @@
       const padres = [b.padresDos, b.padresUno].filter(Boolean);
       return `<section class="pliego pliego-formal" ${de(b, 'invitacion-formal')} aria-labelledby="formal-titulo">
           <div class="formal-sobre" data-formal-sobre>
-          <span class="formal-sobre-fondo" aria-hidden="true"></span>
+          <!-- El sobre ya abierto, de terciopelo rojo con oro (como el de la
+               intro), dejado a un lado; la carta descansa junto a él. -->
+          <div class="formal-envoltura" aria-hidden="true">
+            <svg class="formal-solapa" viewBox="0 0 100 50" preserveAspectRatio="none" focusable="false">
+              <defs>
+                <linearGradient id="formal-oro" x1="0" y1="0" x2="1" y2="1">
+                  <stop offset="0" stop-color="#8b6522"/><stop offset=".28" stop-color="#e9cf8a"/><stop offset=".5" stop-color="#b8913f"/><stop offset=".74" stop-color="#f1d999"/><stop offset="1" stop-color="#a07a2e"/>
+                </linearGradient>
+                <radialGradient id="formal-terciopelo" cx=".5" cy=".8" r=".85">
+                  <stop offset="0" stop-color="#861a2a"/><stop offset=".65" stop-color="#5e0d1b"/><stop offset="1" stop-color="#470915"/>
+                </radialGradient>
+              </defs>
+              <polygon points="0.6,50 50,1.2 99.4,50" fill="url(#formal-terciopelo)" stroke="url(#formal-oro)" stroke-width="1.6" stroke-linejoin="round" vector-effect="non-scaling-stroke"/>
+            </svg>
+            <span class="formal-sobre-fondo"></span>
+            <span class="formal-bolsillo"></span>
+            <svg class="formal-bolsillo-filo" viewBox="0 0 100 100" preserveAspectRatio="none" focusable="false">
+              <polyline points="0,0 50,50 100,0" fill="none" stroke="url(#formal-oro)" stroke-width="1.6" stroke-linejoin="round" vector-effect="non-scaling-stroke"/>
+            </svg>
+          </div>
           <article class="tarjeta tarjeta-filigrana tarjeta-formal">
             <span class="filigrana" aria-hidden="true"></span>
             <span class="formal-lacre" aria-hidden="true">${esc(C.pareja.uno.nombre[0])}${esc(C.pareja.dos.nombre[0])}</span>
@@ -135,7 +162,6 @@
             ${padres.length ? `<div class="formal-padres"><p class="formal-rotulo">Nuestros padres</p>${padres.map((n) => `<p>${cifras(n)}</p>`).join('')}</div>` : ''}
             ${b.verso ? `<blockquote class="formal-verso">${parrafos(b.verso)}${b.versoAutor ? `<footer>${cifras(b.versoAutor)}</footer>` : ''}</blockquote>` : ''}
           </article>
-          <span class="formal-bolsillo" aria-hidden="true"></span>
           </div>
         </section>`;
     },
@@ -294,16 +320,13 @@
         <div class="fotos-mesa" data-fotos></div>
       </section>`,
 
-    // La vestimenta, los regalos y las dudas son hojas de papel vegetal sobre
-    // el forro; las que van seguidas comparten el mismo forro (ver forros()).
-    vestimenta: (b, x) => `<div class="vegetal vegetal-vestimenta" ${de(b, 'vestimenta')}>
-        <h2 class="titulo-grabado" id="vestimenta-titulo">${titulo(x, b)}</h2>
-        <p class="vestimenta-codigo" data-vestimenta-codigo></p>
-        <p class="vestimenta-nota" data-vestimenta-nota hidden></p>
-        ${vestimentaExtra(b, x)}
-        <ul class="vestimenta-fotos" data-vestimenta-fotos aria-label="Fotos de referencia" hidden></ul>
-      </div>`,
+    // La vestimenta es una lámina a todo el ancho, fuera del forro.
+    vestimenta: (b, x) => `<section class="dc-seccion" ${de(b, 'vestimenta')}>
+        ${vestimentaLamina(b, x)}
+      </section>`,
 
+    // Los regalos y las dudas son hojas de papel vegetal sobre el forro; las
+    // que van seguidas comparten el mismo forro y la misma hoja (ver pintar()).
     regalos: (b, x) => `<div class="vegetal-bloque" ${de(b, 'regalos')} data-cuenta-vista="${b.cuentaVista}">
         <h2 class="titulo-grabado">${titulo(x, b)}</h2>
         <p data-regalos></p>
@@ -316,13 +339,12 @@
         <p data-contacto-texto></p>
       </div>`,
 
+    // Las preguntas son una sección entera, de lado a lado, sin tarjeta (como
+    // el itinerario): el título y la lista van directo sobre su banda.
     preguntas: (b, x) => `<section class="pliego pliego-preguntas" ${de(b, 'preguntas')} aria-labelledby="preguntas-titulo" hidden>
         <div class="pliego-texto">
           <h2 class="pliego-titulo" id="preguntas-titulo">${titulo(x, b)}</h2>
-          <article class="tarjeta tarjeta-preguntas">
-            <div class="preguntas-lista" data-preguntas></div>
-            ${marca('Preguntas')}
-          </article>
+          <div class="preguntas-lista" data-preguntas></div>
         </div>
       </section>`,
 
@@ -432,12 +454,12 @@
     },
   };
 
-  const FORRO = ['vestimenta', 'regalos', 'contacto'];
+  const FORRO = ['regalos', 'contacto'];
 
   /*
    * El HTML de los bloques visibles, en orden. x: { pagina, verVacios }.
-   * La vestimenta, los regalos y las dudas que van seguidos comparten un
-   * forro; los regalos y las dudas seguidos, también la misma hoja.
+   * Los regalos y las dudas que van seguidos comparten un forro y la misma
+   * hoja. La vestimenta va sola, a todo el ancho.
    */
   function pintar(x) {
     // Los bloques de un tema (Vino & Marfil) solo se pintan en ese tema.
@@ -453,10 +475,7 @@
           partes.push(forro);
         }
         const html = SECCIONES[b.tipo](b, ctx);
-        if (b.tipo === 'vestimenta') {
-          forro.push(html);
-          hoja = null;
-        } else if (hoja) {
+        if (hoja) {
           hoja.push(html);
         } else {
           hoja = [html];
