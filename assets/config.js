@@ -142,8 +142,8 @@ window.BODA = {
   // Supabase. Vacío = modo local (los datos viven solo en este navegador).
   // Copia aquí la URL del proyecto y la clave pública "anon" (Settings → API).
   supabase: {
-    url: '',
-    anonKey: '',
+    url: 'https://fgcmlkmqxpimswrhmfwx.supabase.co/',
+    anonKey: 'sb_publishable_JUdYVM1V_SkstzMlOj7Xgg_H1tPo0vh',
   },
 
   // Clave del panel en modo local. No protege nada de verdad: es solo para
