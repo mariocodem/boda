@@ -787,8 +787,14 @@
       if (!vistaPanel && /^https?:/.test(absoluta)) {
         try { localStorage.setItem('boda-diego-erika:intro-foto', absoluta); } catch { /* sin almacenamiento */ }
       }
+    } else {
+      doc.style.removeProperty('--intro-foto');
+      // Sin foto, el <head> tampoco la muestra en la próxima visita (no aparece
+      // un instante para luego irse).
+      if (!vistaPanel) {
+        try { localStorage.removeItem('boda-diego-erika:intro-foto'); } catch { /* sin almacenamiento */ }
+      }
     }
-    else doc.style.removeProperty('--intro-foto');
   }
 
   // La tira de la fecha («SÁBADO | 29 | NOVIEMBRE») y los botones del calendario.

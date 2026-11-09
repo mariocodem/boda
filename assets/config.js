@@ -109,7 +109,10 @@ window.BODA = {
   // La del bosque a color va en el arco de la tarjeta.
   // fotosArranque: al cambiar estas fotos, cambia también esta fecha: así
   // reemplazan una vez a las que estuvieran guardadas desde el panel.
-  fotosArranque: '2026-11-05',
+  // 2026-11-09: en Supabase quedó guardada la foto principal vacía, y sin ella
+  // el fondo del sobre y el arco de la tarjeta se quedaban sin foto; la fecha
+  // nueva la trae de vuelta.
+  fotosArranque: '2026-11-09',
   fotoPortada: { archivo: 'fotos/pareja-bosque.jpg', encuadre: '58% 50%' },
   fotos: [
     { archivo: 'fotos/pareja-retrato.jpg', forma: 'horizontal' },

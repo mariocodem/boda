@@ -1,8 +1,13 @@
 /*
- * La música de la invitación (Diseño → Tema → Música). Nunca suena sola:
- * arranca con el toque que abre el sobre, entra subiendo de a poco hasta su
- * volumen y el botón flotante la pausa o la vuelve a poner. Si el invitado ya
- * había abierto el sobre (vuelve a la página), queda el botón, en pausa.
+ * La música de la invitación (Diseño → Tema → Música). Arranca sola con el
+ * toque que abre el sobre, entra subiendo de a poco hasta su volumen y el
+ * botón flotante la pausa o la vuelve a poner. Si el invitado ya había abierto
+ * el sobre (vuelve a la página), queda el botón, en pausa.
+ *
+ * La canción llega con los datos de la boda (de Supabase), y el invitado
+ * puede tocar el sobre antes: entonces la música queda pedida y arranca
+ * apenas llega. Ese toque deja «despierto» el reproductor (en iPhone el audio
+ * solo arranca con un toque del usuario).
  *
  * invitacion.js le pasa la configuración de la página (configurar) y le avisa
  * cuando se abre el sobre (abierta).
@@ -15,19 +20,34 @@
   audio.loop = true;
   audio.preload = 'none';
 
+  // Una centésima de segundo de silencio, para despertar el reproductor.
+  const SILENCIO = 'data:audio/wav;base64,UklGRnQAAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YVAAAACAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgA==';
+
   let conf = { archivo: null, volumen: 0.4, activa: true };
   let abierta = false;
   let sonando = false;
+  // Abrieron el sobre y la canción todavía no estaba lista para sonar.
+  let pedida = false;
   let fundido = 0;
+  // Las direcciones blob: de las canciones del modo local, ya abiertas.
+  const locales = {};
 
   const lista = () => Boolean(conf.activa && conf.archivo);
+  const esLocal = (ref) => String(ref || '').startsWith('local:');
 
-  // La canción subida en modo local (local:<id>) vive en IndexedDB de este
-  // navegador: Datos le da una dirección blob: (y la recuerda). Las demás se
-  // usan tal cual.
-  function direccion(ref) {
-    if (!String(ref || '').startsWith('local:')) return Promise.resolve(ref);
-    return window.Datos ? window.Datos.urlFoto(ref) : Promise.resolve(null);
+  // La dirección que suena: el enlace tal cual, o la blob: de la canción del
+  // modo local (null mientras IndexedDB la abre).
+  const fuente = (ref) => (esLocal(ref) ? locales[ref] || null : ref);
+
+  // La canción del modo local (local:<id>) vive en IndexedDB de este
+  // navegador: Datos le da una dirección blob:. Si ya la pidieron, suena.
+  function abrirLocal(ref) {
+    if (!esLocal(ref) || locales[ref] || !window.Datos) return;
+    window.Datos.urlFoto(ref).then((url) => {
+      if (!url) return;
+      locales[ref] = url;
+      if (pedida && lista() && conf.archivo === ref) sonar();
+    });
   }
 
   function pintar() {
@@ -53,29 +73,42 @@
     fundido = requestAnimationFrame(paso);
   }
 
-  async function sonar() {
+  // Con el toque del sobre, si la canción aún no llega: el silencio suena
+  // mudo un instante y el reproductor queda habilitado para cuando llegue.
+  function despertar() {
+    if (audio.dataset.archivo || audio.dataset.despierto) return;
+    audio.dataset.despierto = 'si';
+    audio.muted = true;
+    audio.src = SILENCIO;
+    audio.play().then(() => { if (!audio.dataset.archivo) audio.pause(); }, () => { /* lo intenta la canción */ });
+  }
+
+  // Sin esperas antes de play(): así cuenta como parte del toque del invitado.
+  function sonar() {
     if (!lista()) return;
-    const pedida = conf.archivo;
-    if (audio.dataset.archivo !== pedida) {
-      const src = await direccion(pedida);
-      if (!src || conf.archivo !== pedida) {
-        sonando = false;
-        pintar();
-        return;
-      }
-      audio.src = src;
-      audio.dataset.archivo = pedida;
+    const src = fuente(conf.archivo);
+    if (!src) {
+      pedida = true;
+      despertar();
+      abrirLocal(conf.archivo);
+      return;
     }
+    pedida = false;
+    if (audio.dataset.archivo !== conf.archivo) {
+      audio.src = src;
+      audio.dataset.archivo = conf.archivo;
+    }
+    audio.muted = false;
     audio.volume = 0;
-    try {
-      await audio.play();
+    audio.play().then(() => {
       sonando = true;
       fundir(conf.volumen, 2400);
-    } catch {
+      pintar();
+    }, () => {
       // El navegador no la dejó sonar (o el archivo no está): queda el botón.
       sonando = false;
-    }
-    pintar();
+      pintar();
+    });
   }
 
   function callar() {
@@ -84,8 +117,13 @@
     pintar();
   }
 
-  boton.addEventListener('click', () => (sonando ? callar() : sonar()));
+  boton.addEventListener('click', () => {
+    pedida = false;
+    if (sonando) callar();
+    else sonar();
+  });
   audio.addEventListener('error', () => {
+    if (!audio.dataset.archivo) return; // el silencio no cuenta
     sonando = false;
     pintar();
   });
@@ -93,16 +131,23 @@
   window.Musica = {
     configurar(m) {
       conf = Object.assign({ archivo: null, volumen: 0.4, activa: true }, m || {});
-      // La del modo local se abre desde ya: así el toque que abre el sobre no
-      // espera a IndexedDB para que suene.
-      if (lista()) direccion(conf.archivo);
+      // La del modo local se abre desde ya, para no esperar a IndexedDB.
+      if (lista()) abrirLocal(conf.archivo);
       if (!lista() && sonando) callar();
       else if (sonando) fundir(conf.volumen, 300);
+      // Abrieron el sobre antes de que llegara la canción: suena ya.
+      else if (pedida && lista()) sonar();
       pintar();
     },
     abierta({ gesto }) {
       abierta = true;
-      if (gesto) sonar();
+      if (gesto) {
+        if (lista()) sonar();
+        else {
+          pedida = true;
+          despertar();
+        }
+      }
       pintar();
     },
   };
