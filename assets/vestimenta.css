@@ -1,28 +1,34 @@
 /*
- * Código de vestimenta: la lámina a todo el ancho (bloque «vestimenta»,
- * HTML en assets/bloques.js → vestimentaLamina()).
+ * Código de vestimenta: la lámina «Dress code» a todo el ancho (bloque
+ * «vestimenta», HTML en assets/bloques.js → vestimentaLamina()).
  *
- * Reproduce la lámina de referencia (referencias-boda/referencias/
- * CodigoDeVestimenta.png): papel marfil con doble filete beige y dorado,
- * rosas de Redouté en las cuatro esquinas, títulos romanos en versales con
- * filetes, Ellos y Ellas a los lados de sus figuras, la paleta sugerida, los
- * ejemplos de atuendos y los colores a evitar tachados.
+ * Calca la imagen que mandó Mario el 2026-11-09 (referencias-boda/
+ * referencias/DressCode.png): papel #eae8dc, «Código de vestimenta» con un
+ * filete y su florón, «DRESS CODE» en romana grande, «Formal / Elegante»
+ * entre filetes, las diez invitadas con «Para ellas» a la izquierda, los
+ * colores recomendados, un divisor con florón, los seis invitados con «Para
+ * ellos» y la ramita, y abajo, entre filetes, «Evitar», «Detalles que suman»
+ * y el agradecimiento.
  *
- * Todo cuelga de .dc-seccion / .dc-lamina con colores y letras propios, así
- * que se ve igual en cualquier tema y los estilos del tema no se cuelan.
+ * Las ilustraciones, la ramita, el florón y los íconos son recortes de la
+ * misma imagen (assets/vestimenta/). Las medidas de escritorio salen de la
+ * imagen: la lámina mide 1056 px de ancho, así que 1cqi = 10,56 px de ella.
+ * En el teléfono todo va en columna y los textos no bajan de un mínimo.
+ *
+ * Todo cuelga de .dc-seccion con colores y letras propios: se ve igual en
+ * cualquier tema y los estilos del tema no se cuelan.
  */
 
 .dc-seccion {
-  --dc-papel: #f8f3ec;
-  --dc-papel-borde: #f3ece2;
-  --dc-tinta: #3a2e29;
-  --dc-tinta-suave: #5a4a43;
-  --dc-titulo: #5b3a32;
-  --dc-filete: #d8c8b5;
-  --dc-oro: #c4ab88;
-  --dc-tache: #7a5048;
-  --dc-romana: 'Cinzel', 'Cormorant Garamond', 'Trajan Pro', Georgia, serif;
-  --dc-texto: 'Cormorant Garamond', 'EB Garamond', Garamond, Georgia, 'Times New Roman', serif;
+  --dc-papel: #eae8dc;
+  --dc-tinta: #231a16;
+  --dc-rotulo: #2e2a22;
+  --dc-texto: #45423a;
+  --dc-suave: #5c5a4e;
+  --dc-filete: #b4b0a5;
+  --dc-raya: #85807a;
+  --dc-romana: 'Cormorant Garamond', 'Cormorant', Garamond, Georgia, 'Times New Roman', serif;
+  --dc-sans: 'Montserrat', 'Hanken Grotesk', system-ui, -apple-system, 'Segoe UI', sans-serif;
 
   position: relative;
   width: 100%;
@@ -32,443 +38,246 @@
 
 .dc-lamina {
   position: relative;
-  isolation: isolate;
   overflow: hidden;
   width: 100%;
   margin: 0;
-  padding:
-    clamp(64px, 6vw + 32px, 120px)
-    clamp(22px, 6vw, 96px)
-    clamp(118px, 4vw + 96px, 160px);
-  color: var(--dc-tinta);
-  font-family: var(--dc-texto);
-  font-weight: 500;
+  padding: clamp(28px, 3vw + 12px, 48px) clamp(16px, 3vw, 40px) clamp(40px, 4vw + 16px, 72px);
+  color: var(--dc-texto);
+  font-family: var(--dc-sans);
+  font-weight: 400;
   text-align: center;
-  background:
-    radial-gradient(ellipse at 50% 30%, rgba(255, 255, 255, 0.55), transparent 70%),
-    radial-gradient(ellipse at 50% 100%, var(--dc-papel-borde), transparent 75%),
-    var(--dc-papel);
+  background: var(--dc-papel);
 }
-
-/* Doble filete: uno beige y, por dentro, uno dorado apagado. */
-.dc-lamina::before,
-.dc-lamina::after {
-  content: '';
-  position: absolute;
-  z-index: 1;
-  pointer-events: none;
-}
-
-.dc-lamina::before {
-  inset: clamp(10px, 1.4vw, 20px);
-  border: 1px solid var(--dc-filete);
-}
-
-.dc-lamina::after {
-  inset: calc(clamp(10px, 1.4vw, 20px) + 5px);
-  border: 1px solid color-mix(in srgb, var(--dc-oro) 70%, transparent);
-}
-
-/* ---------- Rosas en las esquinas ---------- */
-
-.dc-flor {
-  position: absolute;
-  z-index: 0;
-  width: var(--dc-flor, clamp(104px, 15vw, 250px));
-  aspect-ratio: 536 / 600;
-  pointer-events: none;
-  background: var(--dc-flor-img) center / contain no-repeat;
-  opacity: 0.82;
-  filter: saturate(0.72) brightness(1.04);
-}
-
-/* Arriba a la izquierda, una rama de hojas más pequeña. */
-.dc-flor-ai {
-  --dc-flor-img: url('flores/rosa-alba-foliacea-600.webp');
-  --dc-flor: clamp(90px, 10vw, 170px);
-  top: clamp(-34px, -2vw, -16px);
-  left: clamp(-40px, -2.4vw, -18px);
-  opacity: 0.55;
-  transform: rotate(-38deg);
-}
-
-.dc-flor-ad {
-  --dc-flor-img: url('flores/rosa-alba-regalis-600.webp');
-  top: clamp(-46px, -2.8vw, -20px);
-  right: clamp(-54px, -3.2vw, -24px);
-  transform: rotate(40deg);
-}
-
-.dc-flor-bi {
-  --dc-flor-img: url('flores/rosa-indica-fragrans-600.webp');
-  bottom: clamp(-50px, -3vw, -22px);
-  left: clamp(-50px, -3vw, -22px);
-  transform: rotate(-140deg);
-}
-
-.dc-flor-bd {
-  --dc-flor-img: url('flores/rosa-alba-regalis-600.webp');
-  --dc-flor: clamp(96px, 13vw, 220px);
-  bottom: clamp(-46px, -2.8vw, -20px);
-  right: clamp(-46px, -2.8vw, -20px);
-  transform: rotate(140deg) scaleX(-1);
-}
-
-/* ---------- Contenido ---------- */
 
 .dc-contenido {
+  container-type: inline-size;
   position: relative;
-  z-index: 2;
   display: grid;
-  gap: clamp(36px, 3vw + 18px, 64px);
-  width: min(100%, 1180px);
+  width: min(100%, 1080px);
   margin: 0 auto;
 }
 
-.dc-lamina :is(h2, h3, p, ul, figure) {
+/* Sin especificidad: cualquier regla de la lámina le gana */
+.dc-lamina :where(h2, h3, p, ul, figure) {
   margin: 0;
 }
 
-.dc-lamina ul {
+.dc-lamina :where(ul) {
   padding: 0;
   list-style: none;
 }
 
-/* ---------- 1. Encabezado ---------- */
+.dc-lamina h3 {
+  font-family: var(--dc-sans);
+}
+
+/* ---------- Encabezado ---------- */
 
 .dc-cabecera {
+  position: relative;
   display: grid;
   justify-items: center;
-  gap: clamp(8px, 0.8vw, 14px);
 }
 
 .dc-titulo {
-  font-family: var(--dc-romana);
-  font-weight: 400;
-  font-size: clamp(1.65rem, 1rem + 2.9vw, 3.4rem);
-  line-height: 1.1;
-  letter-spacing: 0.07em;
-  padding-left: 0.07em;
+  display: grid;
+  justify-items: center;
+  font-weight: inherit;
+}
+
+.dc-ante {
+  font-family: var(--dc-sans);
+  font-weight: 500;
+  font-size: max(0.78rem, 2.25cqi);
+  line-height: 1.2;
+  letter-spacing: 0.2em;
+  padding-left: 0.2em;
   text-transform: uppercase;
-  text-wrap: balance;
-  color: var(--dc-titulo);
+  color: var(--dc-rotulo);
+}
+
+/* El filete con el florón al medio (el florón es un recorte de la lámina) */
+.dc-floron {
+  display: block;
+  height: max(12px, 1.8cqi);
+  background: url('vestimenta/floron.webp') center / auto 100% no-repeat;
+}
+
+.dc-cabecera .dc-floron {
+  width: min(46cqi, 100%);
+  margin-top: 1.1cqi;
+  background:
+    url('vestimenta/floron.webp') center / auto 100% no-repeat,
+    linear-gradient(var(--dc-filete), var(--dc-filete)) center / 100% 1px no-repeat;
+}
+
+.dc-grande {
+  margin-top: 0.5cqi;
+  font-family: var(--dc-romana);
+  font-weight: 600;
+  font-size: max(2.5rem, 12.4cqi);
+  line-height: 0.92;
+  letter-spacing: 0.015em;
+  padding-left: 0.015em;
+  text-transform: uppercase;
+  color: var(--dc-tinta);
 }
 
 .dc-codigo {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: clamp(12px, 1.4vw, 20px);
-  font-family: var(--dc-romana);
-  font-weight: 400;
-  font-size: clamp(1rem, 0.82rem + 0.8vw, 1.55rem);
+  gap: 2.8cqi;
+  width: 100%;
+  margin-top: 0.6cqi;
+  font-size: max(0.82rem, 2.3cqi);
   line-height: 1.2;
-  letter-spacing: 0.12em;
+  letter-spacing: 0.18em;
   text-transform: uppercase;
-  color: var(--dc-tinta);
+  color: var(--dc-rotulo);
 }
 
 .dc-codigo::before,
 .dc-codigo::after {
   content: '';
-  flex: 0 0 clamp(28px, 5vw, 72px);
+  flex: 0 0 14cqi;
   height: 1px;
   background: var(--dc-filete);
 }
 
 .dc-codigo.por-confirmar {
-  font-style: normal;
   opacity: 0.7;
 }
 
-.dc-intro {
-  max-width: 36em;
-  margin-top: clamp(4px, 0.6vw, 10px) !important;
-  font-size: clamp(1.08rem, 0.95rem + 0.55vw, 1.45rem);
-  line-height: 1.42;
-  text-wrap: balance;
-  color: var(--dc-tinta);
-}
-
 .dc-nota {
-  max-width: 36em;
+  max-width: 40em;
+  margin-top: 1.6cqi;
   font-style: italic;
-  font-size: clamp(1rem, 0.92rem + 0.35vw, 1.2rem);
-  color: var(--dc-tinta-suave);
+  font-size: max(0.88rem, 1.6cqi);
+  line-height: 1.5;
+  color: var(--dc-texto);
 }
 
 .dc-nota[hidden] {
   display: none;
 }
 
-/* ---------- 2. Ellos y Ellas ----------
-   Los rótulos y las listas entran a la cuadrícula (display: contents) para
-   que, en el teléfono, cada figura quede entre su rótulo y su lista. */
+/* La ramita de arriba, pegada al borde izquierdo de la lámina */
+.dc-hoja {
+  position: absolute;
+  z-index: 0;
+  height: auto;
+  pointer-events: none;
+}
 
-.dc-ellos-ellas {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) 1px minmax(0, 1fr);
-  grid-template-areas:
-    'qa . qb'
-    'fa d fb'
-    'la d lb';
-  column-gap: clamp(14px, 4vw, 28px);
-  row-gap: 14px;
+.dc-hoja-1 {
+  left: 0;
+  top: 14.4cqi;
+  width: 10cqi;
+}
+
+/* ---------- Ellas y ellos: el texto a la izquierda, la fila de figuras ---------- */
+
+.dc-grupo {
+  position: relative;
+}
+
+.dc-grupo-ellas {
+  margin-top: 2.4cqi;
+}
+
+.dc-grupo-ellos {
+  margin-top: 1.2cqi;
+}
+
+.dc-texto {
+  position: absolute;
+  z-index: 1;
   text-align: left;
 }
 
-.dc-col {
-  display: contents;
+.dc-grupo-ellas .dc-texto {
+  left: 1.5%;
+  top: 6.1cqi;
+  width: 12.6cqi;
 }
 
-.dc-col-ellos .dc-quien { grid-area: qa; }
-.dc-col-ellas .dc-quien { grid-area: qb; }
-.dc-col-ellos .dc-lista { grid-area: la; }
-.dc-col-ellas .dc-lista { grid-area: lb; }
-.dc-figura-el { grid-area: fa; }
-.dc-figura-ella { grid-area: fb; }
-.dc-divisor { grid-area: d; }
+.dc-grupo-ellos .dc-texto {
+  left: 2.65%;
+  top: 2.8cqi;
+  width: 13.4cqi;
+}
 
 .dc-quien {
-  align-self: end;
-  padding-bottom: 8px;
-  border-bottom: 1px solid var(--dc-filete);
-  font-family: var(--dc-romana);
-  font-weight: 400;
-  font-size: clamp(1.05rem, 0.85rem + 0.9vw, 1.6rem);
-  line-height: 1.1;
-  letter-spacing: 0.1em;
-  text-align: center;
+  font-weight: 500;
+  font-size: max(0.92rem, 1.8cqi);
+  line-height: 1.2;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
   text-transform: uppercase;
-  color: var(--dc-titulo);
+  color: var(--dc-rotulo);
 }
 
-.dc-lista {
-  display: grid;
-  align-content: start;
-  gap: clamp(8px, 1vw, 16px);
-  font-size: clamp(0.98rem, 0.88rem + 0.42vw, 1.28rem);
-  line-height: 1.3;
-}
-
-.dc-lista li {
-  position: relative;
-  padding-left: 1em;
-  text-wrap: pretty;
-}
-
-.dc-lista li::before {
+/* La rayita de debajo */
+.dc-quien::after {
   content: '';
-  position: absolute;
-  left: 0.15em;
-  top: 0.62em;
-  width: 0.26em;
-  height: 0.26em;
-  border-radius: 50%;
-  background: var(--dc-tinta);
-}
-
-.dc-figura {
-  display: flex;
-  justify-content: center;
-  align-items: flex-end;
-}
-
-.dc-figura img,
-.dc-atuendos img {
   display: block;
-  height: auto;
-  max-width: 100%;
+  width: 3cqi;
+  min-width: 22px;
+  height: 1.5px;
+  margin-top: 1.5cqi;
+  background: var(--dc-raya);
 }
 
-.dc-figura img {
-  width: auto;
-  height: clamp(250px, 62vw, 330px);
-}
-
-.dc-divisor {
-  justify-self: center;
-  align-self: stretch;
-  width: 1px;
-  background: linear-gradient(transparent, var(--dc-filete) 8%, var(--dc-filete) 92%, transparent);
-}
-
-/* En pantalla ancha, como en la lámina: lista · figura | figura · lista */
-@media (min-width: 760px) {
-  .dc-ellos-ellas {
-    grid-template-columns: minmax(0, 1.25fr) auto 1px auto minmax(0, 1.25fr);
-    grid-template-rows: auto 1fr;
-    grid-template-areas:
-      'qa fa d fb qb'
-      'la fa d fb lb';
-    column-gap: clamp(18px, 2.6vw, 44px);
-    row-gap: clamp(16px, 1.8vw, 26px);
-    align-items: start;
-  }
-
-  .dc-quien {
-    align-self: start;
-    margin-top: clamp(8px, 2vw, 30px);
-  }
-
-  .dc-figura img {
-    height: clamp(360px, 26vw + 170px, 540px);
-  }
-}
-
-/* ---------- Rótulos con filetes (paleta, ejemplos, a evitar) ---------- */
-
-.dc-bloque {
-  display: grid;
-  gap: clamp(20px, 2vw, 32px);
-}
-
-.dc-rotulo {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: clamp(12px, 1.6vw, 22px);
-  font-family: var(--dc-romana);
-  font-weight: 400;
-  font-size: clamp(0.86rem, 0.72rem + 0.6vw, 1.22rem);
-  line-height: 1.3;
-  letter-spacing: 0.14em;
+.dc-texto p {
+  margin-top: 2cqi;
+  font-size: max(0.8rem, 1.62cqi);
+  line-height: 1.68;
+  letter-spacing: 0.05em;
   text-transform: uppercase;
-  color: var(--dc-tinta);
+  color: var(--dc-texto);
 }
 
-.dc-rotulo span {
-  flex: 0 1 auto;
-  max-width: 30em;
-  text-wrap: balance;
+.dc-texto p + p {
+  margin-top: 0.8em;
 }
 
-.dc-rotulo::before,
-.dc-rotulo::after {
-  content: '';
-  flex: 1 1 0;
-  min-width: 18px;
-  max-width: 200px;
-  height: 1px;
-  background: var(--dc-filete);
-}
-
-/* ---------- 3. Paleta y 5. colores a evitar ---------- */
-
-.dc-colores {
-  --dc-punto: clamp(52px, 13vw, 64px);
-  display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  justify-items: center;
-  gap: 20px 10px;
-}
-
-.dc-color {
-  display: grid;
-  justify-items: center;
-  align-content: start;
-  gap: 8px;
-  max-width: 7.5em;
-  font-size: clamp(0.92rem, 0.84rem + 0.32vw, 1.12rem);
-  line-height: 1.12;
-  color: var(--dc-tinta);
-}
-
-.dc-circulo {
+/* La ramita de abajo, debajo del texto de «Para ellos» */
+.dc-hoja-2 {
   position: relative;
   display: block;
-  width: var(--dc-punto);
-  aspect-ratio: 1;
-  border-radius: 50%;
-  background: var(--c, transparent);
-  box-shadow: inset 0 0 0 1px rgba(80, 52, 42, 0.12);
+  left: -0.8cqi;
+  width: 10.2cqi;
+  margin-top: 2.4cqi;
 }
 
-/* Una palabra por línea, como en la lámina («Verde / salvia») */
-.dc-color-nombre {
-  width: min-content;
-}
-
-/* La X: dos trazos finos de lado a lado, un poco más largos que el círculo */
-.dc-color-evitar .dc-circulo {
-  box-shadow: inset 0 0 0 1px rgba(80, 52, 42, 0.2);
-}
-
-.dc-color-evitar .dc-circulo::before,
-.dc-color-evitar .dc-circulo::after {
-  content: '';
-  position: absolute;
-  left: 50%;
-  top: 50%;
-  width: 136%;
-  height: 1.4px;
-  background: var(--dc-tache);
-  transform: translate(-50%, -50%) rotate(45deg);
-}
-
-.dc-color-evitar .dc-circulo::after {
-  transform: translate(-50%, -50%) rotate(-45deg);
-}
-
-.dc-colores-evitar {
-  --dc-punto: clamp(54px, 14vw, 76px);
-  width: min(100%, 560px);
-  margin: 0 auto !important;
-}
-
-.dc-nota-evitar {
-  font-style: italic;
-  color: var(--dc-tinta-suave);
-}
-
-@media (min-width: 760px) {
-  .dc-paleta .dc-colores {
-    --dc-punto: clamp(60px, 2.6vw + 36px, 82px);
-    grid-template-columns: repeat(8, minmax(0, 1fr));
-    width: min(100%, 1040px);
-    margin: 0 auto;
-    column-gap: clamp(10px, 1.4vw, 24px);
-  }
-
-  .dc-colores-evitar {
-    --dc-punto: clamp(66px, 2.4vw + 44px, 86px);
-  }
-}
-
-/* ---------- 4. Ejemplos de atuendos ---------- */
-
-.dc-atuendos {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  align-items: end;
-  justify-items: center;
-  gap: clamp(18px, 4vw, 28px) clamp(10px, 3vw, 20px);
-}
-
-.dc-atuendos li {
-  width: 100%;
-  display: flex;
-  justify-content: center;
-}
-
-.dc-atuendos img {
-  width: auto;
-  height: clamp(190px, 50vw, 260px);
-}
-
-/* El vestido, pintado del color elegido: el color de fondo, con las sombras
-   del vestido original encima (hard-light: el gris medio deja el color tal
-   cual, lo oscuro lo sombrea y lo claro lo ilumina), recortado a su silueta. */
-.dc-atuendo {
+/* La fila: la ilustración y, encima, los vestidos o trajes de otro color.
+   Cada capa trae las sombras de la tela en gris y la silueta en el alfa:
+   con hard-light el gris medio deja el color tal cual, lo oscuro lo sombrea
+   y lo claro lo ilumina; la máscara la recorta a la prenda. */
+.dc-fila {
   position: relative;
-  display: block;
   isolation: isolate;
 }
 
-.dc-vestido {
+.dc-fila img {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.dc-fila-ellas {
+  margin-left: 10%;
+  width: 89.9%;
+}
+
+.dc-fila-ellos {
+  margin-left: 17.3%;
+  width: 80.5%;
+}
+
+.dc-tinte {
   position: absolute;
-  inset: 0;
-  background-color: var(--c, #7a4f4f);
   background-size: 100% 100%;
   background-repeat: no-repeat;
   background-blend-mode: hard-light;
@@ -479,16 +288,178 @@
   pointer-events: none;
 }
 
-@media (min-width: 760px) {
-  .dc-atuendos {
-    grid-template-columns: repeat(4, minmax(0, 1fr));
-    width: min(100%, 1080px);
-    margin: 0 auto;
-  }
+/* ---------- Colores recomendados ---------- */
 
-  .dc-atuendos img {
-    height: clamp(240px, 14vw + 130px, 340px);
-  }
+.dc-bloque-colores {
+  display: grid;
+  gap: 1.7cqi;
+  margin-top: 2.2cqi;
+}
+
+.dc-rotulo {
+  font-weight: 500;
+  font-size: max(0.85rem, 1.95cqi);
+  line-height: 1.2;
+  letter-spacing: 0.16em;
+  padding-left: 0.16em;
+  text-transform: uppercase;
+  color: var(--dc-rotulo);
+}
+
+.dc-colores {
+  display: grid;
+  grid-template-columns: repeat(10, minmax(0, 1fr));
+  justify-items: center;
+  width: 94%;
+  margin: 0 auto;
+}
+
+.dc-color {
+  display: grid;
+  justify-items: center;
+  align-content: start;
+  gap: 1.1cqi;
+}
+
+.dc-circulo {
+  display: block;
+  width: 7.2cqi;
+  aspect-ratio: 1;
+  border-radius: 50%;
+  background: var(--c, transparent);
+}
+
+/* Una palabra por línea, como en la lámina («Amarillo / mostaza») */
+.dc-color-nombre {
+  width: min-content;
+  font-size: max(0.6rem, 1.4cqi);
+  line-height: 1.42;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--dc-suave);
+}
+
+/* ---------- El divisor con florón ---------- */
+
+.dc-divisor {
+  display: flex;
+  justify-content: center;
+  width: 94.7%;
+  height: max(12px, 1.8cqi);
+  margin: 3.4cqi auto 0;
+  background: linear-gradient(var(--dc-filete), var(--dc-filete)) center / 100% 1px no-repeat;
+}
+
+.dc-divisor .dc-floron {
+  width: 4cqi;
+  min-width: 26px;
+  height: 100%;
+}
+
+/* ---------- Abajo: evitar, detalles que suman y gracias ---------- */
+
+.dc-pie {
+  display: grid;
+  grid-template-columns: 25.2fr 51.8fr 23fr;
+  justify-self: center;
+  width: 94.7%;
+  margin-top: 1cqi;
+  border-top: 1px solid var(--dc-filete);
+  color: var(--dc-texto);
+}
+
+.dc-pie > * {
+  min-width: 0;
+  margin-top: 1.4cqi;
+  padding: 0 1.4cqi 0.6cqi;
+}
+
+.dc-pie > * + * {
+  border-left: 1px solid var(--dc-filete);
+}
+
+.dc-evitar {
+  display: flex;
+  align-items: flex-start;
+  gap: 1.5cqi;
+  padding-left: 0;
+  padding-right: max(8px, 0.8cqi);
+  text-align: left;
+}
+
+.dc-evitar img {
+  flex: 0 0 auto;
+  width: 7.6cqi;
+  height: auto;
+  margin-top: 1.2cqi;
+}
+
+.dc-evitar h3 {
+  margin-top: 2cqi;
+  font-weight: 600;
+  font-size: max(0.8rem, 1.5cqi);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--dc-rotulo);
+}
+
+.dc-evitar p {
+  margin-top: 0.9cqi;
+  font-weight: 500;
+  font-size: max(0.74rem, 1.3cqi);
+  line-height: 1.32;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+}
+
+.dc-detalles h3 {
+  font-weight: 500;
+  font-size: max(0.82rem, 1.9cqi);
+  line-height: 1.2;
+  letter-spacing: 0.2em;
+  padding-left: 0.2em;
+  text-transform: uppercase;
+  color: var(--dc-rotulo);
+}
+
+.dc-detalles ul {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 1cqi;
+  margin-top: 0.6cqi;
+}
+
+.dc-detalles li {
+  display: grid;
+  justify-items: center;
+  align-content: start;
+  gap: 0.2cqi;
+}
+
+.dc-detalles img {
+  width: 6.4cqi;
+  height: auto;
+}
+
+.dc-detalles span {
+  max-width: 13em;
+  font-weight: 500;
+  font-size: max(0.7rem, 1.36cqi);
+  line-height: 1.3;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  text-wrap: balance;
+}
+
+.dc-gracias {
+  display: grid;
+  align-content: center;
+  font-weight: 500;
+  font-size: max(0.78rem, 1.45cqi);
+  line-height: 1.6;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  text-wrap: balance;
 }
 
 /* ---------- Ideas y fotos de referencia ---------- */
@@ -496,28 +467,179 @@
 .dc-ideas {
   display: flex;
   justify-content: center;
+  margin-top: 4cqi;
 }
 
 .dc-lamina .vestimenta-fotos {
-  margin-top: 0;
+  margin-top: 4cqi;
 }
 
-/* ---------- Teléfono angosto ---------- */
+/* ---------- Teléfono y pantallas angostas: en columna ---------- */
 
-@media (max-width: 400px) {
-  .dc-lamina {
-    padding-inline: 18px;
+@container (max-width: 899px) {
+  .dc-ante {
+    font-size: max(0.72rem, 3.3cqi);
   }
 
-  .dc-ellos-ellas {
-    column-gap: 12px;
+  .dc-cabecera .dc-floron {
+    width: 72cqi;
+    margin-top: 2cqi;
   }
 
-  .dc-lista {
-    font-size: 0.95rem;
+  .dc-grande {
+    margin-top: 2.4cqi;
+    font-size: 15.4cqi;
+  }
+
+  .dc-codigo {
+    margin-top: 3.4cqi;
+    font-size: max(0.74rem, 3.4cqi);
+    gap: 3.4cqi;
+  }
+
+  .dc-codigo::before,
+  .dc-codigo::after {
+    flex-basis: 10cqi;
+  }
+
+  .dc-hoja-1 {
+    top: 25cqi;
+    width: 13cqi;
+    left: -4cqi;
+  }
+
+  .dc-grupo .dc-texto {
+    position: static;
+    width: auto;
+    text-align: center;
+  }
+
+  .dc-grupo-ellas {
+    margin-top: 7cqi;
+  }
+
+  .dc-grupo-ellos {
+    margin-top: 6cqi;
+  }
+
+  .dc-quien {
+    font-size: max(0.9rem, 4.2cqi);
+  }
+
+  .dc-quien::after {
+    margin: 2.4cqi auto 0;
+  }
+
+  .dc-texto p {
+    max-width: 30ch;
+    margin: 3cqi auto 0;
+    font-size: max(0.76rem, 3.4cqi);
+    line-height: 1.6;
+    text-wrap: balance;
+  }
+
+  .dc-hoja-2 {
+    display: none;
+  }
+
+  .dc-fila-ellas,
+  .dc-fila-ellos {
+    width: 100%;
+    margin: 4.5cqi 0 0;
+  }
+
+  .dc-bloque-colores {
+    gap: 4.5cqi;
+    margin-top: 7cqi;
+  }
+
+  .dc-rotulo {
+    font-size: max(0.8rem, 3.8cqi);
   }
 
   .dc-colores {
-    column-gap: 6px;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    row-gap: 5cqi;
+    width: 100%;
+  }
+
+  .dc-color {
+    gap: 2cqi;
+  }
+
+  .dc-circulo {
+    width: 13cqi;
+  }
+
+  .dc-color-nombre {
+    font-size: max(0.56rem, 2.7cqi);
+  }
+
+  .dc-divisor {
+    width: 100%;
+    height: 14px;
+    margin-top: 7cqi;
+  }
+
+  .dc-pie {
+    grid-template-columns: 1fr;
+    width: 100%;
+    margin-top: 5cqi;
+  }
+
+  .dc-pie > * {
+    margin-top: 0;
+    padding: 6cqi 0;
+  }
+
+  .dc-pie > * + * {
+    border-left: 0;
+    border-top: 1px solid var(--dc-filete);
+  }
+
+  .dc-evitar {
+    justify-content: center;
+    align-items: center;
+    gap: 5cqi;
+  }
+
+  .dc-evitar img {
+    width: 18cqi;
+    margin-top: 0;
+  }
+
+  .dc-evitar h3 {
+    margin-top: 0;
+    font-size: max(0.8rem, 3.6cqi);
+  }
+
+  .dc-evitar p {
+    margin-top: 1.6cqi;
+    font-size: max(0.74rem, 3.3cqi);
+  }
+
+  .dc-detalles h3 {
+    font-size: max(0.8rem, 3.8cqi);
+  }
+
+  .dc-detalles ul {
+    margin-top: 4cqi;
+    gap: 3cqi;
+  }
+
+  .dc-detalles img {
+    width: 16cqi;
+  }
+
+  .dc-detalles li {
+    gap: 2cqi;
+  }
+
+  .dc-detalles span {
+    font-size: max(0.62rem, 2.9cqi);
+  }
+
+  .dc-gracias {
+    font-size: max(0.74rem, 3.4cqi);
   }
 }

@@ -51,7 +51,7 @@ window.BODA = {
   itinerario: [],
 
   vestimenta: {
-    codigo: 'Formal elegante',
+    codigo: 'Formal / Elegante',
     nota: null,     // 'Evitar el blanco, que es de la novia.' (por ejemplo)
   },
   regalos: null,    // 'Lluvia de sobres el día de la boda.' (por ejemplo)
@@ -99,11 +99,14 @@ window.BODA = {
   // poner aquí rutas a archivos de la carpeta fotos/, por ejemplo:
   //   fotoPortada: { archivo: 'fotos/portada.jpg', encuadre: '50% 30%' },
   //   fotos: [{ archivo: 'fotos/pareja-1.jpg', forma: 'vertical' }],
-  // encuadre: qué parte de la foto queda a la vista dentro del arco.
+  // encuadre: qué parte de la foto queda a la vista dentro del arco (en la
+  // principal) o en la ventana del marco del cierre (en las de la pareja).
   // Las de Diego y Erika que vinieron en fotos/ (2026-11-05). El álbum se lleva
   // las tres primeras: en ellas la pareja está al centro, que es lo que queda
   // a la vista en una ventana ovalada. La del lago va junto a los detalles,
-  // donde se ve entera; la del bosque a color, en el arco de la tarjeta.
+  // donde se ve entera, y en el marco del cierre (Vino & Marfil), donde la
+  // pareja está a la izquierda: por eso su encuadre la corre al borde.
+  // La del bosque a color va en el arco de la tarjeta.
   // fotosArranque: al cambiar estas fotos, cambia también esta fecha: así
   // reemplazan una vez a las que estuvieran guardadas desde el panel.
   fotosArranque: '2026-11-05',
@@ -112,7 +115,7 @@ window.BODA = {
     { archivo: 'fotos/pareja-retrato.jpg', forma: 'horizontal' },
     { archivo: 'fotos/pareja-bosque-bn.jpg', forma: 'horizontal' },
     { archivo: 'fotos/pareja-flores.jpg', forma: 'horizontal' },
-    { archivo: 'fotos/pareja-lago.jpg', forma: 'horizontal' },
+    { archivo: 'fotos/pareja-lago.jpg', forma: 'horizontal', encuadre: '0% 50%' },
   ],
 
   // Google Maps para el panel: búsqueda de lugares con autocompletado y pin que

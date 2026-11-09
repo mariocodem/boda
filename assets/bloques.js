@@ -44,84 +44,135 @@
   const C = window.BODA || { pareja: { uno: { nombre: 'Diego' }, dos: { nombre: 'Erika' } } };
   const vino = (x) => x.pagina.tema === 'vino';
   const nombresMano = () => `<span>${esc(C.pareja.uno.nombre)}</span> <i>&amp;</i> <span>${esc(C.pareja.dos.nombre)}</span>`;
-  const lineas = (t) => String(t || '').split('\n').map((l) => l.trim().replace(/^[-•·*]\s*/, '')).filter(Boolean).slice(0, 12);
 
-  // Vestimenta: la lámina «Código de vestimenta» (encabezado, Ellos y Ellas
-  // con su figura, paleta sugerida, ejemplos de atuendos y colores a evitar).
-  // Las figuras son ilustraciones en assets/vestimenta/ (recortadas de
-  // referencias-boda/referencias/CodigoDeVestimenta.png). Todo va dentro de
-  // .dc-lamina: sus estilos (assets/vestimenta.css) no dependen del tema.
+  // Vestimenta: la lámina «Dress code» (2026-11-09, imagen de Mario en
+  // referencias-boda/referencias/DressCode.png). Las ilustraciones son las de
+  // la imagen, recortadas en dos filas (assets/vestimenta/ellas.webp y
+  // ellos.webp, sin el papel). Cada vestido y cada traje trae aparte su capa
+  // (ellas-<id>.webp / ellos-<id>.webp: las sombras de la tela en gris y la
+  // silueta en el alfa); con un color distinto al de la imagen, la capa se
+  // pinta de ese color encima (hard-light, en assets/vestimenta.css). Con el
+  // color de siempre no se pinta nada: se ve la ilustración tal cual.
+  // Las recortó herramientas/vestimenta/recortar.mjs; caja = izquierda, arriba,
+  // ancho y alto de la capa, en % de su fila.
   const DC_IMG = 'assets/vestimenta/';
-  // Cada pareja de ejemplo trae aparte el vestido (pareja-N-vestido.webp: sus
-  // sombras en gris y su silueta): encima de la ilustración se pinta del
-  // color elegido en el panel (campo «atuendos»).
-  const ATUENDOS = [
-    { img: 'pareja-1', w: 384, vestido: 'vestido largo', traje: 'traje azul marino' },
-    { img: 'pareja-2', w: 384, vestido: 'vestido', traje: 'traje oscuro' },
-    { img: 'pareja-3', w: 392, vestido: 'vestido de un hombro', traje: 'traje azul marino' },
-    { img: 'pareja-4', w: 400, vestido: 'vestido', traje: 'traje gris oscuro' },
-  ];
-  const atuendo = (a, c) => {
-    const color = /^#[0-9a-f]{6}$/i.test(c.hex || '') ? c.hex : '#7a4f4f';
-    const nombre = c.nombre ? ` ${esc(c.nombre.toLowerCase())}` : '';
-    const capa = `url('${DC_IMG}${a.img}-vestido.webp')`;
-    return `<li><span class="dc-atuendo" style="--c: ${color}">
-            <img src="${DC_IMG}${a.img}.webp" width="${a.w}" height="616" alt="Pareja de ejemplo: ${a.vestido}${nombre} y ${a.traje}" loading="lazy" decoding="async">
-            <span class="dc-vestido" style="background-image: ${capa}; -webkit-mask-image: ${capa}; mask-image: ${capa}" aria-hidden="true"></span>
-          </span></li>`;
+  const DC_FILAS = {
+    ellas: {
+      ancho: 949,
+      alto: 474,
+      prendas: [
+        { id: 'terracota', hex: '#9c4720', caja: [1.264, 15.401, 11.275, 82.068] },
+        { id: 'mostaza', hex: '#b17610', caja: [11.697, 13.924, 11.486, 82.7] },
+        { id: 'vino', hex: '#53151c', caja: [22.339, 22.996, 9.062, 74.262] },
+        { id: 'esmeralda', hex: '#113e31', caja: [31.612, 15.612, 9.8, 81.646] },
+        { id: 'olivo', hex: '#46512f', caja: [40.885, 22.363, 9.273, 74.895] },
+        { id: 'marino', hex: '#152232', caja: [48.788, 22.996, 12.75, 75.105] },
+        { id: 'petroleo', hex: '#1f3840', caja: [61.117, 16.456, 7.482, 80.38] },
+        { id: 'cafe', hex: '#412c1b', caja: [67.756, 18.987, 10.327, 78.692] },
+        { id: 'ciruela', hex: '#381a25', caja: [76.502, 17.3, 12.54, 81.013] },
+        { id: 'lila', hex: '#4d384b', caja: [86.723, 14.979, 13.277, 82.489] },
+      ],
+    },
+    ellos: {
+      ancho: 850,
+      alto: 434,
+      prendas: [
+        { id: 'cafe', hex: '#281a11', caja: [0.706, 14.516, 16.118, 76.959] },
+        { id: 'marino', hex: '#18191e', caja: [18.471, 15.207, 15.412, 76.498] },
+        { id: 'negro', hex: '#12110d', caja: [34.941, 14.747, 15.529, 76.498] },
+        { id: 'gris', hex: '#2a2929', caja: [50.824, 14.977, 15.176, 76.728] },
+        { id: 'marino2', hex: '#1b1c21', caja: [67.176, 14.286, 15.412, 76.728] },
+        { id: 'cafe2', hex: '#28221d', caja: [82.588, 14.747, 16.706, 76.959] },
+      ],
+    },
+  };
+
+  // Una fila de figuras: la ilustración y, encima, las prendas que cambiaron
+  // de color.
+  function dcFila(nombre, colores, alt) {
+    const f = DC_FILAS[nombre];
+    const tintes = f.prendas.map((pr, i) => {
+      const c = colores[i];
+      const hex = c && /^#[0-9a-f]{6}$/i.test(c.hex || '') ? c.hex.toLowerCase() : null;
+      if (!hex || hex === pr.hex) return '';
+      const capa = `url('${DC_IMG}${nombre}-${pr.id}.webp')`;
+      const [x, y, w, h] = pr.caja;
+      return `<span class="dc-tinte" style="left: ${x}%; top: ${y}%; width: ${w}%; height: ${h}%; background-color: ${hex}; background-image: ${capa}; -webkit-mask-image: ${capa}; mask-image: ${capa}" aria-hidden="true"></span>`;
+    }).join('');
+    return `<figure class="dc-fila dc-fila-${nombre}" style="aspect-ratio: ${f.ancho} / ${f.alto}">
+            <img src="${DC_IMG}${nombre}.webp" width="${f.ancho}" height="${f.alto}" alt="${esc(alt)}" loading="lazy" decoding="async">
+            ${tintes}
+          </figure>`;
+  }
+
+  // «terracota, amarillo mostaza y vino»
+  const enumerar = (nombres) => {
+    const n = nombres.filter(Boolean).map((t) => t.toLowerCase());
+    return n.length > 1 ? `${n.slice(0, -1).join(', ')} y ${n[n.length - 1]}` : (n[0] || '');
   };
 
   function vestimentaLamina(b, x) {
-    const items = (clave) => lineas(Pg.texto(x.pagina, b, clave));
-    const paleta = Pg.colores(b, 'paleta');
-    const evitar = Pg.colores(b, 'evitar');
-    const atuendos = Pg.colores(b, 'atuendos').slice(0, ATUENDOS.length);
-    const sub = Pg.texto(x.pagina, b, 'subtitulo');
-    const rotulo = (t) => `<h3 class="dc-rotulo"><span>${t}</span></h3>`;
-    const punto = (c, tachado) => `<li class="dc-color${tachado ? ' dc-color-evitar' : ''}"><span class="dc-circulo" style="--c: ${c.hex}"></span><span class="dc-color-nombre">${esc(c.nombre)}</span></li>`;
-    const lista = (quien, titulo, cosas) => `<div class="dc-col dc-col-${quien}">
-          <h3 class="dc-quien">${titulo}</h3>
-          ${cosas.length ? `<ul class="dc-lista">${cosas.map((i) => `<li>${cifras(i)}</li>`).join('')}</ul>` : ''}
-        </div>`;
-    const figura = (img, w, alt, clase) => `<figure class="dc-figura ${clase}"><img src="${DC_IMG}${img}.webp" width="${w}" height="928" alt="${alt}" loading="lazy" decoding="async"></figure>`;
+    const t = (clave) => Pg.texto(x.pagina, b, clave);
+    const vestidos = Pg.colores(b, 'vestidos').slice(0, DC_FILAS.ellas.prendas.length);
+    const trajes = Pg.colores(b, 'trajes').slice(0, DC_FILAS.ellos.prendas.length);
+    const punto = (c) => `<li class="dc-color"><span class="dc-circulo" style="--c: ${c.hex}"></span><span class="dc-color-nombre">${esc(c.nombre)}</span></li>`;
+    const icono = (img, texto) => `<li><img src="${DC_IMG}icono-${img}.webp" width="68" height="69" alt="" loading="lazy" decoding="async"><span>${cifras(texto)}</span></li>`;
+    const conVestidos = vestidos.length ? `: ${enumerar(vestidos.map((c) => c.nombre))}` : '';
+    const conTrajes = trajes.length ? `: ${enumerar(trajes.map((c) => c.nombre))}` : '';
+    const detalles = [['vestido', t('detalle1')], ['zapato', t('detalle2')], ['reloj', t('detalle3')]].filter(([, d]) => d);
     return `<article class="dc-lamina" aria-labelledby="vestimenta-titulo">
-      <span class="dc-flor dc-flor-ai" aria-hidden="true"></span>
-      <span class="dc-flor dc-flor-ad" aria-hidden="true"></span>
-      <span class="dc-flor dc-flor-bi" aria-hidden="true"></span>
-      <span class="dc-flor dc-flor-bd" aria-hidden="true"></span>
       <div class="dc-contenido">
         <header class="dc-cabecera">
-          <h2 class="dc-titulo" id="vestimenta-titulo">${titulo(x, b)}</h2>
+          <img class="dc-hoja dc-hoja-1" src="${DC_IMG}hoja-1.webp" width="106" height="130" alt="" aria-hidden="true" loading="lazy" decoding="async">
+          <h2 class="dc-titulo" id="vestimenta-titulo">
+            <span class="dc-ante">${titulo(x, b)}</span>
+            <span class="dc-floron" aria-hidden="true"></span>
+            <span class="dc-grande">${cifras(t('grande'))}</span>
+          </h2>
           <p class="dc-codigo vestimenta-codigo" data-vestimenta-codigo></p>
-          ${sub ? `<p class="dc-intro">${cifras(sub)}</p>` : ''}
           <p class="dc-nota vestimenta-nota" data-vestimenta-nota hidden></p>
         </header>
 
-        <section class="dc-ellos-ellas" aria-label="Qué ponerse">
-          ${lista('ellos', 'Ellos', items('ellos'))}
-          ${figura('el', 340, 'Ilustración: hombre con traje azul marino, camisa blanca y corbata', 'dc-figura-el')}
-          <span class="dc-divisor" aria-hidden="true"></span>
-          ${figura('ella', 336, 'Ilustración: mujer con vestido largo verde y sandalias', 'dc-figura-ella')}
-          ${lista('ellas', 'Ellas', items('ellas'))}
+        <section class="dc-grupo dc-grupo-ellas" aria-labelledby="dc-ellas">
+          <div class="dc-texto">
+            <h3 class="dc-quien" id="dc-ellas">${cifras(t('rotuloEllas'))}</h3>
+            ${parrafos(t('textoEllas'))}
+          </div>
+          ${dcFila('ellas', vestidos, `Diez invitadas con vestido largo${conVestidos}.`)}
         </section>
 
-        ${paleta.length ? `<section class="dc-bloque dc-paleta">
-          ${rotulo('Paleta de colores sugerida para vestidos')}
-          <ul class="dc-colores">${paleta.map((c) => punto(c)).join('')}</ul>
+        ${vestidos.length ? `<section class="dc-bloque-colores" aria-labelledby="dc-colores">
+          <h3 class="dc-rotulo" id="dc-colores">${cifras(t('rotuloColores'))}</h3>
+          <ul class="dc-colores">${vestidos.map(punto).join('')}</ul>
         </section>` : ''}
 
-        ${atuendos.length ? `<section class="dc-bloque dc-ejemplos">
-          ${rotulo('Ejemplos de atuendos')}
-          <ul class="dc-atuendos">${atuendos.map((c, i) => atuendo(ATUENDOS[i], c)).join('')}</ul>
-        </section>` : ''}
+        <div class="dc-divisor" aria-hidden="true"><span class="dc-floron"></span></div>
 
-        ${evitar.length ? `<section class="dc-bloque dc-evitar">
-          ${rotulo('Colores a evitar')}
-          <ul class="dc-colores dc-colores-evitar">${evitar.map((c) => punto(c, true)).join('')}</ul>
-          ${b.notaEvitar ? `<p class="dc-nota-evitar">${cifras(b.notaEvitar)}</p>` : ''}
-        </section>` : ''}
+        <section class="dc-grupo dc-grupo-ellos" aria-labelledby="dc-ellos">
+          <div class="dc-texto">
+            <h3 class="dc-quien" id="dc-ellos">${cifras(t('rotuloEllos'))}</h3>
+            ${parrafos(t('textoEllos'))}
+            <img class="dc-hoja dc-hoja-2" src="${DC_IMG}hoja-2.webp" width="108" height="110" alt="" aria-hidden="true" loading="lazy" decoding="async">
+          </div>
+          ${dcFila('ellos', trajes, `Seis invitados de traje con camisa blanca y corbata${conTrajes}.`)}
+        </section>
 
-        ${b.ideas ? `<p class="dc-ideas"><a class="boton-pildora" href="${esc(b.ideas)}" target="_blank" rel="noopener">${esc(Pg.texto(x.pagina, b, 'ideasTexto'))}${P.icono('externo')}</a></p>` : ''}
+        <footer class="dc-pie">
+          <section class="dc-evitar" aria-labelledby="dc-evitar">
+            <img src="${DC_IMG}evitar.webp" width="84" height="84" alt="" aria-hidden="true" loading="lazy" decoding="async">
+            <div>
+              <h3 id="dc-evitar">${cifras(t('rotuloEvitar'))}</h3>
+              ${parrafos(t('textoEvitar'))}
+            </div>
+          </section>
+          ${detalles.length ? `<section class="dc-detalles" aria-labelledby="dc-detalles">
+            <h3 id="dc-detalles">${cifras(t('rotuloDetalles'))}</h3>
+            <ul>${detalles.map(([img, d]) => icono(img, d)).join('')}</ul>
+          </section>` : ''}
+          ${t('gracias') ? `<div class="dc-gracias">${parrafos(t('gracias'))}</div>` : ''}
+        </footer>
+
+        ${b.ideas ? `<p class="dc-ideas"><a class="boton-pildora" href="${esc(b.ideas)}" target="_blank" rel="noopener">${esc(t('ideasTexto'))}${P.icono('externo')}</a></p>` : ''}
         <ul class="vestimenta-fotos" data-vestimenta-fotos aria-label="Fotos de referencia" hidden></ul>
       </div>
     </article>`;

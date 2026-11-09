@@ -948,7 +948,13 @@
     const url = ref ? await window.Datos.urlFoto(ref) : null;
     const camafeo = $('[data-camafeo]');
     camafeo.hidden = !url;
-    $('[data-camafeo-foto]').innerHTML = url ? `<img src="${esc(url)}" alt="${esc(pareja)}" loading="lazy" decoding="async">` : '';
+    const caja = $('[data-camafeo-foto]');
+    caja.innerHTML = url ? `<img src="${esc(url)}" alt="${esc(pareja)}" loading="lazy" decoding="async">` : '';
+    // La ventana del marco es vertical: si la foto trae encuadre en config.js
+    // (se lee de ahí porque el panel no lo guarda), la pareja queda al centro.
+    const deConfig = [C.fotoPortada].concat(C.fotos || []).find((f) => f && f.archivo === ref);
+    const img = $('img', caja);
+    if (img && deConfig && deConfig.encuadre) img.style.objectPosition = deConfig.encuadre;
   }
 
   // Los textos que cambian si la invitación es para una persona o para varias.
