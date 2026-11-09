@@ -78,7 +78,7 @@ if [ -d media ]; then cp -r media publicar/; fi
 echo "Listo: publicar/ con $(find publicar -type f | wc -l) archivos ($(du -sh publicar | cut -f1))."
 ```
 
-Si algún día agregas otra carpeta que el sitio necesite (por ejemplo, otra al lado de `fotos/`), súmala aquí con otro `cp -r`. La música va en `media/` y se copia sola.
+Si algún día agregas otra carpeta que el sitio necesite (por ejemplo, otra al lado de `fotos/`), súmala aquí con otro `cp -r`. La música ya no necesita carpeta: se sube desde el panel al bucket `musica` de Supabase (si existe `media/`, se copia sola).
 
 ### 1.2 `_headers` (nuevo, en la raíz del proyecto)
 
@@ -384,7 +384,7 @@ En **Workers & Pages → boda-diego-erika → Deployments** verás el despliegue
 3. **Sube las fotos** que habías subido en modo local (**La boda** y los bloques de **Diseño**) y pulsa **Guardar cambios** / **Publicar**. Van al bucket `fotos` de Supabase.
 4. **Invitados:** abre el CSV exportado en Excel o Google Sheets, deja **en este orden** las columnas *Nombre*, *Cupos*, *WhatsApp* y *De*, cópialas y pégalas en **Invitados → Importar lista**. Cada invitado recibe un **código nuevo**, y los enlaces ya salen con la dirección de producción. Los enlaces del modo local no sirven: no reutilices ninguno.
 5. **Mesas, tareas, presupuesto y proveedores:** vuelve a armarlos. Para las tareas, «Empezar con la lista sugerida» las trae con fecha, y se pasan solas al calendario «Boda de Diego y Erika» de la cuenta con la que entraste. Para que los dos lo vean, compártelo desde Google Calendar.
-6. **Música (si la usas):** pon el mp3 en `media/` (menos de 25 MiB), escribe su ruta en **Diseño → Tema → Música**, haz commit y push.
+6. **Música (si la usas):** en **Diseño → Tema → Música** pulsa **Subir la canción (.mp3)** (hasta 20 MB) y luego **Publicar**. Va al bucket `musica` de Supabase; si el panel dice que falta, vuelve a ejecutar `supabase/esquema.sql` (paso 3.2).
 
 ---
 

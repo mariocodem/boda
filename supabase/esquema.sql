@@ -8,8 +8,9 @@
 --    devuelven y modifican la invitación cuyo código conocen.
 --  * La tabla evento (fecha, lugares y estilo) la puede leer cualquiera, como
 --    la invitación impresa; solo los administradores la cambian.
---  * Las fotos van en el bucket público «fotos» de Storage: cualquiera con el
---    enlace las ve; solo los administradores las suben o las borran.
+--  * Las fotos van en el bucket público «fotos» de Storage, y la canción en el
+--    bucket público «musica»: cualquiera con el enlace las ve o la oye; solo
+--    los administradores las suben o las borran.
 --  * El plano de mesas (tabla salon) también es público, como un plano impreso
 --    a la entrada; solo los administradores lo cambian. La mesa de cada
 --    invitado vive en su fila: ver_invitacion la devuelve solo cuando ese
@@ -330,6 +331,41 @@ create policy "administradores borran fotos"
   on storage.objects for delete
   to authenticated
   using (bucket_id = 'fotos' and public.es_admin());
+
+-- La canción de la invitación (Diseño → Tema → Música): un mp3 de hasta 20 MB
+-- que se sube desde el panel. El bucket es público porque suena en la
+-- invitación; solo los administradores la suben, la cambian o la borran.
+insert into storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
+values ('musica', 'musica', true, 20971520, array['audio/mpeg'])
+on conflict (id) do update
+  set public = excluded.public,
+      file_size_limit = excluded.file_size_limit,
+      allowed_mime_types = excluded.allowed_mime_types;
+
+drop policy if exists "administradores ven la musica" on storage.objects;
+create policy "administradores ven la musica"
+  on storage.objects for select
+  to authenticated
+  using (bucket_id = 'musica' and public.es_admin());
+
+drop policy if exists "administradores suben musica" on storage.objects;
+create policy "administradores suben musica"
+  on storage.objects for insert
+  to authenticated
+  with check (bucket_id = 'musica' and public.es_admin());
+
+drop policy if exists "administradores cambian musica" on storage.objects;
+create policy "administradores cambian musica"
+  on storage.objects for update
+  to authenticated
+  using (bucket_id = 'musica' and public.es_admin())
+  with check (bucket_id = 'musica' and public.es_admin());
+
+drop policy if exists "administradores borran musica" on storage.objects;
+create policy "administradores borran musica"
+  on storage.objects for delete
+  to authenticated
+  using (bucket_id = 'musica' and public.es_admin());
 
 revoke all on function public.ver_invitacion(text, boolean) from public;
 revoke all on function public.responder_invitacion(text, boolean, integer, text, text, text, text[]) from public;

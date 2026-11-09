@@ -91,7 +91,12 @@ Hecho el 2026-11-06 a partir de las referencias de `referencias-boda/` (ideas, n
 
 ### Música
 
-En **Diseño → Tema → Música** escribe la ruta del mp3 (súbelo a una carpeta `media/` del sitio, por ejemplo `media/cancion.mp3`) o un enlace https, el volumen y si suena. Nunca suena sola: arranca con el toque que abre el sobre, entra subiendo despacio y el botón redondo de abajo a la derecha la pausa o la vuelve a poner. Si el invitado vuelve a la página con el sobre ya abierto, queda el botón en pausa. Usa una canción que tengan derecho a poner.
+En **Diseño → Tema → Música** pulsa **Subir la canción (.mp3)** y elige el archivo (hasta 20 MB); allí mismo se puede oír, cambiar o quitar, y se ajustan el volumen y si suena. Los invitados la oyen cuando pulsas **Publicar**.
+
+- **Modo local:** la canción queda en ese navegador (IndexedDB), solo para probar.
+- **Con Supabase:** va al bucket público `musica` de Storage, que crea `supabase/esquema.sql`. Al cambiarla o quitarla y publicar, la anterior se borra.
+
+Una ruta del sitio (`media/cancion.mp3`) o un enlace https que ya estuvieran puestos siguen sonando. Nunca suena sola: arranca con el toque que abre el sobre, entra subiendo despacio y el botón redondo de abajo a la derecha la pausa o la vuelve a poner. Si el invitado vuelve a la página con el sobre ya abierto, queda el botón en pausa. Usa una canción que tengan derecho a poner.
 
 ### Animaciones
 
@@ -186,7 +191,7 @@ El ID de cliente es público por diseño, como la clave de Google Maps: lo prote
 ## Conectar Supabase (respuestas reales)
 
 1. Crea un proyecto gratuito en [supabase.com](https://supabase.com).
-2. En **SQL Editor**, pega y ejecuta `supabase/esquema.sql`. (Si ya lo habías ejecutado antes, vuelve a ejecutarlo: agrega lo que falte, como la tabla `evento`, el espacio `fotos` de Storage, el plano de mesas, la tabla `planeacion`, el borrador del diseño, las preguntas opcionales de la respuesta y los nombres de quienes van, sin tocar los invitados). Hasta que lo vuelvas a ejecutar, las respuestas siguen llegando, pero sin los nombres.
+2. En **SQL Editor**, pega y ejecuta `supabase/esquema.sql`. (Si ya lo habías ejecutado antes, vuelve a ejecutarlo: agrega lo que falte, como la tabla `evento`, los espacios `fotos` y `musica` de Storage, el plano de mesas, la tabla `planeacion`, el borrador del diseño, las preguntas opcionales de la respuesta y los nombres de quienes van, sin tocar los invitados). Hasta que lo vuelvas a ejecutar, las respuestas siguen llegando, pero sin los nombres.
 3. En **Authentication → Users**, crea tu usuario (correo y contraseña). Recomendado: en **Authentication → Sign In / Providers** desactiva el registro público.
 4. En el SQL Editor autoriza tu correo:
    ```sql

@@ -4158,6 +4158,38 @@ body.llevando-familia * {
   text-underline-offset: 0.2em;
 }
 
+/* La canción subida (Tema → Música): su nombre y un reproductor para oírla */
+.musica-elegida {
+  display: grid;
+  gap: 8px;
+  margin-bottom: 10px;
+  padding: 10px 12px;
+  border-radius: 6px;
+  background: var(--algodon-hondo);
+}
+
+.musica-nombre {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+  font-size: 0.92rem;
+  font-weight: 600;
+  color: var(--tinta);
+  overflow-wrap: anywhere;
+}
+
+.musica-nombre .icono {
+  flex: none;
+  width: 18px;
+  height: 18px;
+}
+
+.musica-elegida audio {
+  width: 100%;
+  height: 36px;
+}
+
 .diseno-galeria {
   margin: 0;
   padding: 0;

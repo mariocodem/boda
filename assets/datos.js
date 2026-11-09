@@ -389,11 +389,45 @@
     return vistas[ref];
   }
 
-  // Las fotos subidas se pueden borrar; las rutas de la carpeta del sitio no.
-  const BASE_STORAGE = conSupabase ? `${C.supabase.url.replace(/\/+$/, '')}/storage/v1/object/public/fotos/` : null;
-  function esSubida(ref) {
+  // Lo subido se puede borrar; las rutas de la carpeta del sitio no. Las fotos
+  // van al bucket «fotos» y la canción al bucket «musica».
+  const BASE_PUBLICA = conSupabase ? `${C.supabase.url.replace(/\/+$/, '')}/storage/v1/object/public/` : null;
+  const BUCKETS = ['fotos', 'musica'];
+
+  // El bucket y la ruta de un archivo subido a Supabase, o null.
+  function enStorage(ref) {
     const s = String(ref || '');
-    return s.startsWith('local:') || Boolean(BASE_STORAGE && s.startsWith(BASE_STORAGE));
+    if (!BASE_PUBLICA || !s.startsWith(BASE_PUBLICA)) return null;
+    const resto = s.slice(BASE_PUBLICA.length);
+    const bucket = BUCKETS.find((b) => resto.startsWith(`${b}/`));
+    return bucket ? { bucket, ruta: decodeURIComponent(resto.slice(bucket.length + 1)) } : null;
+  }
+
+  function esSubida(ref) {
+    return String(ref || '').startsWith('local:') || Boolean(enStorage(ref));
+  }
+
+  // La canción: un mp3 tal cual, hasta 20 MB (lo mismo que acepta el bucket
+  // «musica» de supabase/esquema.sql).
+  const MAX_MB_MUSICA = 20;
+  const mb = (bytes) => (bytes / 1048576).toLocaleString('es-CO', { maximumFractionDigits: 1 });
+
+  function validarMusica(archivo) {
+    if (!archivo || !archivo.size) throw new Error('Ese archivo está vacío. Elige un .mp3.');
+    const esMp3 = /\.mp3$/i.test(archivo.name || '') || /^audio\/(mpeg|mp3)$/i.test(archivo.type || '');
+    if (!esMp3) throw new Error('La canción tiene que ser un archivo .mp3.');
+    if (archivo.size > MAX_MB_MUSICA * 1048576) throw new Error(`La canción pesa ${mb(archivo.size)} MB y el máximo es ${MAX_MB_MUSICA} MB.`);
+  }
+
+  // Los errores de Supabase al subir la canción, que traducirError leería
+  // como de fotos.
+  function errorMusica(e) {
+    const msg = String((e && e.message) || e);
+    if (/bucket not found/i.test(msg)) return new Error('Falta el espacio para la música en Supabase: ejecuta supabase/esquema.sql en el SQL Editor.');
+    if (/row-level security|unauthorized|403/i.test(msg)) return new Error('Supabase no dejó subir la canción: ejecuta supabase/esquema.sql en el SQL Editor y revisa que tu correo esté en administradores.');
+    if (/payload too large|exceeded the maximum allowed size|413/i.test(msg)) return new Error(`La canción pesa más de lo que acepta Supabase (${MAX_MB_MUSICA} MB).`);
+    if (/mime type|invalid_mime/i.test(msg)) return new Error('Supabase solo acepta la canción en .mp3.');
+    return traducirError(e);
   }
 
   // ---------- Modo local ----------
@@ -591,6 +625,12 @@
     async subirFoto(blob) {
       const id = idFoto();
       await fotosLocales('readwrite', (st) => st.put(blob, id));
+      return `local:${id}`;
+    },
+    // En modo local la canción vive con las fotos, en IndexedDB del navegador.
+    async subirMusica(archivo) {
+      const id = idFoto();
+      await fotosLocales('readwrite', (st) => st.put(new Blob([archivo], { type: 'audio/mpeg' }), id));
       return `local:${id}`;
     },
     async diseno() {
@@ -906,10 +946,19 @@
       if (error) throw traducirError(error);
       return s.storage.from('fotos').getPublicUrl(ruta).data.publicUrl;
     },
-    async borrarFoto(ref) {
-      if (!BASE_STORAGE || !String(ref).startsWith(BASE_STORAGE)) return;
+    async subirMusica(archivo) {
       const s = await sb();
-      const { error } = await s.storage.from('fotos').remove([decodeURIComponent(ref.slice(BASE_STORAGE.length))]);
+      const ruta = `cancion/${Date.now().toString(36)}-${idFoto()}.mp3`;
+      const { error } = await s.storage.from('musica').upload(ruta, archivo, { contentType: 'audio/mpeg', cacheControl: '31536000', upsert: false });
+      if (error) throw errorMusica(error);
+      return s.storage.from('musica').getPublicUrl(ruta).data.publicUrl;
+    },
+    // Sirve para las fotos y para la canción: cada una se borra de su bucket.
+    async borrarFoto(ref) {
+      const x = enStorage(ref);
+      if (!x) return;
+      const s = await sb();
+      const { error } = await s.storage.from(x.bucket).remove([x.ruta]);
       if (error) throw traducirError(error);
     },
   };
@@ -955,6 +1004,12 @@
     normalizarEvento,
     subirFoto: envolver((blob, carpeta) => motor.subirFoto(blob, carpeta)),
     borrarFoto: envolver((ref) => (esSubida(ref) ? motor.borrarFoto(ref) : null)),
+    subirMusica: envolver((archivo) => {
+      validarMusica(archivo);
+      return motor.subirMusica(archivo);
+    }),
+    MAX_MB_MUSICA,
+    // urlFoto también le da su dirección blob: a la canción del modo local.
     urlFoto,
     esSubida,
     enlace(codigo, { vista } = {}) {

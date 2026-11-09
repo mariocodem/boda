@@ -6,7 +6,7 @@
  *   { tema: 'vino' | 'victoriano' | 'pliegos' | 'editorial',
  *     trato: 'tu' | 'usted',
  *     animacion: 'completas' | 'suaves' | 'ninguna',
- *     musica: { archivo, volumen, activa },
+ *     musica: { archivo, nombre, volumen, activa },
  *     fondo: { tipo: 'tema' | 'color' | 'degradado' | 'imagen', color, color2,
  *              direccion, imagen, velo },
  *     portada: { texto, textoVarios, pista },   // la tarjeta (va siempre primero)
@@ -535,14 +535,18 @@
     return r;
   }
 
-  // La música de fondo: un mp3 del sitio (media/…) o un enlace https. Suena
-  // solo cuando el invitado abre el sobre, y siempre se puede pausar.
+  // La música de fondo: el mp3 que se sube desde el panel (un enlace https de
+  // Supabase Storage, o local:<id> en modo local). Siguen sirviendo una ruta
+  // del sitio (media/…) o un enlace https de antes. nombre: el del archivo
+  // subido, para reconocerlo en el panel. Suena solo cuando el invitado abre
+  // el sobre, y siempre se puede pausar.
   function normalizarMusica(m) {
     const x = m || {};
     const s = String(x.archivo || '').trim();
-    const archivo = (/^https:\/\/\S+$/.test(s) || (/^[\w-]+(\/[\w.-]+)*\.(mp3|m4a|aac|ogg|oga|wav)$/i.test(s) && !s.includes('..'))) ? s.slice(0, 600) : null;
+    const archivo = (/^https:\/\/\S+$/.test(s) || /^local:[a-z0-9-]{6,48}$/i.test(s) || (/^[\w-]+(\/[\w.-]+)*\.(mp3|m4a|aac|ogg|oga|wav)$/i.test(s) && !s.includes('..'))) ? s.slice(0, 600) : null;
+    const nombre = archivo ? String(x.nombre || '').trim().slice(0, 120) || null : null;
     const volumen = Math.min(1, Math.max(0.05, Number(x.volumen) || 0.4));
-    return { archivo, volumen: Math.round(volumen * 100) / 100, activa: x.activa !== false };
+    return { archivo, nombre, volumen: Math.round(volumen * 100) / 100, activa: x.activa !== false };
   }
 
   function normalizar(p) {
@@ -610,9 +614,11 @@
     return (valores && valores[clave]) || d || '';
   }
 
-  // Las fotos que usa una página (para no borrar las que siguen en uso).
-  function fotosDe(pagina) {
+  // Los archivos que usa una página, las fotos y la canción (para no borrar
+  // del almacenamiento los que siguen en uso).
+  function archivosDe(pagina) {
     const refs = new Set();
+    if (pagina.musica && pagina.musica.archivo) refs.add(pagina.musica.archivo);
     if (pagina.fondo && pagina.fondo.imagen) refs.add(pagina.fondo.imagen.url);
     ['portada', 'cierre'].forEach((k) => {
       TIPOS[k].campos.forEach((c) => { if (c.tipo === 'foto' && pagina[k] && pagina[k][c.clave]) refs.add(pagina[k][c.clave].url); });
@@ -664,7 +670,7 @@
     campo,
     texto: textoDe,
     colores: coloresDe,
-    fotosDe,
+    archivosDe,
     videoEmbebido,
     claro,
   };

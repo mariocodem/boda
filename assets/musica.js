@@ -22,6 +22,14 @@
 
   const lista = () => Boolean(conf.activa && conf.archivo);
 
+  // La canción subida en modo local (local:<id>) vive en IndexedDB de este
+  // navegador: Datos le da una dirección blob: (y la recuerda). Las demás se
+  // usan tal cual.
+  function direccion(ref) {
+    if (!String(ref || '').startsWith('local:')) return Promise.resolve(ref);
+    return window.Datos ? window.Datos.urlFoto(ref) : Promise.resolve(null);
+  }
+
   function pintar() {
     boton.hidden = !(lista() && abierta);
     boton.setAttribute('aria-pressed', sonando ? 'true' : 'false');
@@ -47,9 +55,16 @@
 
   async function sonar() {
     if (!lista()) return;
-    if (audio.dataset.archivo !== conf.archivo) {
-      audio.src = conf.archivo;
-      audio.dataset.archivo = conf.archivo;
+    const pedida = conf.archivo;
+    if (audio.dataset.archivo !== pedida) {
+      const src = await direccion(pedida);
+      if (!src || conf.archivo !== pedida) {
+        sonando = false;
+        pintar();
+        return;
+      }
+      audio.src = src;
+      audio.dataset.archivo = pedida;
     }
     audio.volume = 0;
     try {
@@ -78,6 +93,9 @@
   window.Musica = {
     configurar(m) {
       conf = Object.assign({ archivo: null, volumen: 0.4, activa: true }, m || {});
+      // La del modo local se abre desde ya: así el toque que abre el sobre no
+      // espera a IndexedDB para que suene.
+      if (lista()) direccion(conf.archivo);
       if (!lista() && sonando) callar();
       else if (sonando) fundir(conf.volumen, 300);
       pintar();

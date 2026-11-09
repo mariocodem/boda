@@ -41,7 +41,7 @@
     cargando: null,
     error: '',
     publicado: null, // { pagina, estilo, mariposa }: lo que ven los invitados
-    borrador: null,  // lo mismo, más subidas (fotos del borrador) y editadoEn
+    borrador: null,  // lo mismo, más subidas (fotos y canción del borrador) y editadoEn
     evento: null,    // los datos de la boda: dicen qué secciones están vacías
     elegido: null,   // el bloque abierto ('portada' y 'cierre' son los fijos)
     pestana: 'bloques',
@@ -54,6 +54,7 @@
     temporizador: null,
     publicando: false,
     subiendo: 0,
+    subiendoMusica: false,
     arrastre: null,
   };
 
@@ -127,10 +128,10 @@
 
   // Las fotos que se subieron para el borrador y ya no usa nadie se borran.
   function limpiarFotos(antes) {
-    const usadas = new Set([...Pg.fotosDe(d.publicado.pagina), ...Pg.fotosDe(d.borrador.pagina)]);
+    const usadas = new Set([...Pg.archivosDe(d.publicado.pagina), ...Pg.archivosDe(d.borrador.pagina)]);
     const sobran = new Set([...antes, ...d.borrador.subidas].filter((r) => !usadas.has(r)));
     sobran.forEach((r) => D.borrarFoto(r).catch(() => { /* queda huérfana; no estorba */ }));
-    d.borrador.subidas = d.borrador.subidas.filter((r) => !sobran.has(r) && !Pg.fotosDe(d.publicado.pagina).has(r));
+    d.borrador.subidas = d.borrador.subidas.filter((r) => !sobran.has(r) && !Pg.archivosDe(d.publicado.pagina).has(r));
   }
 
   // ---------- Respaldo: exportar, importar y restaurar ----------
@@ -198,7 +199,7 @@
     d.publicando = true;
     pintarEstado('Publicando…');
     try {
-      const antes = Pg.fotosDe(d.publicado.pagina);
+      const antes = Pg.archivosDe(d.publicado.pagina);
       const nuevo = limpio(d.borrador);
       // Solo cambia el diseño: los datos de la boda se quedan como están.
       const actual = await D.evento();
@@ -305,7 +306,7 @@
     let t = texto;
     if (!t) {
       if (!d.cargado) t = d.error ? 'Sin conexión con el diseño' : 'Cargando…';
-      else if (d.subiendo) t = 'Subiendo la foto…';
+      else if (d.subiendo) t = d.subiendoMusica ? 'Subiendo la canción…' : 'Subiendo la foto…';
       else if (d.guardando) t = 'Guardando el borrador…';
       else if (cambios) t = `Borrador con cambios sin publicar${d.borrador.editadoEn && !d.pendiente ? ` · guardado ${u.hace(d.borrador.editadoEn)}` : ''}`;
       else t = D.modo === 'local' ? 'Todo publicado (en este navegador)' : 'Todo publicado: los invitados ven esto';
@@ -978,9 +979,21 @@
 
       <fieldset class="tema-grupo">
         <legend class="tema-titulo">Música</legend>
-        <label class="campo"><span class="campo-etiqueta">Canción</span>
-          <input type="text" data-tema="musica-archivo" value="${esc(p.musica.archivo || '')}" placeholder="media/cancion.mp3" spellcheck="false" autocomplete="off">
-          <span class="campo-ayuda">Pon el mp3 en la carpeta <code>media/</code> del sitio y escribe aquí su ruta, o pega un enlace https. Que sea una canción que puedan usar.</span></label>
+        <div class="campo">
+          <span class="campo-etiqueta">Canción</span>
+          ${p.musica.archivo ? `<div class="musica-elegida">
+              <p class="musica-nombre">${P.icono('musica')}<span>${esc(nombreCancion(p.musica))}</span></p>
+              <audio controls preload="none" data-musica-escuchar="${esc(p.musica.archivo)}" aria-label="Escuchar la canción"></audio>
+            </div>` : ''}
+          <div class="diseno-fotos">
+            <label class="boton boton-secundario subir-boton diseno-subir${d.subiendoMusica ? ' preparando' : ''}">
+              <input type="file" accept=".mp3,audio/mpeg" data-tema="musica-subir" class="solo-lectores">
+              ${P.icono('subir')}<span>${d.subiendoMusica ? 'Subiendo la canción…' : p.musica.archivo ? 'Cambiar la canción' : 'Subir la canción (.mp3)'}</span>
+            </label>
+            ${p.musica.archivo && !d.subiendoMusica ? '<button class="enlace-quitar" type="button" data-musica-quitar>Quitar la canción</button>' : ''}
+          </div>
+          <span class="campo-ayuda">Un archivo .mp3 de hasta ${D.MAX_MB_MUSICA} MB. ${D.modo === 'local' ? 'En modo local se guarda solo en este navegador.' : 'Se sube a Supabase y los invitados la oyen al publicar.'} Que sea una canción que tengan derecho a poner.</span>
+        </div>
         <label class="campo"><span class="campo-etiqueta">Volumen: <output data-musica-valor>${Math.round(p.musica.volumen * 100)}%</output></span>
           <input type="range" min="5" max="100" step="5" value="${Math.round(p.musica.volumen * 100)}" data-tema="musica-volumen"></label>
         <label class="casilla"><input type="checkbox" data-tema="musica-activa"${p.musica.activa ? ' checked' : ''}><span>Que suene al abrir el sobre</span></label>
@@ -994,7 +1007,7 @@
           <label class="boton boton-secundario subir-boton"><input type="file" accept="application/json,.json" data-respaldo="importar" class="solo-lectores">${P.icono('subir')}<span>Importar</span></label>
           <button class="boton boton-secundario" type="button" data-respaldo="restaurar" data-icono="deshacer">Restaurar el diseño de arranque</button>
         </div>
-        <p class="campo-ayuda">Exportar descarga todo el contenido: los datos de la boda, el diseño publicado y el borrador. Importar lo trae de vuelta: los datos de la boda se guardan al instante y el diseño queda en el borrador para revisarlo y publicarlo. Las fotos subidas en modo local no viajan en el archivo. Restaurar vuelve el borrador al diseño de arranque (los datos de la boda no se tocan).</p>
+        <p class="campo-ayuda">Exportar descarga todo el contenido: los datos de la boda, el diseño publicado y el borrador. Importar lo trae de vuelta: los datos de la boda se guardan al instante y el diseño queda en el borrador para revisarlo y publicarlo. Las fotos y la canción subidas en modo local no viajan en el archivo. Restaurar vuelve el borrador al diseño de arranque (los datos de la boda no se tocan).</p>
       </fieldset>`;
     u.iconos(panelTema);
     pintarMuestras();
@@ -1002,7 +1015,47 @@
       const url = await D.urlFoto(img.dataset.miniatura);
       if (url) img.src = url;
     });
+    $$('[data-musica-escuchar]', panelTema).forEach(async (audio) => {
+      const url = await D.urlFoto(audio.dataset.musicaEscuchar);
+      if (url) audio.src = url;
+    });
     Object.keys(Estilos.LETRAS).forEach(Estilos.cargarLetra);
+  }
+
+  // Cómo se llama la canción en el panel: el nombre del archivo que se subió,
+  // o el final de su ruta si se puso antes a mano (media/…, un enlace).
+  function nombreCancion(m) {
+    if (m.nombre) return m.nombre;
+    if (m.archivo.startsWith('local:')) return 'La canción guardada en este navegador';
+    try {
+      return decodeURIComponent(m.archivo.split(/[?#]/)[0].split('/').pop()) || m.archivo;
+    } catch {
+      return m.archivo;
+    }
+  }
+
+  // La canción se sube tal cual (no se reduce como las fotos). Mientras sube,
+  // no se puede publicar.
+  async function subirMusica(archivo) {
+    if (d.subiendoMusica) return;
+    d.subiendo += 1;
+    d.subiendoMusica = true;
+    pintarEstado();
+    pintarTema();
+    try {
+      const url = await D.subirMusica(archivo);
+      d.borrador.subidas.push(url);
+      pagina().musica = Object.assign({}, pagina().musica, { archivo: url, nombre: archivo.name });
+      cambio({ lista: false });
+      u.aviso(`Canción lista: ${archivo.name}. Publica para que la oigan los invitados.`);
+    } catch (err) {
+      u.aviso(err.message, { error: true });
+    } finally {
+      d.subiendo -= 1;
+      d.subiendoMusica = false;
+      pintarEstado();
+      pintarTema();
+    }
   }
 
   // Cada opción se pinta con su paleta (o su letra) y lo demás elegido.
@@ -1074,6 +1127,13 @@
   });
 
   panelTema.addEventListener('click', (e) => {
+    if (e.target.closest('[data-musica-quitar]')) {
+      pagina().musica = Object.assign({}, pagina().musica, { archivo: null, nombre: null });
+      cambio({ lista: false });
+      pintarTema();
+      $('[data-tema="musica-subir"]', panelTema).focus();
+      return;
+    }
     const b = e.target.closest('button[data-respaldo]');
     if (!b) return;
     if (b.dataset.respaldo === 'exportar') exportarJson();
@@ -1106,14 +1166,10 @@
     } else if (t.dataset.tema === 'animacion') {
       p.animacion = t.value;
       cambio({ lista: false });
-    } else if (t.dataset.tema === 'musica-archivo') {
-      const escrito = t.value.trim();
-      p.musica = Object.assign({}, p.musica, { archivo: escrito });
-      cambio({ lista: false });
-      if (escrito && !pagina().musica.archivo) {
-        t.setAttribute('aria-invalid', 'true');
-        u.aviso('Esa ruta no sirve: escribe algo como media/cancion.mp3 o un enlace https.', { error: true });
-      } else t.removeAttribute('aria-invalid');
+    } else if (t.dataset.tema === 'musica-subir') {
+      const archivo = t.files && t.files[0];
+      t.value = '';
+      if (archivo) subirMusica(archivo);
     } else if (t.dataset.tema === 'musica-volumen') {
       p.musica = Object.assign({}, p.musica, { volumen: Number(t.value) / 100 });
       cambio({ lista: false });
